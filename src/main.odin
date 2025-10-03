@@ -1,7 +1,6 @@
 package main
 
 import "core:fmt"
-
 import rl "vendor:raylib"
 
 DEBUG::#config(DEBUG, false)
@@ -47,10 +46,16 @@ main::proc() {
     b(i)
   }
 
-  rl.InitWindow(10, 10, "coucou")
+  rl.ChangeDirectory("resources")
+  rl.InitWindow(1000, 1000, "coucou")
+
+  texture: rl.Texture = rl.LoadTexture("cursor1.png")
 
   for !rl.WindowShouldClose() {
     rl.BeginDrawing()
+    rl.DrawText(fmt.ctprint(rl.GetFPS()), 0, 0, 20, rl.WHITE)
+    rl.DrawText(rl.GetWorkingDirectory(), 100, 100, 20, rl.WHITE)
+    rl.DrawTexture(texture, 10, 10, rl.WHITE)
     rl.ClearBackground(rl.RED)
     rl.EndDrawing()
   }
