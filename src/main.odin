@@ -5,3 +5,4 @@ import "core:fmt"
 main::proc() {
   fmt.println("coucou")
 }
+coiucou
