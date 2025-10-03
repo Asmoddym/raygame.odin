@@ -1,5 +1,7 @@
 package main
 
+import "core:os"
+import "core:mem"
 import "core:fmt"
 import rl "vendor:raylib"
 
@@ -30,7 +32,7 @@ coucou::proc(i: ^int, coucou:int) {
   i^ += 1
 }
 
-main::proc() {
+bloup::proc() {
   i: int = 1
 
   b: proc(int) = proc(i: int) { fmt.println(i) }
@@ -40,6 +42,7 @@ main::proc() {
   bla2(a, "bla")
   fmt.println(">> ", a.key)
 
+  free(a)
 
   when DEBUG {
     coucou(&i, coucou = 3)
@@ -62,6 +65,28 @@ main::proc() {
     rl.EndDrawing()
   }
 
+
   rl.CloseWindow()
 
+  rl.UnloadTexture(texture)
+}
+
+main::proc() {
+	when ODIN_DEBUG {
+		track: mem.Tracking_Allocator
+		mem.tracking_allocator_init(&track, context.allocator)
+		context.allocator = mem.tracking_allocator(&track)
+
+		defer {
+			if len(track.allocation_map) > 0 {
+				fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+				for _, entry in track.allocation_map {
+					fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+				}
+			}
+			mem.tracking_allocator_destroy(&track)
+		}
+	}
+
+  bloup()
 }
