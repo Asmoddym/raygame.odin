@@ -1,0 +1,4 @@
+[run]
+mode: float
+cmd: :terminal odin run src
+after: i
