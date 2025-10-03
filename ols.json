@@ -1,10 +1,16 @@
 {
-	"enable_semantic_tokens": false,
+  "collections": [
+		{ "name": "raygame", "path": "d:/projects/Odin/raygame.odin/src" }
+	],
+	"enable_semantic_tokens": true,
 	"enable_document_symbols": true,
 	"enable_hover": true,
 	"enable_snippets": true,
+  "enable_auto_import": true,
+  "verbose": true,
 	"profile": "default",
+  "checker_args": "-strict-style -vet -vet-cast -vet-semicolon -debug",
 	"profiles": [
-		{ "name": "default", "checker_path": ["src"]},
-	]
+		{ "name": "default", "checker_path": ["src"] }
+	],
 }

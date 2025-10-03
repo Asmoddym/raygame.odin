@@ -1,19 +1,17 @@
 package main
 
-import "core:os"
 import "core:mem"
 import "core:fmt"
 import rl "vendor:raylib"
 
 DEBUG::#config(DEBUG, false)
 
-
 Table :: struct($K: typeid) {
-  key: K
+  key: K,
 }
 
 Table2 :: struct($K: typeid) {
-  key: K
+  key: K,
 }
 
 create_table::proc(v: $K) -> ^Table(K) {
@@ -33,10 +31,6 @@ coucou::proc(i: ^int, coucou:int) {
 }
 
 bloup::proc() {
-  i: int = 1
-
-  b: proc(int) = proc(i: int) { fmt.println(i) }
-
   a:= create_table("coucou")
   fmt.println("> ", a.key)
   bla2(a, "bla")
@@ -68,7 +62,7 @@ bloup::proc() {
 
   rl.CloseWindow()
 
-  rl.UnloadTexture(texture)
+  // rl.UnloadTexture(texture)
 }
 
 main::proc() {

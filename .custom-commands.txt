@@ -1,9 +1,11 @@
 [run]
 mode: float
-cmd: :terminal odin run src -out:raygame[[extension]] -debug
+cmd_windows: :terminal .\vendor\builder.bat run debug
+cmd_unix: :terminal ./vendor/builder.sh run debug
 after: i
 
 [build]
 mode: float
-cmd: :terminal odin build src -out:raygame[[extension]]
+cmd_windows: :terminal .\vendor\builder.bat build debug
+cmd_unix: :terminal ./vendor/builder.sh build debug
 after: i
