@@ -47,6 +47,8 @@ main::proc() {
   }
 
   rl.ChangeDirectory("resources")
+  rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.WINDOW_HIGHDPI})
+
   rl.InitWindow(1000, 1000, "coucou")
 
   texture: rl.Texture = rl.LoadTexture("cursor1.png")

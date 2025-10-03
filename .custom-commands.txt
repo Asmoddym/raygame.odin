@@ -1,9 +1,9 @@
 [run]
 mode: float
-cmd: :terminal odin run src -out:raygame.exe
+cmd: :terminal odin run src -out:raygame[[extension]]
 after: i
 
 [build]
 mode: float
-cmd: :terminal odin build src -out:raygame.exe
+cmd: :terminal odin build src -out:raygame[[extension]]
 after: i
