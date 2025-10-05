@@ -12,15 +12,19 @@ Level :: enum {
 log :: proc(level: Level, args: ..any) {
   switch level {
   case Level.ERROR:
-     fmt.eprint("[ERROR] ")
-     fmt.eprintln(..args, sep = "")
+    __log("ERROR", ..args)
      os.exit(1)
   case Level.WARN:
     when ODIN_DEBUG {
-      fmt.eprint("[WARN] ")
-      fmt.eprintln(..args, sep = "")
+    __log("WARN", ..args)
     }
   case Level.NONE:
   }
+}
+
+@(private="file")
+__log :: proc(prefix: string, args: ..any) {
+  fmt.eprint("[", prefix, "] ", sep = "")
+  fmt.eprintln(..args, sep = "")
 }
 

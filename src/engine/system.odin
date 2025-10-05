@@ -31,6 +31,7 @@ systems_update :: proc() {
   timer.lock(timer.Type.SYSTEM)
 }
 
+@(private="file")
 systems_can_update :: proc(system: System, now: time.Time) -> bool {
   return time.duration_milliseconds(time.diff(system.last_updated_at, now)) > system.recurrence_in_ms
 }

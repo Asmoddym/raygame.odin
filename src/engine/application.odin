@@ -20,13 +20,14 @@ run :: proc() {
     timer.reset(timer.Type.FRAME)
 
     rl.BeginDrawing()
-    rl.ClearBackground(rl.BLACK)
 
     rl.BeginMode2D(graphics.camera)
+    rl.ClearBackground(rl.BLACK)
     systems_update()
+    timer.lock(timer.Type.FRAME)
+
     rl.EndMode2D()
 
-    timer.lock(timer.Type.FRAME)
     when ODIN_DEBUG {
       render_debug()
     }

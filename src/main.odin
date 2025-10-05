@@ -99,7 +99,6 @@ update_sprites :: proc() {
 
 main :: proc() {
   engine.init()
-  engine.database_init_table(&table_textures)
 
   engine.systems_register(draw_textures)
   engine.systems_register(draw_sprites)
