@@ -25,7 +25,7 @@ IF "%2" == "debug" (
 
   set BINARY_NAME=%BINARY_NAME%-debug.exe
 ) ELSE IF "%2" == "release" (
-  set COMPILER_ARGS=%COMMON_COMPILER_ARGS%
+  set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS%
   set BINARY_NAME=%BINARY_NAME%-release.exe
 ) ELSE (
   echo "Second argument should be [debug|release]"
