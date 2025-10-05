@@ -1,5 +1,12 @@
-# Initialize repo
+# Usage
 
+```bash
+.\vendor\builder.bat run debug
+```
+
+# Developing
+
+Update submodules to fetch `ols`, then install it
 ```bash
 git submodule update --init --remote --recursive
 cd ols
@@ -7,7 +14,6 @@ cd ols
 ```
 
 Add Coc config:
-
 ```json
 "languageserver": {
     "odin": {
@@ -17,4 +23,3 @@ Add Coc config:
     }
 }
 ```
-And optionally custom config from ols
