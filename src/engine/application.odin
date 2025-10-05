@@ -4,23 +4,16 @@ import rl "vendor:raylib"
 import "core:fmt"
 import "core:strings"
 import "utl/timer"
-
-DEBUG::#config(DEBUG, false)
-
-// -----
-// Registry and entity management
-// -----
-
+import "../graphics"
 
 init :: proc() {
   rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.WINDOW_HIGHDPI})
 
+  rl.ChangeDirectory("resources")
   rl.InitWindow(1600, 900, "coucou")
-}
 
-// -----
-// Run
-// -----
+  graphics.init_camera(1600, 900)
+}
 
 run :: proc() {
   for !rl.WindowShouldClose() {
@@ -29,7 +22,9 @@ run :: proc() {
     rl.BeginDrawing()
     rl.ClearBackground(rl.BLACK)
 
+    rl.BeginMode2D(graphics.camera)
     systems_update()
+    rl.EndMode2D()
 
     timer.lock(timer.Type.FRAME)
     when ODIN_DEBUG {

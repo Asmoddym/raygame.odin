@@ -1,20 +1,28 @@
 @echo off
 
-set COMMON_COMPILER_ARGS=-strict-style -vet -vet-cast -vet-semicolon
+set COMMON_COMPILER_ARGS=-strict-style 
+set STRICT_COMPILER_ARGS=-vet -vet-cast -vet-semicolon
 set BINARY_NAME=raygame
 set MAIN_PACKAGE=src
 
 IF "%1" == "run" (
   set ACTION=run
+) ELSE IF "%1" == "run-strict" (
+  set ACTION=run
 ) ELSE IF "%1" == "build" (
   set ACTION=build
 ) ELSE (
-  echo "First argument should be [run|build]"
+  echo "First argument should be [run|run-strict|build]"
   exit /b 1
 )
 
 IF "%2" == "debug" (
-  set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug
+  if "%1" == "run-strict" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug %STRICT_COMPILER_ARGS%
+  ) ELSE (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug
+  )
+
   set BINARY_NAME=%BINARY_NAME%-debug.exe
 ) ELSE IF "%2" == "release" (
   set COMPILER_ARGS=%COMMON_COMPILER_ARGS%
