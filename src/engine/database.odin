@@ -6,27 +6,28 @@ Table :: struct($ComponentType: typeid) {
   items: [dynamic]ComponentType,
 }
 
-database_add_component :: proc(eid: int, table: ^Table($ComponentType)) -> ^ComponentType {
+database_add_component :: proc(entity_id: int, table: ^Table($ComponentType)) -> ^ComponentType {
   append(&table.items, ComponentType { })
 
   item := &table.items[len(table.items) - 1]
-  item.base.eid = eid
+  item.base.entity_id = entity_id
 
   return item
 }
 
 database_get_component :: proc(
-  eid: int,
+  entity_id: int,
   table: ^Table($ComponentType),
   desc: string = "",
   error_level: error.Level = error.Level.ERROR) -> ^ComponentType {
   for &c in table.items {
-    if c.eid == eid {
+    if c.entity_id == entity_id {
       return &c
     }
   }
 
-  error.log(error_level, "No component type \"", desc, "\" for eid ", eid)
+  // TODO: Better name this, as this exits too
+  error.log(error_level, "No component type \"", desc, "\" for entity_id ", entity_id)
 
   return nil
 }

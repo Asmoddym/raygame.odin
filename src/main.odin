@@ -12,8 +12,10 @@ import rl "vendor:raylib"
 
 draw_textures :: proc() {
   for t in table_textures.items {
-    position := engine.database_get_component(t.eid, &table_positions, "position for draw")
-    dimensions := engine.database_get_component(t.eid, &table_dimensions, "dimensions for draw", error_level = error.Level.NONE)
+    // TODO: Maybe remove this error_level and handle it here?
+    // => It could make a lot of code for nothing... I don't know
+    position := engine.database_get_component(t.entity_id, &table_positions, "position for draw")
+    dimensions := engine.database_get_component(t.entity_id, &table_dimensions, "dimensions for draw", error_level = error.Level.NONE)
 
     source := rl.Rectangle {
       0,
@@ -35,8 +37,8 @@ draw_textures :: proc() {
 
 draw_sprites :: proc() {
   for sprite in table_sprites.items {
-    position := engine.database_get_component(sprite.eid, &table_positions)
-    dimensions := engine.database_get_component(sprite.eid, &table_dimensions, error_level = error.Level.WARN)
+    position := engine.database_get_component(sprite.entity_id, &table_positions)
+    dimensions := engine.database_get_component(sprite.entity_id, &table_dimensions, error_level = error.Level.NONE)
     spritesheet := sprite.states[sprite.state]
 
     source := rl.Rectangle {
@@ -59,8 +61,8 @@ draw_sprites :: proc() {
 
 move_controllable :: proc() {
   controllable := table_controllables.items[0]
-  position := engine.database_get_component(controllable.eid, &table_positions)
-  sprite := engine.database_get_component(controllable.eid, &table_sprites)
+  position := engine.database_get_component(controllable.entity_id, &table_positions)
+  sprite := engine.database_get_component(controllable.entity_id, &table_sprites)
 
   sprite.state = int(enums.Direction.NONE)
   if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
@@ -102,8 +104,7 @@ main :: proc() {
 
   engine.systems_register(draw_textures)
   engine.systems_register(draw_sprites)
-
-  engine.systems_register(move_controllable, 10)
+  engine.systems_register(move_controllable, recurrence_in_ms = 10)
   engine.systems_register(update_sprites)
 
   // NPC
@@ -119,14 +120,14 @@ main :: proc() {
   engine.database_add_component(player, &table_controllables)
   player_sprite := engine.database_add_component(player, &table_sprites)
 
-  graphics.sprite_init(player_sprite, 
-    {
-      int(enums.Direction.NONE) = "idle.png",
-      int(enums.Direction.UP) = "up.png",
-      int(enums.Direction.DOWN) = "down.png",
-      int(enums.Direction.LEFT) = "left.png",
-      int(enums.Direction.RIGHT) = "right.png",
-    })
+  // TODO: Find a better name than Sprite... this is not a sprite
+  graphics.sprite_init(player_sprite, {
+    int(enums.Direction.NONE) = "idle.png",
+    int(enums.Direction.UP) = "up.png",
+    int(enums.Direction.DOWN) = "down.png",
+    int(enums.Direction.LEFT) = "left.png",
+    int(enums.Direction.RIGHT) = "right.png",
+  })
 
   player_position := engine.database_add_component(player, &table_positions)
   player_position.x = 300

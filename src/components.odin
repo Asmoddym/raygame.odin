@@ -6,8 +6,7 @@ import "core:time"
 import rl "vendor:raylib"
 
 Component :: struct {
-  id: int,
-  eid: int,
+  entity_id: int,
 }
 
 // Texture
