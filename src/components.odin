@@ -61,3 +61,11 @@ Component_Sprite :: struct {
 
 table_sprites: engine.Table(Component_Sprite)
 
+// Movable
+
+Component_Movable :: struct {
+  using base: Component,
+}
+
+table_movables: engine.Table(Component_Movable)
+

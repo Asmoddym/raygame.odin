@@ -4,6 +4,12 @@ cmd_windows: :terminal .\vendor\builder.bat run debug
 cmd_unix: :terminal ./vendor/builder.sh run debug
 after: i
 
+[check]
+mode: float
+cmd_windows: :terminal .\vendor\builder.bat build-strict debug
+cmd_unix: :terminal ./vendor/builder.sh build-strict debug
+after: i
+
 [run-strict]
 mode: float
 cmd_windows: :terminal .\vendor\builder.bat run-strict debug

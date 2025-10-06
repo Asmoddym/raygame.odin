@@ -106,10 +106,14 @@ main :: proc() {
   engine.systems_register(draw_sprites)
   engine.systems_register(move_controllable, recurrence_in_ms = 10)
   engine.systems_register(update_sprites)
+  engine.systems_register(collision_system)
 
   // NPC
   npc := engine.database_create_entity()
   engine.database_add_component(npc, &table_textures).texture = rl.LoadTexture("wabbit_alpha.png")
+  npc_dimensions := engine.database_add_component(npc, &table_dimensions)
+  npc_dimensions.width = 32
+  npc_dimensions.height = 32
 
   npc_position := engine.database_add_component(npc, &table_positions)
   npc_position.x = 100
@@ -118,6 +122,7 @@ main :: proc() {
   // Player
   player := engine.database_create_entity()
   engine.database_add_component(player, &table_controllables)
+  engine.database_add_component(player, &table_movables)
   player_sprite := engine.database_add_component(player, &table_sprites)
 
   // TODO: Find a better name than Sprite... this is not a sprite

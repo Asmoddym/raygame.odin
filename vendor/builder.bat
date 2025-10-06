@@ -11,6 +11,8 @@ IF "%1" == "run" (
   set ACTION=run
 ) ELSE IF "%1" == "build" (
   set ACTION=build
+) ELSE IF "%1" == "build-strict" (
+  set ACTION=build
 ) ELSE (
   echo "First argument should be [run|run-strict|build]"
   exit /b 1
@@ -19,6 +21,8 @@ IF "%1" == "run" (
 IF "%2" == "debug" (
   if "%1" == "run-strict" (
     set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug %STRICT_COMPILER_ARGS%
+  ) else if "%1" == "build-strict" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS%
   ) ELSE (
     set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug
   )
