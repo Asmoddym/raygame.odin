@@ -37,7 +37,6 @@ database_has_component :: proc(entity_id: int, table: ^Table($ComponentType)) ->
   return false
 }
 
-
 database_create_entity :: proc() -> int {
   @(static) entity_count := 0
 

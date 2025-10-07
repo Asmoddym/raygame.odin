@@ -20,10 +20,10 @@ EdgeData :: struct {
 
 @(private="file")
 compass := #partial [enums.Direction]rl.Vector2 {
-  .UP = rl.Vector2 { 0, 1 }, // up
-  .RIGHT = rl.Vector2 { 1, 0 }, // right
-  .DOWN = rl.Vector2 { 0, -1 }, // down
-  .LEFT = rl.Vector2 { -1, 0 }, // left
+  .UP = rl.Vector2 { 0, 1 },
+  .RIGHT = rl.Vector2 { 1, 0 },
+  .DOWN = rl.Vector2 { 0, -1 },
+  .LEFT = rl.Vector2 { -1, 0 },
 }
 
 collision_system :: proc() {

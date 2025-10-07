@@ -56,4 +56,3 @@ Component_BoundingBox :: struct {
 }
 
 table_bounding_boxs: engine.Table(Component_BoundingBox)
-

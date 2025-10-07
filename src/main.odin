@@ -9,7 +9,7 @@ import "enums"
 
 import rl "vendor:raylib"
 
-draw_textures :: proc() {
+draw_sprites :: proc() {
   for sprite in table_sprites.items {
     box := engine.database_get_component(sprite.entity_id, &table_bounding_boxs).box
     source := rl.Rectangle { 0, 0, box.width, box.height }
@@ -19,7 +19,7 @@ draw_textures :: proc() {
   }
 }
 
-draw_sprites :: proc() {
+draw_animated_sprites :: proc() {
   for sprite in table_animated_sprites.items {
     box := engine.database_get_component(sprite.entity_id, &table_bounding_boxs).box
     spritesheet := sprite.states[sprite.state]
@@ -79,8 +79,8 @@ update_animated_sprites :: proc() {
 main :: proc() {
   engine.init()
 
-  engine.systems_register(draw_textures)
   engine.systems_register(draw_sprites)
+  engine.systems_register(draw_animated_sprites)
   engine.systems_register(move_controllable, recurrence_in_ms = 10)
   engine.systems_register(update_animated_sprites)
   engine.systems_register(collision_system)
