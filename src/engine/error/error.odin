@@ -13,13 +13,15 @@ log :: proc(level: Level, args: ..any) {
   switch level {
   case Level.ERROR:
     __log("ERROR", ..args)
-     os.exit(1)
   case Level.WARN:
-    when ODIN_DEBUG {
     __log("WARN", ..args)
-    }
   case Level.NONE:
   }
+}
+
+raise :: proc(args: ..any) {
+  log(.ERROR, ..args)
+  os.exit(1)
 }
 
 @(private="file")

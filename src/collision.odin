@@ -32,14 +32,12 @@ collision_system :: proc() {
   x_points: [dynamic]EdgeData
   x_active_intervals: [dynamic]int
 
-  for dimensions in table_dimensions.items {
-    entity_id := dimensions.entity_id
-    position := engine.database_get_component(entity_id, &table_positions)
+  for bounding_box in table_bounding_boxs.items {
+    box := bounding_box.box
+    entity_id := bounding_box.entity_id
 
-    rect := rl.Rectangle { f32(position.x), f32(position.y), f32(dimensions.width), f32(dimensions.height) }
-
-    append(&x_points, EdgeData { entity_id, rect.x, 0 })
-    append(&x_points, EdgeData { entity_id, rect.x + rect.width, 1 })
+    append(&x_points, EdgeData { entity_id, box.x, 0 })
+    append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
   }
 
   // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
@@ -63,25 +61,20 @@ collision_system :: proc() {
 
 @(private="file")
 resolve_collision :: proc(entity_id: int, other_entity_id: int) {
-  position := engine.database_get_component(entity_id, &table_positions)
-  other_position := engine.database_get_component(other_entity_id, &table_positions)
-  dimensions := engine.database_get_component(entity_id, &table_dimensions)
-  other_dimensions := engine.database_get_component(other_entity_id, &table_dimensions)
+  box := &engine.database_get_component(entity_id, &table_bounding_boxs).box
+  other_box := &engine.database_get_component(other_entity_id, &table_bounding_boxs).box
 
-  rectangle := rl.Rectangle { f32(position.x), f32(position.y), f32(dimensions.width), f32(dimensions.height) }
-  other_rectangle := rl.Rectangle { f32(other_position.x) , f32(other_position.y) , f32(other_dimensions.width) , f32(other_dimensions.height) }
+  if !rl.CheckCollisionRecs(box^, other_box^) do return
 
-  if !rl.CheckCollisionRecs(rectangle, other_rectangle) do return
+  is_movable := engine.database_has_component(entity_id, &table_movables)
+  other_is_movable := engine.database_has_component(other_entity_id, &table_movables)
 
-  is_movable := engine.database_get_component(entity_id, &table_movables, error_level = .NONE) != nil
-  other_is_movable := engine.database_get_component(other_entity_id, &table_movables, error_level = .NONE) != nil
-
-  rectangle_center := calculate_center(rectangle)
-  other_rectangle_center := calculate_center(other_rectangle)
+  rectangle_center := calculate_center(box^)
+  other_rectangle_center := calculate_center(other_box^)
 
   diff := rl.Vector2 { rectangle_center.x - other_rectangle_center.x, rectangle_center.y - other_rectangle_center.y }
   normalized := normalize(diff)
-  collision_rec := rl.GetCollisionRec(rectangle, other_rectangle)
+  collision_rec := rl.GetCollisionRec(box^, other_box^)
 
   // TODO: I should be able to remove left and/or right as I know there will be a X collision, and it should always be on the left (I think?)
 
@@ -102,29 +95,21 @@ resolve_collision :: proc(entity_id: int, other_entity_id: int) {
     mid_diff := collision_rec.width / 2
 
     // As the algorithm begins with X coord, we know rectangle will always be the entity at the right.
-    if is_movable {
-      position.x += int(mid_diff)
-    }
-    if other_is_movable {
-      other_position.x -= int(mid_diff)
-    }
+    if is_movable do box.x += mid_diff
+    if other_is_movable do other_box.x -= mid_diff
   } else {
     mid_diff := collision_rec.height / 2
 
     // Here, we need to check in which direction the collision occurred
     mid_diff *= best_match == .UP ? 1 : -1
 
-    if is_movable {
-      position.y += int(mid_diff)
-    }
-    if other_is_movable {
-      other_position.y -= int(mid_diff)
-    }
+    if is_movable do box.y += mid_diff
+    if other_is_movable do other_box.y -= mid_diff
   }
 
   if show_bounds {
-    rl.DrawRectangleLinesEx(rectangle, 1, is_movable ? rl.GREEN : rl.BLUE)
-    rl.DrawRectangleLinesEx(other_rectangle, 1, other_is_movable ? rl.YELLOW : rl.BLUE)
+    rl.DrawRectangleLinesEx(box^, 1, is_movable ? rl.GREEN : rl.BLUE)
+    rl.DrawRectangleLinesEx(other_box^, 1, other_is_movable ? rl.YELLOW : rl.BLUE)
     rl.DrawRectangleRec(collision_rec, rl.RED)
   }
 }

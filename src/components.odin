@@ -9,37 +9,15 @@ Component :: struct {
   entity_id: int,
 }
 
-// Texture
+// Sprite
 
-Component_Texture :: struct {
+Component_Sprite :: struct {
   using base: Component,
 
   texture: rl.Texture2D,
 }
 
-table_textures: engine.Table(Component_Texture)
-
-// Position
-
-Component_Position :: struct {
-  using base: Component,
-
-  x: int,
-  y: int,
-}
-
-table_positions: engine.Table(Component_Position)
-
-// Dimensions
-
-Component_Dimensions :: struct {
-  using base: Component,
-
-  width: int,
-  height: int,
-}
-
-table_dimensions: engine.Table(Component_Dimensions)
+table_sprites: engine.Table(Component_Sprite)
 
 // Controllable
 
@@ -49,9 +27,9 @@ Component_Controllable :: struct {
 
 table_controllables: engine.Table(Component_Controllable)
 
-// Sprite
+// AnimatedSprite
 
-Component_Sprite :: struct {
+Component_AnimatedSprite :: struct {
   using base: Component,
 
   states: map[int]graphics.Spritesheet,
@@ -59,7 +37,7 @@ Component_Sprite :: struct {
   last_updated_at: time.Time,
 }
 
-table_sprites: engine.Table(Component_Sprite)
+table_animated_sprites: engine.Table(Component_AnimatedSprite)
 
 // Movable
 
@@ -68,4 +46,14 @@ Component_Movable :: struct {
 }
 
 table_movables: engine.Table(Component_Movable)
+
+// BoundingBox
+
+Component_BoundingBox :: struct {
+  using base: Component,
+
+  box: rl.Rectangle,
+}
+
+table_bounding_boxs: engine.Table(Component_BoundingBox)
 
