@@ -83,8 +83,8 @@ handle_inputs :: proc() {
 pause_system :: proc() {
   ui.draw_x_centered_button(
     "Exit",
-    engine.game_state.screen_width,
-    f32(engine.game_state.screen_height / 2),
+    engine.game_state.resolution.x,
+    f32(engine.game_state.resolution.y / 2),
     font_size = 40,
     on_click = proc() { engine.game_state.closed = true },
   )

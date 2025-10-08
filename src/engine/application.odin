@@ -8,24 +8,36 @@ import "utl/timer"
 GameState :: struct {
   paused: bool,
   closed: bool,
-  screen_width: i32,
-  screen_height: i32,
+  resolution: [2]i32,
 }
 
 game_state: GameState
+
+FULLSCREEN :=false 
 
 init :: proc() {
   rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.WINDOW_HIGHDPI})
 
   rl.ChangeDirectory("resources")
-  rl.InitWindow(0, 0, "coucou")
 
-  game_state = GameState { false, false, rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
-  rl.ToggleBorderlessWindowed()
+  size: [2]i32
+
+  if FULLSCREEN {
+    size = { 0, 0 }
+  } else {
+    size = { 1600, 900 }
+  }
+
+  rl.InitWindow(size.x, size.y, "coucou")
+  game_state = GameState { false, false, { size.x == 0 ? rl.GetMonitorWidth(rl.GetCurrentMonitor()) : size.x, size.y == 0 ? rl.GetMonitorHeight(rl.GetCurrentMonitor()) : size.y } }
+
+  if (size.x == 0 && size.y == 0) {
+    rl.ToggleBorderlessWindowed()
+  }
 
   rl.SetExitKey(.KEY_NULL)
 
-  init_camera(game_state.screen_width, game_state.screen_height)
+  init_camera(game_state.resolution)
 }
 
 run :: proc() {
