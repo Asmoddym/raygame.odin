@@ -2,6 +2,7 @@
 
 package macro
 
+import "core:fmt"
 import "core:time"
 import "engine"
 import "graphics"
@@ -76,13 +77,18 @@ update_animated_sprites :: proc() {
   }
 }
 
+handle_inputs :: proc() {
+}
+
+
 main :: proc() {
   engine.init()
 
   engine.systems_register(draw_sprites)
   engine.systems_register(draw_animated_sprites)
-  engine.systems_register(move_controllable, recurrence_in_ms = 10)
   engine.systems_register(update_animated_sprites)
+  engine.systems_register(handle_inputs)
+  engine.systems_register(move_controllable, recurrence_in_ms = 10)
   engine.systems_register(collision_system)
 
   // NPC
