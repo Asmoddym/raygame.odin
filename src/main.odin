@@ -81,12 +81,19 @@ handle_inputs :: proc() {
 }
 
 pause_system :: proc() {
-  ui.draw_x_centered_button(
-    "Exit",
-    engine.game_state.resolution.x,
-    f32(engine.game_state.resolution.y / 2),
+  @(static) selection:= 0
+
+  if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection = (selection + 1) % 2
+  if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection = selection == 0 ? 1 : selection - 1
+
+  ui.draw_xy_centered_button_list(
+    { "Toggle fullscreen", "Exit" },
     font_size = 40,
-    on_click = proc() { engine.game_state.closed = true },
+    on_click = {
+      proc() { engine.game_state.borderless_window = !engine.game_state.borderless_window },
+      proc() { engine.game_state.closed = true },
+    },
+    selected = selection,
   )
 }
 

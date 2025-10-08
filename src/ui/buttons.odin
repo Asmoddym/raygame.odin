@@ -2,32 +2,54 @@ package ui
 
 import "core:strings"
 import rl "vendor:raylib"
+import "../engine"
 
 @(private="file")
-BUTTON_SPACING: f32 = 20
+BUTTON_SPACING: i32 = 15
 
-draw_x_centered_button :: proc(text: string, width: i32, y: f32, font_size: i32, on_click: proc(), color: rl.Color = rl.WHITE) {
-  ctext := strings.unsafe_string_to_cstring(text)
-  measured_size := rl.MeasureText(ctext, font_size)
-  x := f32(width / 2 - measured_size / 2)
-  draw_button(text, rl.Vector2 { x, y }, font_size, on_click, color)
+@(private="file")
+BUTTON_PADDING: i32 = 15
+
+draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int = -1, color: rl.Color = rl.WHITE) {
+  padding := i32(font_size / 3)
+  text_height_with_padding := font_size + 2 * padding
+
+  // Add each text with padding and spacing
+  block_height := i32(len(texts)) * text_height_with_padding + (i32(len(texts) - 1) * BUTTON_SPACING)
+
+  // The calculation is made from the text, not the box. We have to remove BUTTON_PADDING for the first iteration
+  beginning_y := engine.game_state.resolution.y / 2 - block_height / 2 + i32(BUTTON_PADDING)
+
+  for idx in 0..<len(texts) {
+    text := texts[idx]
+    measured_text := rl.MeasureText(strings.unsafe_string_to_cstring(text), font_size)
+    position := rl.Vector2 {
+      f32(engine.game_state.resolution.x / 2 - measured_text / 2),
+      f32(beginning_y),
+    }
+
+    draw_button(text, position, font_size, on_click[idx], selected == idx, color)
+    beginning_y += text_height_with_padding + BUTTON_SPACING
+  }
 }
 
-draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), color: rl.Color = rl.WHITE) {
+draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
+  padding := i32(font_size / 3)
+
   color := color
   ctext := strings.unsafe_string_to_cstring(text)
-  measured_size := rl.MeasureText(ctext, font_size)
+  measured_text := rl.MeasureText(ctext, font_size)
 
-  width: f32 = f32(measured_size + 2 * i32(BUTTON_SPACING))
-  height: f32 = f32(font_size + 2 * i32(BUTTON_SPACING))
-  hitbox := rl.Rectangle { position.x - BUTTON_SPACING, position.y - BUTTON_SPACING, width, height }
+  width: f32 = f32(measured_text + 2 * padding)
+  height: f32 = f32(font_size + 2 * padding)
+  box := rl.Rectangle { f32(position.x - f32(padding)), f32(position.y - f32(padding)), width, height }
 
-  if rl.CheckCollisionPointRec(rl.GetMousePosition(), hitbox) {
+  if selected || rl.CheckCollisionPointRec(rl.GetMousePosition(), box) {
     color.a /= 3
 
-    if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do on_click()
+    if rl.IsKeyPressed(.ENTER) || rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do on_click()
   }
 
   rl.DrawText(ctext, i32(position.x), i32(position.y), font_size, color)
-  rl.DrawRectangleLinesEx(hitbox, 2, color)
+  rl.DrawRectangleLinesEx(box, 2, color)
 }
