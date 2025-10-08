@@ -4,7 +4,6 @@ import rl "vendor:raylib"
 import "core:fmt"
 import "core:strings"
 import "utl/timer"
-import "../graphics"
 
 GameState :: struct {
   paused: bool,
@@ -26,44 +25,28 @@ init :: proc() {
 
   rl.SetExitKey(.KEY_NULL)
 
-  graphics.init_camera(game_state.screen_width, game_state.screen_height)
+  init_camera(game_state.screen_width, game_state.screen_height)
 }
 
 run :: proc() {
   for !rl.WindowShouldClose() && !game_state.closed {
+    paused := game_state.paused
     timer.reset(timer.Type.FRAME)
     rl.BeginDrawing()
 
-    if game_state.paused {
-      run_paused()
-    } else {
-      run_frame()
+    if !paused do rl.BeginMode2D(camera)
+
+    rl.ClearBackground(rl.BLACK)
+    systems_update()
+    timer.lock(timer.Type.FRAME)
+
+    if !paused do rl.EndMode2D()
+
+    when ODIN_DEBUG {
+      render_debug()
     }
 
     rl.EndDrawing()
-  }
-}
-
-run_frame :: proc() {
-  rl.BeginMode2D(graphics.camera)
-  rl.ClearBackground(rl.BLACK)
-  systems_update()
-  timer.lock(timer.Type.FRAME)
-
-  rl.EndMode2D()
-
-  when ODIN_DEBUG {
-    render_debug()
-  }
-}
-
-run_paused :: proc() {
-  rl.ClearBackground(rl.BLACK)
-  systems_on_pause()
-  timer.lock(timer.Type.FRAME)
-
-  when ODIN_DEBUG {
-    render_debug()
   }
 }
 

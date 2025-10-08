@@ -2,11 +2,11 @@
 
 package macro
 
-import "core:fmt"
 import "core:time"
 import "engine"
 import "graphics"
 import "enums"
+import "ui"
 
 import rl "vendor:raylib"
 
@@ -63,7 +63,7 @@ move_controllable :: proc() {
     animated_sprite.state = int(enums.Direction.DOWN)
   }
 
-  graphics.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
+  engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }
 
 update_animated_sprites :: proc() {
@@ -80,6 +80,15 @@ update_animated_sprites :: proc() {
 handle_inputs :: proc() {
 }
 
+pause_system :: proc() {
+  ui.draw_x_centered_button(
+    "Exit",
+    engine.game_state.screen_width,
+    f32(engine.game_state.screen_height / 2),
+    font_size = 40,
+    on_click = proc() { engine.game_state.closed = true },
+  )
+}
 
 main :: proc() {
   engine.init()
@@ -90,6 +99,8 @@ main :: proc() {
   engine.systems_register(handle_inputs)
   engine.systems_register(move_controllable, recurrence_in_ms = 10)
   engine.systems_register(collision_system)
+
+  engine.systems_register_pause_system(pause_system)
 
   // NPC
   npc := engine.database_create_entity()
