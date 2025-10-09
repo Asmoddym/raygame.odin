@@ -35,6 +35,7 @@ draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: 
 
 draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
   padding := i32(font_size / 3)
+  thickness: f32 = 2
 
   color := color
   ctext := strings.unsafe_string_to_cstring(text)
@@ -46,12 +47,14 @@ draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click
 
   //|| rl.CheckCollisionPointRec(rl.GetMousePosition(), box) {
   if selected {
-    color.a /= 3
+    thickness = 6
 
     // if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do on_click()
     if rl.IsKeyPressed(.ENTER) do on_click()
+  } else {
+    color.a /= 2
   }
 
   rl.DrawText(ctext, i32(position.x), i32(position.y), font_size, color)
-  rl.DrawRectangleLinesEx(box, 2, color)
+  rl.DrawRectangleLinesEx(box, thickness, color)
 }

@@ -100,14 +100,14 @@ pause_system :: proc() {
 main :: proc() {
   engine.init()
 
-  engine.systems_register(draw_sprites)
-  engine.systems_register(draw_animated_sprites)
-  engine.systems_register(update_animated_sprites)
-  engine.systems_register(handle_inputs)
-  engine.systems_register(move_controllable, recurrence_in_ms = 10)
-  engine.systems_register(collision_system)
+  engine.systems_register(engine.SystemType.RUNTIME, draw_sprites)
+  engine.systems_register(engine.SystemType.RUNTIME, draw_animated_sprites)
+  engine.systems_register(engine.SystemType.RUNTIME, update_animated_sprites)
+  engine.systems_register(engine.SystemType.RUNTIME, handle_inputs)
+  engine.systems_register(engine.SystemType.RUNTIME, move_controllable, recurrence_in_ms = 10)
+  engine.systems_register(engine.SystemType.RUNTIME, collision_system)
 
-  engine.systems_register_pause_system(pause_system)
+  engine.systems_register(engine.SystemType.PAUSE, pause_system)
 
   // NPC
   npc := engine.database_create_entity()

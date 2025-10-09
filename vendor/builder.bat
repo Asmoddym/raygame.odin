@@ -13,27 +13,59 @@ IF "%1" == "run" (
   set ACTION=build
 ) ELSE IF "%1" == "build-strict" (
   set ACTION=build
+) ELSE IF "%1" == "check" (
+  set ACTION=check
 ) ELSE (
-  echo "First argument should be [run|run-strict|build]"
+  echo "First argument should be [run|run-strict|build|build-strict|check]"
   exit /b 1
 )
 
-IF "%2" == "debug" (
-  if "%1" == "run-strict" (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug %STRICT_COMPILER_ARGS%
-  ) else if "%1" == "build-strict" (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS%
-  ) ELSE (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug
+if "%1" == "run" (
+  if "%2" == "debug" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
+  ) else if "%2" == "release" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+  ) else (
+    echo "Second argument should be [debug|release]"
+    exit /b 1
   )
-
-  set BINARY_NAME=%BINARY_NAME%-debug.exe
-) ELSE IF "%2" == "release" (
-  set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS%
-  set BINARY_NAME=%BINARY_NAME%-release.exe
-) ELSE (
-  echo "Second argument should be [debug|release]"
-  exit /b 1
 )
 
-odin %ACTION% %MAIN_PACKAGE% %COMPILER_ARGS% -out:%BINARY_NAME%
+if "%1" == "run-strict" (
+  if "%2" == "debug" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
+  ) else if "%2" == "release" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+  ) else (
+    echo "Second argument should be [debug|release]"
+    exit /b 1
+  )
+)
+
+if "%1" == "build" (
+  if "%2" == "debug" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
+  ) else if "%2" == "release" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+  ) else (
+    echo "Second argument should be [debug|release]"
+    exit /b 1
+  )
+)
+
+if "%1" == "build-strict" (
+  if "%2" == "debug" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
+  ) else if "%2" == "release" (
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+  ) else (
+    echo "Second argument should be [debug|release]"
+    exit /b 1
+  )
+)
+
+if "%1" == "check" (
+  set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS%
+)
+
+odin %ACTION% %MAIN_PACKAGE% %COMPILER_ARGS%

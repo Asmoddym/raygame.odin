@@ -25,7 +25,7 @@ init_window :: proc(resolution: [2]i32, borderless_window: bool) {
   game_state.borderless_window = borderless_window
   if borderless_window do rl.ToggleBorderlessWindowed()
 
-    rl.SetExitKey(.KEY_NULL)
+  rl.SetExitKey(.KEY_NULL)
 }
 
 init :: proc() {
@@ -38,6 +38,7 @@ init :: proc() {
 
   init_window({ 1600, 900 }, false)
   init_camera(game_state.resolution)
+  systems_register(.INTERNAL, systems_internal_pause_toggle)
 }
 
 run :: proc() {
@@ -46,28 +47,38 @@ run :: proc() {
   for !rl.WindowShouldClose() && !game_state.closed {
     timer.reset(timer.Type.FRAME)
     process_game_state_changes(previous_state)
-
     previous_state = game_state
-    paused := game_state.paused
 
     rl.BeginDrawing()
 
-    if !paused do rl.BeginMode2D(camera)
-
-    rl.ClearBackground(rl.BLACK)
-
-    systems_update()
-
-    timer.lock(timer.Type.FRAME)
-
-    if !paused do rl.EndMode2D()
-
-    when ODIN_DEBUG {
-      render_debug()
+    if game_state.paused {
+      process_paused_frame()
+    } else {
+      process_runtime_frame()
     }
+
+    when ODIN_DEBUG do render_debug()
 
     rl.EndDrawing()
   }
+}
+
+process_paused_frame :: proc() {
+  rl.ClearBackground(rl.BLACK)
+
+  systems_update()
+
+  timer.lock(timer.Type.FRAME)
+}
+
+process_runtime_frame :: proc() {
+  rl.BeginMode2D(camera)
+  rl.ClearBackground(rl.BLACK)
+
+  systems_update()
+
+  timer.lock(timer.Type.FRAME)
+  rl.EndMode2D()
 }
 
 render_debug :: proc() {

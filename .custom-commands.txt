@@ -6,8 +6,8 @@ after: i
 
 [check]
 mode: float
-cmd_windows: :terminal .\vendor\builder.bat build-strict debug
-cmd_unix: :terminal ./vendor/builder.sh build-strict debug
+cmd_windows: :terminal .\vendor\builder.bat check debug
+cmd_unix: :terminal ./vendor/builder.sh check debug
 after: i
 
 [run-strict]
