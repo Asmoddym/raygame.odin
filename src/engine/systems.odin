@@ -10,18 +10,21 @@ System :: struct {
   last_updated_at: time.Time,
 }
 
-@(private="file")
-systems: [dynamic]System
+SystemRegistry :: struct {
+  runtime: [dynamic]System,
+  pause: [dynamic]System,
+  internal: [dynamic]System,
+}
 
 @(private="file")
-pause_systems: [dynamic]System
+systems: SystemRegistry
 
 systems_register :: proc(callback: proc(), recurrence_in_ms: f64 = -1) {
-  append(&systems, System { recurrence_in_ms, callback, time.now() })
+  append(&systems.runtime, System { recurrence_in_ms, callback, time.now() })
 }
 
 systems_register_pause_system :: proc(callback: proc()) {
-  append(&pause_systems, System { -1, callback, time.now() })
+  append(&systems.pause, System { -1, callback, time.now() })
 }
 
 systems_update :: proc() {
@@ -33,15 +36,15 @@ systems_update :: proc() {
   } else {
     run_runtime_systems(now)
   }
-
-  if rl.IsKeyPressed(.ESCAPE) do game_state.paused = !game_state.paused
+  
+  run_internal_systems()
 
   timer.lock(timer.Type.SYSTEM)
 }
 
 @(private="file")
 run_pause_systems :: proc(now: time.Time) {
-  for &system in pause_systems {
+  for &system in systems.pause {
     system.callback()
     system.last_updated_at = now
   }
@@ -49,8 +52,8 @@ run_pause_systems :: proc(now: time.Time) {
 
 @(private="file")
 run_runtime_systems :: proc(now: time.Time) {
-  for &system in systems {
-    if (game_state.paused || can_update(system, now)) {
+  for &system in systems.runtime {
+    if can_update(system, now) {
       system.callback()
       system.last_updated_at = now
     }
@@ -60,5 +63,10 @@ run_runtime_systems :: proc(now: time.Time) {
 @(private="file")
 can_update :: proc(system: System, now: time.Time) -> bool {
   return time.duration_milliseconds(time.diff(system.last_updated_at, now)) > system.recurrence_in_ms
+}
+
+@(private="file")
+run_internal_systems :: proc() {
+  if rl.IsKeyPressed(.ESCAPE) do game_state.paused = !game_state.paused
 }
 

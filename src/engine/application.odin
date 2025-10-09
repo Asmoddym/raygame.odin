@@ -44,12 +44,12 @@ run :: proc() {
   previous_state: GameState = game_state
 
   for !rl.WindowShouldClose() && !game_state.closed {
+    timer.reset(timer.Type.FRAME)
     process_game_state_changes(previous_state)
 
     previous_state = game_state
     paused := game_state.paused
 
-    timer.reset(timer.Type.FRAME)
     rl.BeginDrawing()
 
     if !paused do rl.BeginMode2D(camera)

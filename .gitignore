@@ -2,3 +2,7 @@ ols/
 *.exe
 
 src.bin*/
+
+raygame
+raygame-debug
+raygame*.dSYM*/
