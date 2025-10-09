@@ -6,7 +6,6 @@ BINARY_NAME=raygame
 MAIN_PACKAGE=src
 
 ACTION=""
-COMPILER_ARGS=""
 
 if [ "$1" == "check" ]; then
   ACTION=check
