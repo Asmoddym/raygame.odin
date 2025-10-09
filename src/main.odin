@@ -38,9 +38,8 @@ draw_animated_sprites :: proc() {
 }
 
 move_controllable :: proc() {
-  controllable := table_controllables.items[0]
-  animated_sprite := engine.database_get_component(controllable.entity_id, &table_animated_sprites)
-  box := &engine.database_get_component(controllable.entity_id, &table_bounding_boxs).box
+  animated_sprite := engine.database_get_component(player, &table_animated_sprites)
+  box := &engine.database_get_component(player, &table_bounding_boxs).box
 
   animated_sprite.state = int(enums.Direction.NONE)
   if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
@@ -62,6 +61,10 @@ move_controllable :: proc() {
     box.y += 3
     animated_sprite.state = int(enums.Direction.DOWN)
   }
+}
+
+update_camera_position :: proc() {
+  box := engine.database_get_component(player, &table_bounding_boxs).box
 
   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }
@@ -78,6 +81,42 @@ update_animated_sprites :: proc() {
 }
 
 handle_inputs :: proc() {
+  if rl.IsKeyPressed(rl.KeyboardKey.A) {
+    text := engine.database_add_component(engine.database_create_entity(), &table_texts)
+    text.text = "coucou c'est moi !"
+    text.duration = 2000
+    text.size = 20
+    text.instanciated_at = time.now()
+    text.follows_entity_id = player
+
+    // box := engine.database_get_component(text.follows_entity_id, &table_bounding_boxs).box
+    // text.position = rl.Vector2 { box.x, box.y }
+  }
+}
+
+draw_texts :: proc() {
+  for &item in table_texts.items {
+    ui.draw_text_box(item.text, item.size, item.position)
+  }
+}
+
+update_texts :: proc() {
+  to_delete: [dynamic]int
+
+  for &item in table_texts.items {
+    if item.follows_entity_id != -1 {
+      box := engine.database_get_component(item.follows_entity_id, &table_bounding_boxs).box
+      item.position = rl.Vector2 { box.x + box.width, box.y }
+    }
+
+    if item.duration != -1 && time.duration_milliseconds(time.diff(item.instanciated_at, time.now())) > item.duration {
+      append(&to_delete, item.entity_id)
+    }
+  }
+
+  for id in to_delete {
+    engine.database_destroy_component(id, &table_texts)
+  }
 }
 
 pause_system :: proc() {
@@ -97,15 +136,21 @@ pause_system :: proc() {
   )
 }
 
+player: int
+
 main :: proc() {
   engine.init()
 
-  engine.systems_register(engine.SystemType.RUNTIME, draw_sprites)
-  engine.systems_register(engine.SystemType.RUNTIME, draw_animated_sprites)
+  engine.systems_register(engine.SystemType.RUNTIME, update_camera_position)
   engine.systems_register(engine.SystemType.RUNTIME, update_animated_sprites)
   engine.systems_register(engine.SystemType.RUNTIME, handle_inputs)
   engine.systems_register(engine.SystemType.RUNTIME, move_controllable, recurrence_in_ms = 10)
+  engine.systems_register(engine.SystemType.RUNTIME, update_texts)
   engine.systems_register(engine.SystemType.RUNTIME, collision_system)
+  engine.systems_register(engine.SystemType.RUNTIME, draw_sprites) 
+  engine.systems_register(engine.SystemType.RUNTIME, draw_animated_sprites) 
+  engine.systems_register(engine.SystemType.RUNTIME, draw_texts) 
+
 
   engine.systems_register(engine.SystemType.PAUSE, pause_system)
 
@@ -114,9 +159,15 @@ main :: proc() {
   sprite := engine.database_add_component(npc, &table_sprites)
   sprite.texture = rl.LoadTexture("wabbit_alpha.png")
   engine.database_add_component(npc, &table_bounding_boxs).box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
+  text := engine.database_add_component(npc, &table_texts)
+  text.text = "J'ai faim :("
+  text.size = 20
+  text.duration = -1
+  text.follows_entity_id = -1
+  text.position = rl.Vector2 { f32(100 + sprite.texture.width) , 100 }
 
   // Player
-  player := engine.database_create_entity()
+  player = engine.database_create_entity()
   engine.database_add_component(player, &table_controllables)
   engine.database_add_component(player, &table_movables)
   engine.database_add_component(player, &table_bounding_boxs).box = rl.Rectangle { 300, 300, 64.0, 64.0 }

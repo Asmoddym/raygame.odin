@@ -7,9 +7,6 @@ import "../engine"
 @(private="file")
 BUTTON_SPACING: i32 = 15
 
-@(private="file")
-BUTTON_PADDING: i32 = 15
-
 draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int = -1, color: rl.Color = rl.WHITE) {
   padding := i32(font_size / 3)
   text_height_with_padding := font_size + 2 * padding
@@ -17,8 +14,8 @@ draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: 
   // Add each text with padding and spacing
   block_height := i32(len(texts)) * text_height_with_padding + (i32(len(texts) - 1) * BUTTON_SPACING)
 
-  // The calculation is made from the text, not the box. We have to remove BUTTON_PADDING for the first iteration
-  beginning_y := engine.game_state.resolution.y / 2 - block_height / 2 + i32(BUTTON_PADDING)
+  // The calculation is made from the text, not the box. We have to remove the padding for the first iteration
+  beginning_y := engine.game_state.resolution.y / 2 - block_height / 2 + i32(padding)
 
   for idx in 0..<len(texts) {
     text := texts[idx]

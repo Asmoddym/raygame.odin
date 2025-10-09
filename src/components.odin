@@ -56,3 +56,18 @@ Component_BoundingBox :: struct {
 }
 
 table_bounding_boxs: engine.Table(Component_BoundingBox)
+
+// Text
+
+Component_Text :: struct {
+  using base: Component,
+
+  text: string,
+  size: i32,
+  duration: f64,
+  instanciated_at: time.Time,
+  position: rl.Vector2,
+  follows_entity_id: int,
+}
+
+table_texts: engine.Table(Component_Text)

@@ -15,6 +15,15 @@ database_add_component :: proc(entity_id: int, table: ^Table($ComponentType)) ->
   return item
 }
 
+database_destroy_component :: proc(entity_id: int, table: ^Table($ComponentType)) {
+  for i in 0..<len(table.items) {
+    if table.items[i].entity_id == entity_id {
+      unordered_remove(&(table^.items), i)
+      return
+    }
+  }
+}
+
 database_get_component :: proc(entity_id: int, table: ^Table($ComponentType), desc: string = "") -> ^ComponentType {
   for &c in table.items {
     if c.entity_id == entity_id {

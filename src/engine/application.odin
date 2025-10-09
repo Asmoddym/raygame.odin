@@ -109,6 +109,6 @@ process_game_state_changes :: proc(previous_state: GameState) {
       rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
     }
 
-    init_camera(game_state.resolution)
+    init_camera_offset(game_state.resolution)
   }
 }
