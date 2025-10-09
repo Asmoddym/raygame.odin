@@ -3,6 +3,7 @@ ols/
 
 src.bin*/
 
+ols.json
 raygame
 raygame-debug
 raygame*.dSYM*/
