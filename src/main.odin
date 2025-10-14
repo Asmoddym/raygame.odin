@@ -160,7 +160,7 @@ main :: proc() {
   sprite.texture = rl.LoadTexture("wabbit_alpha.png")
   engine.database_add_component(npc, &table_bounding_boxs).box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
   text := engine.database_add_component(npc, &table_texts)
-  text.text = "J'ai faim :("
+  text.text = "J'ai terriblement faim a l'aide :("
   text.size = 20
   text.duration = -1
   text.follows_entity_id = -1
