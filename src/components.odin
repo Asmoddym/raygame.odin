@@ -66,8 +66,7 @@ Component_Text :: struct {
   size: i32,
   duration: f64,
   instanciated_at: time.Time,
-  position: rl.Vector2,
-  follows_entity_id: int,
+  attached_to_box: ^rl.Rectangle,
 }
 
 table_texts: engine.Table(Component_Text)

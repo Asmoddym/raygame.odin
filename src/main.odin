@@ -87,16 +87,19 @@ handle_inputs :: proc() {
     text.duration = 2000
     text.size = 20
     text.instanciated_at = time.now()
-    text.follows_entity_id = player
-
-    // box := engine.database_get_component(text.follows_entity_id, &table_bounding_boxs).box
-    // text.position = rl.Vector2 { box.x, box.y }
+    text.attached_to_box = &(engine.database_get_component(player, &table_bounding_boxs).box)
   }
 }
 
 draw_texts :: proc() {
   for &item in table_texts.items {
-    ui.draw_text_box(item.text, item.size, item.position)
+    box := item.attached_to_box
+
+    if box != nil {
+      position := rl.Vector2 { box.x + box.width, box.y }
+
+      ui.draw_text_box(item.text, item.size, position)
+    }
   }
 }
 
@@ -104,11 +107,6 @@ update_texts :: proc() {
   to_delete: [dynamic]int
 
   for &item in table_texts.items {
-    if item.follows_entity_id != -1 {
-      box := engine.database_get_component(item.follows_entity_id, &table_bounding_boxs).box
-      item.position = rl.Vector2 { box.x + box.width, box.y }
-    }
-
     if item.duration != -1 && time.duration_milliseconds(time.diff(item.instanciated_at, time.now())) > item.duration {
       append(&to_delete, item.entity_id)
     }
@@ -163,8 +161,7 @@ main :: proc() {
   text.text = "J'ai terriblement faim a l'aide :("
   text.size = 20
   text.duration = -1
-  text.follows_entity_id = -1
-  text.position = rl.Vector2 { f32(100 + sprite.texture.width) , 100 }
+  text.attached_to_box = &engine.database_get_component(npc, &table_bounding_boxs).box
 
   // Player
   player = engine.database_create_entity()
