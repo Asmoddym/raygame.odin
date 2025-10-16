@@ -148,8 +148,6 @@ main :: proc() {
   engine.systems_register(engine.SystemType.RUNTIME, draw_sprites) 
   engine.systems_register(engine.SystemType.RUNTIME, draw_animated_sprites) 
   engine.systems_register(engine.SystemType.RUNTIME, draw_texts) 
-
-
   engine.systems_register(engine.SystemType.PAUSE, pause_system)
 
   // NPC
