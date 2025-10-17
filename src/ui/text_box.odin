@@ -47,6 +47,9 @@ draw_text_box:: proc(text: string, font_size: i32, position: rl.Vector2, color: 
 
   i32_position: [2]i32 = { i32(position.x), i32(position.y) - total_box_height }
 
+  rl.DrawRectangle(i32_position.x, i32_position.y, max_width + TEXT_PADDING * 2, total_box_height, rl.BLACK)
+  rl.DrawRectangleLines(i32_position.x, i32_position.y, max_width + TEXT_PADDING * 2, total_box_height, color)
+
   for i: int = 0; i < len(words); i += 1 {
     strings.write_string(&builder, words[i])
     cword := strings.to_cstring(&builder)
@@ -56,6 +59,4 @@ draw_text_box:: proc(text: string, font_size: i32, position: rl.Vector2, color: 
 
     strings.builder_reset(&builder)
   }
-
-  rl.DrawRectangleLines(i32_position.x, i32_position.y, max_width + TEXT_PADDING * 2, total_box_height, color)
 }
