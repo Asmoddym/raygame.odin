@@ -23,7 +23,7 @@ init_window :: proc(resolution: [2]i32, borderless_window: bool) {
   }
 
   game_state.borderless_window = borderless_window
-  if borderless_window do rl.ToggleBorderlessWindowed()
+  if borderless_window do rl.ToggleFullscreen()
 
   rl.SetExitKey(.KEY_NULL)
 }
@@ -99,7 +99,7 @@ render_debug :: proc() {
 
 process_game_state_changes :: proc(previous_state: GameState) {
   if game_state.borderless_window != previous_state.borderless_window {
-    rl.ToggleBorderlessWindowed()
+    rl.ToggleFullscreen()
 
     if game_state.borderless_window {
       game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
