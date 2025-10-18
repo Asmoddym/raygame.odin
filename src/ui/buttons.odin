@@ -42,11 +42,9 @@ draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click
   height: f32 = f32(font_size + 2 * padding)
   box := rl.Rectangle { f32(position.x - f32(padding)), f32(position.y - f32(padding)), width, height }
 
-  //|| rl.CheckCollisionPointRec(rl.GetMousePosition(), box) {
   if selected {
     thickness = 6
 
-    // if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do on_click()
     if rl.IsKeyPressed(.ENTER) do on_click()
   } else {
     color.a /= 2
