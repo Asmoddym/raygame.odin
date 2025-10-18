@@ -2,6 +2,7 @@
 
 package macro
 
+import "core:fmt"
 import "core:time"
 import "engine"
 import "graphics"
@@ -83,11 +84,14 @@ update_animated_sprites :: proc() {
 handle_inputs :: proc() {
   if rl.IsKeyPressed(rl.KeyboardKey.A) {
     text := engine.database_add_component(engine.database_create_entity(), &table_texts)
-    text.text = "coucou c'est moi !"
-    text.duration = 2000
+    text.text = "coucou c'est moi et je suis un texte animé oulala c'est rigolo !"
+    text.duration = 10000
     text.size = 20
     text.instanciated_at = time.now()
     text.attached_to_box = &(engine.database_get_component(player, &table_bounding_boxs).box)
+
+    text.animated = true
+    text.ticks = 0
   }
 }
 
@@ -98,7 +102,11 @@ draw_texts :: proc() {
     if box != nil {
       position := rl.Vector2 { box.x + box.width, box.y }
 
-      ui.draw_text_box(item.text, item.size, position)
+      if item.animated {
+        ui.draw_animated_text_box(item.text, item.size, position, item.ticks)
+      } else {
+        ui.draw_text_box(item.text, item.size, position)
+      }
     }
   }
 }
@@ -107,7 +115,14 @@ update_texts :: proc() {
   to_delete: [dynamic]int
 
   for &item in table_texts.items {
-    if item.duration != -1 && time.duration_milliseconds(time.diff(item.instanciated_at, time.now())) > item.duration {
+    time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
+
+    if item.animated && item.ticks != len(item.text) {
+      // 20ms for each letter
+      item.ticks = int(time_diff / 20)
+    }
+
+    if item.duration != -1 && time_diff > item.duration {
       append(&to_delete, item.entity_id)
     }
   }

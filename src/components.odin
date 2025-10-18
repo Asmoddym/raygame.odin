@@ -67,6 +67,9 @@ Component_Text :: struct {
   duration: f64,
   instanciated_at: time.Time,
   attached_to_box: ^rl.Rectangle,
+
+  animated: bool,
+  ticks: int,
 }
 
 table_texts: engine.Table(Component_Text)
