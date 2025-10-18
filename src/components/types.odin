@@ -1,7 +1,7 @@
-package macro
+package components
 
-import "engine"
-import "graphics"
+import "../engine"
+import "../graphics"
 import "core:time"
 import rl "vendor:raylib"
 
@@ -55,11 +55,11 @@ Component_BoundingBox :: struct {
   box: rl.Rectangle,
 }
 
-table_bounding_boxs: engine.Table(Component_BoundingBox)
+table_bounding_boxes: engine.Table(Component_BoundingBox)
 
 // Text
 
-Component_Text :: struct {
+Component_TextBox :: struct {
   using base: Component,
 
   text: string,
@@ -72,4 +72,4 @@ Component_Text :: struct {
   ticks: int,
 }
 
-table_texts: engine.Table(Component_Text)
+table_text_boxes: engine.Table(Component_TextBox)

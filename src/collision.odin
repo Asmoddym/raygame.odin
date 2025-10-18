@@ -7,6 +7,7 @@ import "core:slice"
 import "engine"
 import "core:math"
 import "enums"
+import "components"
 
 @(private="file")
 show_bounds := false
@@ -32,7 +33,7 @@ collision_system :: proc() {
   x_points: [dynamic]EdgeData
   x_active_intervals: [dynamic]int
 
-  for bounding_box in table_bounding_boxs.items {
+  for bounding_box in components.table_bounding_boxes.items {
     box := bounding_box.box
     entity_id := bounding_box.entity_id
 
@@ -61,13 +62,13 @@ collision_system :: proc() {
 
 @(private="file")
 resolve_collision :: proc(entity_id: int, other_entity_id: int) {
-  box := &engine.database_get_component(entity_id, &table_bounding_boxs).box
-  other_box := &engine.database_get_component(other_entity_id, &table_bounding_boxs).box
+  box := &engine.database_get_component(entity_id, &components.table_bounding_boxes).box
+  other_box := &engine.database_get_component(other_entity_id, &components.table_bounding_boxes).box
 
   if !rl.CheckCollisionRecs(box^, other_box^) do return
 
-  is_movable := engine.database_has_component(entity_id, &table_movables)
-  other_is_movable := engine.database_has_component(other_entity_id, &table_movables)
+  is_movable := engine.database_has_component(entity_id, &components.table_movables)
+  other_is_movable := engine.database_has_component(other_entity_id, &components.table_movables)
 
   rectangle_center := calculate_center(box^)
   other_rectangle_center := calculate_center(other_box^)

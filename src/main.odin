@@ -2,18 +2,19 @@
 
 package macro
 
-import "core:fmt"
 import "core:time"
 import "engine"
 import "graphics"
 import "enums"
 import "ui"
 
+import "components"
+
 import rl "vendor:raylib"
 
 draw_sprites :: proc() {
-  for sprite in table_sprites.items {
-    box := engine.database_get_component(sprite.entity_id, &table_bounding_boxs).box
+  for sprite in components.table_sprites.items {
+    box := engine.database_get_component(sprite.entity_id, &components.table_bounding_boxes).box
     source := rl.Rectangle { 0, 0, box.width, box.height }
     dest := box
 
@@ -22,8 +23,8 @@ draw_sprites :: proc() {
 }
 
 draw_animated_sprites :: proc() {
-  for sprite in table_animated_sprites.items {
-    box := engine.database_get_component(sprite.entity_id, &table_bounding_boxs).box
+  for sprite in components.table_animated_sprites.items {
+    box := engine.database_get_component(sprite.entity_id, &components.table_bounding_boxes).box
     spritesheet := sprite.states[sprite.state]
 
     source := rl.Rectangle {
@@ -39,8 +40,8 @@ draw_animated_sprites :: proc() {
 }
 
 move_controllable :: proc() {
-  animated_sprite := engine.database_get_component(player, &table_animated_sprites)
-  box := &engine.database_get_component(player, &table_bounding_boxs).box
+  animated_sprite := engine.database_get_component(player, &components.table_animated_sprites)
+  box := &engine.database_get_component(player, &components.table_bounding_boxes).box
 
   animated_sprite.state = int(enums.Direction.NONE)
   if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
@@ -65,13 +66,13 @@ move_controllable :: proc() {
 }
 
 update_camera_position :: proc() {
-  box := engine.database_get_component(player, &table_bounding_boxs).box
+  box := engine.database_get_component(player, &components.table_bounding_boxes).box
 
   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }
 
 update_animated_sprites :: proc() {
-  for &item in table_animated_sprites.items {
+  for &item in components.table_animated_sprites.items {
     current_state := &item.states[item.state]
 
     if time.duration_milliseconds(time.diff(item.last_updated_at, time.now())) > f64(1000 / current_state.tiles) {
@@ -83,20 +84,19 @@ update_animated_sprites :: proc() {
 
 handle_inputs :: proc() {
   if rl.IsKeyPressed(rl.KeyboardKey.A) {
-    text := engine.database_add_component(engine.database_create_entity(), &table_texts)
-    text.text = "coucou c'est moi et je suis un texte animé oulala c'est rigolo !"
-    text.duration = 10000
-    text.size = 20
-    text.instanciated_at = time.now()
-    text.attached_to_box = &(engine.database_get_component(player, &table_bounding_boxs).box)
+    text := engine.database_add_component(player, &components.table_text_boxes)
 
-    text.animated = true
-    text.ticks = 0
+    components.init_animated_text_box(text,
+      "coucou c'est moi et je suis un texte animé oulala c'est rigolo !",
+      font_size = 20,
+      attached_to_entity_id = player,
+      duration = 10000,
+    )
   }
 }
 
 draw_texts :: proc() {
-  for &item in table_texts.items {
+  for &item in components.table_text_boxes.items {
     box := item.attached_to_box
 
     if box != nil {
@@ -114,7 +114,7 @@ draw_texts :: proc() {
 update_texts :: proc() {
   to_delete: [dynamic]int
 
-  for &item in table_texts.items {
+  for &item in components.table_text_boxes.items {
     time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
 
     if item.animated && item.ticks != len(item.text) {
@@ -128,7 +128,7 @@ update_texts :: proc() {
   }
 
   for id in to_delete {
-    engine.database_destroy_component(id, &table_texts)
+    engine.database_destroy_component(id, &components.table_text_boxes)
   }
 }
 
@@ -167,21 +167,22 @@ main :: proc() {
 
   // NPC
   npc := engine.database_create_entity()
-  sprite := engine.database_add_component(npc, &table_sprites)
+  sprite := engine.database_add_component(npc, &components.table_sprites)
   sprite.texture = rl.LoadTexture("wabbit_alpha.png")
-  engine.database_add_component(npc, &table_bounding_boxs).box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
-  text := engine.database_add_component(npc, &table_texts)
-  text.text = "J'ai terriblement faim a l'aide :("
-  text.size = 20
-  text.duration = -1
-  text.attached_to_box = &engine.database_get_component(npc, &table_bounding_boxs).box
+  engine.database_add_component(npc, &components.table_bounding_boxes).box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
+  text := engine.database_add_component(npc, &components.table_text_boxes)
+  components.init_text_box(text,
+    "J'ai terriblement faim à l'aide :(",
+    font_size = 20,
+    attached_to_entity_id = npc,
+  )
 
   // Player
   player = engine.database_create_entity()
-  engine.database_add_component(player, &table_controllables)
-  engine.database_add_component(player, &table_movables)
-  engine.database_add_component(player, &table_bounding_boxs).box = rl.Rectangle { 300, 300, 64.0, 64.0 }
-  player_animated_sprite := engine.database_add_component(player, &table_animated_sprites)
+  engine.database_add_component(player, &components.table_controllables)
+  engine.database_add_component(player, &components.table_movables)
+  engine.database_add_component(player, &components.table_bounding_boxes).box = rl.Rectangle { 300, 300, 64.0, 64.0 }
+  player_animated_sprite := engine.database_add_component(player, &components.table_animated_sprites)
 
   graphics.animated_sprite_init(player_animated_sprite, {
     int(enums.Direction.NONE) = "idle.png",
