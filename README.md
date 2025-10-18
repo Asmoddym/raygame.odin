@@ -43,3 +43,7 @@ Add Coc config:
     }
 }
 ```
+
+# Kanban
+
+https://github.com/users/Asmoddym/projects/4

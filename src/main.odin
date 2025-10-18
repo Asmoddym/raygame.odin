@@ -124,7 +124,7 @@ pause_system :: proc() {
   if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection = selection == 0 ? 1 : selection - 1
 
   ui.draw_xy_centered_button_list(
-    { "Toggle fullscreen", "Exit" },
+    { "Toggle borderless window", "Exit" },
     font_size = 40,
     on_click = {
       proc() { engine.game_state.borderless_window = !engine.game_state.borderless_window },
