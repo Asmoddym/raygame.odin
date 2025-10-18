@@ -91,6 +91,7 @@ handle_inputs :: proc() {
       font_size = 20,
       attached_to_entity_id = player,
       duration = 10000,
+      color = rl.RED,
     )
   }
 }
@@ -103,9 +104,9 @@ draw_texts :: proc() {
       position := rl.Vector2 { box.x + box.width, box.y }
 
       if item.animated {
-        ui.draw_animated_text_box(item.text, item.size, position, item.ticks)
+        ui.draw_animated_text_box(item.text, item.size, position, item.ticks, item.color)
       } else {
-        ui.draw_text_box(item.text, item.size, position)
+        ui.draw_text_box(item.text, item.size, position, item.color)
       }
     }
   }

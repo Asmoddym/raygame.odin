@@ -62,7 +62,7 @@ generate_metadata_v2 :: proc(metadata: ^Metadata, text: string, font_size: i32, 
 
 draw_from_metadata :: proc(metadata: ^Metadata, font_size: i32, color: rl.Color) {
   rl.DrawRectangle(metadata.position.x, metadata.position.y, metadata.box_width, metadata.box_height, rl.BLACK)
-  rl.DrawRectangleLines(metadata.position.x, metadata.position.y, metadata.box_width, metadata.box_height, color)
+  rl.DrawRectangleLines(metadata.position.x, metadata.position.y, metadata.box_width, metadata.box_height, rl.WHITE)
 
   for i: int = 0; i < len(metadata.words); i += 1 {
     strings.write_string(&metadata.builder, metadata.words[i])

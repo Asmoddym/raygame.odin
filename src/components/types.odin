@@ -67,6 +67,7 @@ Component_TextBox :: struct {
   duration: f64,
   instanciated_at: time.Time,
   attached_to_box: ^rl.Rectangle,
+  color: rl.Color,
 
   animated: bool,
   ticks: int,
