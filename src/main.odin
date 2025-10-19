@@ -91,7 +91,6 @@ handle_inputs :: proc() {
       font_size = 20,
       attached_to_entity_id = player,
       duration = 10000,
-      color = rl.RED,
     )
   }
 }
@@ -119,8 +118,8 @@ update_texts :: proc() {
     time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
 
     if item.animated && item.ticks != len(item.text) {
-      // 20ms for each letter
-      item.ticks = int(time_diff / 20)
+      // 30ms for each letter
+      item.ticks = int(time_diff / 30)
     }
 
     if item.duration != -1 && time_diff > item.duration {

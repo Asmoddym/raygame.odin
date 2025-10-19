@@ -26,7 +26,7 @@ Metadata :: struct {
   text: string,
 }
 
-generate_metadata_v2 :: proc(metadata: ^Metadata, text: string, font_size: i32, position: rl.Vector2) {
+generate_metadata :: proc(metadata: ^Metadata, text: string, font_size: i32, position: rl.Vector2) {
   current_width: i32 = 0
 
   metadata.text = text
@@ -80,7 +80,7 @@ draw_text_box :: proc(text: string, font_size: i32, position: rl.Vector2, color:
   metadata: Metadata
   metadata.builder = strings.builder_from_bytes(bytes[:])
 
-  generate_metadata_v2(&metadata, text, font_size, position)
+  generate_metadata(&metadata, text, font_size, position)
   draw_from_metadata(&metadata, font_size, color)
 }
 
@@ -89,7 +89,7 @@ draw_animated_text_box :: proc(text: string, font_size: i32, position: rl.Vector
   metadata: Metadata
   metadata.builder = strings.builder_from_bytes(bytes[:])
 
-  generate_metadata_v2(&metadata, text, font_size, position)
+  generate_metadata(&metadata, text, font_size, position)
   metadata.words = strings.split(text[:ticks], " ")
 
   draw_from_metadata(&metadata, font_size, color)
