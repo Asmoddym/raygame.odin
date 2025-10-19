@@ -103,9 +103,9 @@ draw_texts :: proc() {
       position := rl.Vector2 { box.x + box.width, box.y }
 
       if item.animated {
-        ui.draw_animated_text_box(item.text, item.size, position, item.ticks, item.color)
+        ui.draw_animated_text_box(&item.metadata, position, item.ticks)
       } else {
-        ui.draw_text_box(item.text, item.size, position, item.color)
+        ui.draw_text_box(&item.metadata, position)
       }
     }
   }
@@ -117,7 +117,7 @@ update_texts :: proc() {
   for &item in components.table_text_boxes.items {
     time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
 
-    if item.animated && item.ticks != len(item.text) {
+    if item.animated && item.ticks != len(item.metadata.text) {
       // 30ms for each letter
       item.ticks = int(time_diff / 30)
     }
