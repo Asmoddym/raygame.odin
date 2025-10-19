@@ -133,7 +133,7 @@ update_texts :: proc() {
 }
 
 pause_system :: proc() {
-  @(static) selection:= 0
+  @(static) selection := 0
 
   if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection = (selection + 1) % 2
   if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection = selection == 0 ? 1 : selection - 1

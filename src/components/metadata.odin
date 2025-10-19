@@ -20,8 +20,3 @@ TextBoxMetadata :: struct {
   font_size: i32,
   color: rl.Color,
 }
-
-MetadataUnion :: union {
-  TextBoxMetadata,
-  Metadata,
-}
