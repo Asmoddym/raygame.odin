@@ -17,6 +17,7 @@ TextBoxMetadata :: struct {
   words_position: [dynamic][2]i32,
   words: []string,
   text: string,
+  text_len: int,
   font_size: i32,
   color: rl.Color,
 }

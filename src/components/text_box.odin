@@ -9,9 +9,10 @@ import rl "vendor:raylib"
 generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, font_size: i32, color: rl.Color) {
   bytes: [256]byte
   builder := strings.builder_from_bytes(bytes[:])
-current_width: i32 = 0
+  current_width: i32 = 0
 
   metadata.text = text
+  metadata.text_len = len(text)
   metadata.font_size = font_size
   metadata.words = strings.split(metadata.text, " ")
 

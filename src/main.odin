@@ -117,9 +117,10 @@ update_texts :: proc() {
   for &item in components.table_text_boxes.items {
     time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
 
-    if item.animated && item.ticks != len(item.metadata.text) {
+    if item.animated && item.ticks != item.metadata.text_len {
       // 30ms for each letter
       item.ticks = int(time_diff / 30)
+      if item.ticks > item.metadata.text_len do item.ticks = item.metadata.text_len
     }
 
     if item.duration != -1 && time_diff > item.duration {
