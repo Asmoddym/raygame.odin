@@ -136,14 +136,18 @@ update_texts :: proc() {
 pause_system :: proc() {
   @(static) selection := 0
 
-  if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection = (selection + 1) % 2
-  if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection = selection == 0 ? 1 : selection - 1
+  if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection -= 1
+  if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection += 1
+
+  if selection < 0 do selection = 2
+  if selection > 2 do selection = 0
 
   ui.draw_xy_centered_button_list(
-    { "Toggle borderless window", "Exit" },
+    { "Toggle borderless window", "Toggle fullscreen", "Exit" },
     font_size = 40,
     on_click = {
       proc() { engine.game_state.borderless_window = !engine.game_state.borderless_window },
+      proc() { engine.game_state.fullscreen = !engine.game_state.fullscreen },
       proc() { engine.game_state.closed = true },
     },
     selected = selection,

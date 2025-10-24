@@ -9,6 +9,7 @@ GameState :: struct {
   paused: bool,
   closed: bool,
   borderless_window: bool,
+  fullscreen: bool,
   resolution: [2]i32,
 }
 
@@ -99,9 +100,31 @@ render_debug :: proc() {
 
 process_game_state_changes :: proc(previous_state: GameState) {
   if game_state.borderless_window != previous_state.borderless_window {
+    if game_state.fullscreen {
+      rl.ToggleFullscreen()
+      game_state.fullscreen = false
+    }
     rl.ToggleBorderlessWindowed()
 
     if game_state.borderless_window {
+      game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
+      rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
+    } else {
+      game_state.resolution = { 1600, 900 }
+      rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
+    }
+
+    init_camera_offset(game_state.resolution)
+  }
+
+  if game_state.fullscreen != previous_state.fullscreen {
+    if game_state.borderless_window {
+      rl.ToggleBorderlessWindowed()
+      game_state.borderless_window = false
+    }
+    rl.ToggleFullscreen()
+
+    if game_state.fullscreen {
       game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
       rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
     } else {
