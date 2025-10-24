@@ -95,43 +95,29 @@ render_debug :: proc() {
     rl.DrawText(strings.unsafe_string_to_cstring(str), 10, 10, 20, rl.LIME)
   }
 
-  rl.DrawText(strings.unsafe_string_to_cstring(fmt.tprintf("Res: %dx%d", game_state.resolution.x, game_state.resolution.y)), 10, game_state.resolution.y - 28, 20, rl.WHITE)
+  rl.DrawText(strings.unsafe_string_to_cstring(fmt.tprintf("Res: %dx%d (%s)", game_state.resolution.x, game_state.resolution.y, game_state.fullscreen ? "Fullscreen" : (game_state.borderless_window ? "Borderless" : "windowed"))), 10, game_state.resolution.y - 28, 20, rl.WHITE)
 }
-
 process_game_state_changes :: proc(previous_state: GameState) {
   if game_state.borderless_window != previous_state.borderless_window {
-    if game_state.fullscreen {
-      rl.ToggleFullscreen()
-      game_state.fullscreen = false
-    }
-    rl.ToggleBorderlessWindowed()
-
-    if game_state.borderless_window {
-      game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
-      rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-    } else {
-      game_state.resolution = { 1600, 900 }
-      rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-    }
-
-    init_camera_offset(game_state.resolution)
-  }
-
-  if game_state.fullscreen != previous_state.fullscreen {
-    if game_state.borderless_window {
-      rl.ToggleBorderlessWindowed()
-      game_state.borderless_window = false
-    }
-    rl.ToggleFullscreen()
-
-    if game_state.fullscreen {
-      game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
-      rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-    } else {
-      game_state.resolution = { 1600, 900 }
-      rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-    }
-
-    init_camera_offset(game_state.resolution)
+    game_state.fullscreen = false
+    toggle_screen_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
+  } else if game_state.fullscreen != previous_state.fullscreen {
+    game_state.borderless_window = false
+    toggle_screen_mode(game_state.fullscreen, proc() { rl.ToggleFullscreen() })
   }
 }
+
+toggle_screen_mode :: proc(toggle: bool, toggler: proc()) {
+  if toggle {
+    game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
+    rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
+    toggler()
+  } else {
+    toggler()
+    game_state.resolution = { 1600, 900 }
+    rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
+  }
+
+  init_camera_offset(game_state.resolution)
+}
+
