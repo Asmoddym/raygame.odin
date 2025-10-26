@@ -10,7 +10,7 @@ import "enums"
 import "components"
 
 @(private="file")
-show_bounds := false
+show_bounds := true
 
 @(private="file")
 EdgeData :: struct {
@@ -39,6 +39,8 @@ collision_system :: proc() {
 
     append(&x_points, EdgeData { entity_id, box.x, 0 })
     append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
+
+    if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.GREEN)
   }
 
   // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
@@ -109,8 +111,7 @@ resolve_collision :: proc(entity_id: int, other_entity_id: int) {
   }
 
   if show_bounds {
-    rl.DrawRectangleLinesEx(box^, 1, is_movable ? rl.GREEN : rl.BLUE)
-    rl.DrawRectangleLinesEx(other_box^, 1, other_is_movable ? rl.YELLOW : rl.BLUE)
+    rl.DrawRectangleLinesEx(other_box^, 1, rl.YELLOW)
     rl.DrawRectangleRec(collision_rec, rl.RED)
   }
 }

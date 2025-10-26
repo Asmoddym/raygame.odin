@@ -97,6 +97,7 @@ render_debug :: proc() {
 
   rl.DrawText(strings.unsafe_string_to_cstring(fmt.tprintf("Res: %dx%d (%s)", game_state.resolution.x, game_state.resolution.y, game_state.fullscreen ? "Fullscreen" : (game_state.borderless_window ? "Borderless" : "windowed"))), 10, game_state.resolution.y - 28, 20, rl.WHITE)
 }
+
 process_game_state_changes :: proc(previous_state: GameState) {
   if game_state.borderless_window != previous_state.borderless_window {
     game_state.fullscreen = false
