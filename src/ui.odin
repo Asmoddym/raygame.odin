@@ -132,7 +132,7 @@ ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, f
 
 
 // Draw text boxes
-ui_system_draw_text_boxes :: proc() {
+ui_system_text_box_draw :: proc() {
   for &item in table_text_boxes.items {
     box := item.attached_to_box
 
@@ -149,7 +149,7 @@ ui_system_draw_text_boxes :: proc() {
 }
 
 // Update animated text boxes and remove text boxes whose duration is expired
-ui_system_update_text_boxes :: proc() {
+ui_system_text_box_update :: proc() {
   to_delete: [dynamic]int
 
   for &item in table_text_boxes.items {

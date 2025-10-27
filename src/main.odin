@@ -12,14 +12,14 @@ main :: proc() {
   engine.init()
 
   engine.systems_register(engine.SystemType.RUNTIME, ui_system_update_camera_position)
-  engine.systems_register(engine.SystemType.RUNTIME, update_animated_sprites)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_animated_sprite_update)
   engine.systems_register(engine.SystemType.RUNTIME, handle_inputs)
   engine.systems_register(engine.SystemType.RUNTIME, move_controllable, recurrence_in_ms = 10)
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_update_text_boxes)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_text_box_update)
   engine.systems_register(engine.SystemType.RUNTIME, collision_system)
-  engine.systems_register(engine.SystemType.RUNTIME, draw_sprites) 
-  engine.systems_register(engine.SystemType.RUNTIME, draw_animated_sprites) 
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_draw_text_boxes)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_sprite_draw)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_animated_sprite_draw)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_text_box_draw)
   engine.systems_register(engine.SystemType.PAUSE, pause_system)
 
   // NPC
@@ -44,7 +44,7 @@ main :: proc() {
   bounding_box.movable = true
   player_animated_sprite := engine.database_add_component(globals.player, &table_animated_sprites)
 
-  animated_sprite_init(player_animated_sprite, {
+  ui_animated_sprite_init(player_animated_sprite, {
     int(enums.Direction.NONE) = "idle.png",
     int(enums.Direction.UP) = "up.png",
     int(enums.Direction.DOWN) = "down.png",
