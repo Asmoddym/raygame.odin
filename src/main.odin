@@ -11,15 +11,15 @@ import rl "vendor:raylib"
 main :: proc() {
   engine.init()
 
-  engine.systems_register(engine.SystemType.RUNTIME, update_camera_position)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_update_camera_position)
   engine.systems_register(engine.SystemType.RUNTIME, update_animated_sprites)
   engine.systems_register(engine.SystemType.RUNTIME, handle_inputs)
   engine.systems_register(engine.SystemType.RUNTIME, move_controllable, recurrence_in_ms = 10)
-  engine.systems_register(engine.SystemType.RUNTIME, update_texts)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_update_text_boxes)
   engine.systems_register(engine.SystemType.RUNTIME, collision_system)
   engine.systems_register(engine.SystemType.RUNTIME, draw_sprites) 
   engine.systems_register(engine.SystemType.RUNTIME, draw_animated_sprites) 
-  engine.systems_register(engine.SystemType.RUNTIME, draw_texts) 
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_draw_text_boxes)
   engine.systems_register(engine.SystemType.PAUSE, pause_system)
 
   // NPC
@@ -30,7 +30,7 @@ main :: proc() {
   bounding_box.box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
   bounding_box.movable = false
   text := engine.database_add_component(npc, &table_text_boxes)
-  init_text_box(text,
+  ui_text_box_init(text,
     "J'ai terriblement faim à l'aide :(",
     font_size = 20,
     attached_to_entity_id = npc,

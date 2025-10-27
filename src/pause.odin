@@ -12,7 +12,7 @@ pause_system :: proc() {
   if selection < 0 do selection = 2
   if selection > 2 do selection = 0
 
-  ui__draw_xy_centered_button_list(
+  ui_button_draw_xy_centered_list(
     { "Toggle borderless window", "Toggle fullscreen", "Exit" },
     font_size = 40,
     on_click = {
