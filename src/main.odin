@@ -26,7 +26,9 @@ main :: proc() {
   npc := engine.database_create_entity()
   sprite := engine.database_add_component(npc, &table_sprites)
   sprite.texture = rl.LoadTexture("wabbit_alpha.png")
-  engine.database_add_component(npc, &table_bounding_boxes).box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
+  bounding_box := engine.database_add_component(npc, &table_bounding_boxes)
+  bounding_box.box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
+  bounding_box.movable = false
   text := engine.database_add_component(npc, &table_text_boxes)
   init_text_box(text,
     "J'ai terriblement faim à l'aide :(",
@@ -37,8 +39,9 @@ main :: proc() {
   // Player
   globals.player = engine.database_create_entity()
   engine.database_add_component(globals.player, &table_controllables)
-  engine.database_add_component(globals.player, &table_movables)
-  engine.database_add_component(globals.player, &table_bounding_boxes).box = rl.Rectangle { 300, 300, 64.0, 64.0 }
+  bounding_box = engine.database_add_component(globals.player, &table_bounding_boxes)
+  bounding_box.box = rl.Rectangle { 300, 300, 64.0, 64.0 }
+  bounding_box.movable = true
   player_animated_sprite := engine.database_add_component(globals.player, &table_animated_sprites)
 
   animated_sprite_init(player_animated_sprite, {
