@@ -1,13 +1,14 @@
-package ui
+package macro
 
 import "core:strings"
 import rl "vendor:raylib"
-import "../engine"
+import "engine"
+import "globals"
 
 @(private="file")
 BUTTON_SPACING: i32 = 15
 
-draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int = -1, color: rl.Color = rl.WHITE) {
+ui__draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int = -1, color: rl.Color = rl.WHITE) {
   padding := i32(font_size / 3)
   text_height_with_padding := font_size + 2 * padding
 
@@ -25,12 +26,12 @@ draw_xy_centered_button_list :: proc(texts: []string, font_size: i32, on_click: 
       f32(beginning_y),
     }
 
-    draw_button(text, position, font_size, on_click[idx], selected == idx, color)
+    ui__draw_button(text, position, font_size, on_click[idx], selected == idx, color)
     beginning_y += text_height_with_padding + BUTTON_SPACING
   }
 }
 
-draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
+ui__draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
   padding := i32(font_size / 3)
   thickness: f32 = 2
 
@@ -53,3 +54,10 @@ draw_button :: proc(text: string, position: rl.Vector2, font_size: i32, on_click
   rl.DrawText(ctext, i32(position.x), i32(position.y), font_size, color)
   rl.DrawRectangleLinesEx(box, thickness, color)
 }
+
+update_camera_position :: proc() {
+  box := engine.database_get_component(globals.player, &table_bounding_boxes).box
+
+  engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
+}
+

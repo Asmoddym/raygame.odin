@@ -2,6 +2,15 @@ package engine
 
 import "error"
 
+Metadata :: struct {
+}
+
+Component :: struct($T: typeid) {
+  entity_id: int,
+
+  metadata: T,
+}
+
 Table :: struct($ComponentType: typeid) {
   items: [dynamic]ComponentType,
 }
