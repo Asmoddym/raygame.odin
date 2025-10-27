@@ -7,13 +7,6 @@ import "core:time"
 import rl "vendor:raylib"
 
 
-
-//
-// PUBLIC API
-//
-
-
-
 // COMPONENTS DEFINITION
 
 

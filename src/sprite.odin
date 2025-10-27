@@ -6,13 +6,6 @@ import "engine"
 import rl "vendor:raylib"
 
 
-
-//
-// PUBLIC API
-//
-
-
-
 // COMPONENTS DEFINITION
 
 
