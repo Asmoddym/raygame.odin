@@ -6,6 +6,15 @@ Table :: struct($ComponentType: typeid) {
   items: [dynamic]ComponentType,
 }
 
+Metadata :: struct {
+}
+
+Component :: struct($T: typeid) {
+  entity_id: int,
+
+  metadata: T,
+}
+
 database_add_component :: proc(entity_id: int, table: ^Table($ComponentType)) -> ^ComponentType {
   append(&table.items, ComponentType { })
 

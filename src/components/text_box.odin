@@ -6,6 +6,38 @@ import "../engine"
 import "../constants"
 import rl "vendor:raylib"
 
+TextBoxMetadata :: struct {
+  using base: engine.Metadata,
+
+  lines: i32,
+  text_width: i32,
+  box_width: i32,
+  text_height: i32,
+  box_height: i32,
+
+  words_position: [dynamic][2]i32,
+  words: []string,
+  text: string,
+  text_len: int,
+  font_size: i32,
+  color: rl.Color,
+}
+
+// Text
+
+Component_TextBox :: struct {
+  using base: engine.Component(TextBoxMetadata),
+
+  duration: f64,
+  instanciated_at: time.Time,
+  attached_to_box: ^rl.Rectangle,
+
+  animated: bool,
+  ticks: int,
+}
+
+table_text_boxes: engine.Table(Component_TextBox)
+
 generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, font_size: i32, color: rl.Color) {
   bytes: [256]byte
   builder := strings.builder_from_bytes(bytes[:])

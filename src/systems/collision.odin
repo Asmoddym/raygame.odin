@@ -1,13 +1,13 @@
 #+feature dynamic-literals
 
-package macro
+package systems
 
 import rl "vendor:raylib"
 import "core:slice"
-import "engine"
 import "core:math"
-import "enums"
-import "components"
+import "../engine"
+import "../enums"
+import "../components"
 
 @(private="file")
 show_bounds := true
