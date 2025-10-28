@@ -11,6 +11,11 @@ import rl "vendor:raylib"
 
 
 
+// Pause mode toggling system
+pause_system_toggle :: proc() {
+  if rl.IsKeyPressed(.ESCAPE) do engine.game_state.paused = !engine.game_state.paused
+}
+
 // General pause system
 pause_system_main :: proc() {
   @(static) selection := 0
