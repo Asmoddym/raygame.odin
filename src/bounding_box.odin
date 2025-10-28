@@ -1,16 +1,76 @@
-#+feature dynamic-literals
-
 package macro
 
-import rl "vendor:raylib"
-import "core:slice"
 import "engine"
-import "core:math"
 import "enums"
-import "components"
+import "core:slice"
+import "core:math"
+import rl "vendor:raylib"
 
-@(private="file")
-show_bounds := false
+
+// COMPONENTS DEFINITION
+
+
+Component_BoundingBox :: struct {
+  using base: engine.Component(engine.Metadata),
+
+  box: rl.Rectangle,
+  movable: bool,
+}
+
+table_bounding_boxes: engine.Table(Component_BoundingBox)
+
+
+
+//
+// SYSTEMS
+//
+
+
+
+// Main collision system using bounding_box components
+// Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
+bounding_box_system_collision_resolver :: proc() {
+  @(static) show_bounds := true
+
+  if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
+
+  x_points: [dynamic]EdgeData
+  x_active_intervals: [dynamic]int
+
+  for bounding_box in table_bounding_boxes.items {
+    box := bounding_box.box
+    entity_id := bounding_box.entity_id
+
+    append(&x_points, EdgeData { entity_id, box.x, 0 })
+    append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
+
+    if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.GREEN)
+  }
+
+  slice.sort_by(x_points[:], proc(i, j: EdgeData) -> bool { return i.v < j.v })
+
+  for x in x_points {
+    if x.type == 0 {
+      entity_id := x.id
+
+      for other_entity_id in x_active_intervals {
+        resolve_collision(entity_id, other_entity_id, show_bounds)
+      }
+
+      append(&x_active_intervals, x.id)
+    } else {
+      remove_by_id(&x_active_intervals, x.id)
+    }
+  }
+}
+
+
+
+//
+// PRIVATE
+//
+
+
 
 @(private="file")
 EdgeData :: struct {
@@ -27,48 +87,16 @@ compass := #partial [enums.Direction]rl.Vector2 {
   .LEFT = rl.Vector2 { -1, 0 },
 }
 
-collision_system :: proc() {
-  if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
-
-  x_points: [dynamic]EdgeData
-  x_active_intervals: [dynamic]int
-
-  for bounding_box in components.table_bounding_boxes.items {
-    box := bounding_box.box
-    entity_id := bounding_box.entity_id
-
-    append(&x_points, EdgeData { entity_id, box.x, 0 })
-    append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
-  }
-
-  // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
-
-  slice.sort_by(x_points[:], proc(i, j: EdgeData) -> bool { return i.v < j.v })
-
-  for x in x_points {
-    if x.type == 0 {
-      entity_id := x.id
-
-      for other_entity_id in x_active_intervals {
-        resolve_collision(entity_id, other_entity_id)
-      }
-
-      append(&x_active_intervals, x.id)
-    } else {
-      remove_by_id(&x_active_intervals, x.id)
-    }
-  }
-}
-
+// Collision resolver
 @(private="file")
-resolve_collision :: proc(entity_id: int, other_entity_id: int) {
-  box := &engine.database_get_component(entity_id, &components.table_bounding_boxes).box
-  other_box := &engine.database_get_component(other_entity_id, &components.table_bounding_boxes).box
+resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: bool) {
+  bounding_box := engine.database_get_component(entity_id, &table_bounding_boxes)
+  other_bounding_box := engine.database_get_component(other_entity_id, &table_bounding_boxes)
+
+  box := &bounding_box.box
+  other_box := &other_bounding_box.box
 
   if !rl.CheckCollisionRecs(box^, other_box^) do return
-
-  is_movable := engine.database_has_component(entity_id, &components.table_movables)
-  other_is_movable := engine.database_has_component(other_entity_id, &components.table_movables)
 
   rectangle_center := calculate_center(box^)
   other_rectangle_center := calculate_center(other_box^)
@@ -96,24 +124,27 @@ resolve_collision :: proc(entity_id: int, other_entity_id: int) {
     mid_diff := collision_rec.width / 2
 
     // As the algorithm begins with X coord, we know rectangle will always be the entity at the right.
-    if is_movable do box.x += mid_diff
-    if other_is_movable do other_box.x -= mid_diff
+    if bounding_box.movable do box.x += mid_diff
+    if other_bounding_box.movable do other_box.x -= mid_diff
   } else {
     mid_diff := collision_rec.height / 2
 
     // Here, we need to check in which direction the collision occurred
     mid_diff *= best_match == .UP ? 1 : -1
 
-    if is_movable do box.y += mid_diff
-    if other_is_movable do other_box.y -= mid_diff
+    if bounding_box.movable do box.y += mid_diff
+    if other_bounding_box.movable do other_box.y -= mid_diff
   }
 
   if show_bounds {
-    rl.DrawRectangleLinesEx(box^, 1, is_movable ? rl.GREEN : rl.BLUE)
-    rl.DrawRectangleLinesEx(other_box^, 1, other_is_movable ? rl.YELLOW : rl.BLUE)
+    rl.DrawRectangleLinesEx(other_box^, 1, rl.YELLOW)
     rl.DrawRectangleRec(collision_rec, rl.RED)
   }
 }
+
+
+// Utils
+
 
 @(private="file")
 calculate_center :: proc(rect: rl.Rectangle) -> rl.Vector2 {
