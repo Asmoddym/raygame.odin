@@ -1,5 +1,6 @@
 package macro
 
+import "core:fmt"
 import "engine"
 import "enums"
 import "core:slice"
@@ -123,7 +124,7 @@ resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: boo
   if best_match == .LEFT || best_match == .RIGHT {
     mid_diff := collision_rec.width / 2
 
-    // As the algorithm begins with X coord, we know rectangle will always be the entity at the right.
+    // As the algorithm begins with X coord, we know box will always be the entity at the right.
     if bounding_box.movable do box.x += mid_diff
     if other_bounding_box.movable do other_box.x -= mid_diff
   } else {

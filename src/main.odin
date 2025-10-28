@@ -40,6 +40,16 @@ init_player :: proc() {
   })
 }
 
+init_terrain :: proc() {
+  tree := engine.database_create_entity()
+
+  c := engine.database_add_component(tree, &table_sprites)
+  c.texture = rl.LoadTexture("tree_1.png")
+  bounding_box := engine.database_add_component(tree, &table_bounding_boxes)
+  bounding_box.box = rl.Rectangle { -100, -100, f32(c.texture.width), f32(c.texture.height) }
+  bounding_box.movable = false
+}
+
 main :: proc() {
   engine.init()
 
@@ -57,6 +67,7 @@ main :: proc() {
 
   init_npc()
   init_player()
+  init_terrain()
 
   engine.run()
 }
