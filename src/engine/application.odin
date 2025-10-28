@@ -11,8 +11,6 @@ game_state: GameState
 
 // Init engine. Must be called first
 init :: proc() {
-  rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.WINDOW_HIGHDPI})
-
   rl.ChangeDirectory("resources")
 
   game_state.paused = false
@@ -69,6 +67,7 @@ GameState :: struct {
 // Initialize window from a resolution
 @(private="file")
 application_window_init :: proc(resolution: [2]i32) {
+  rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.WINDOW_HIGHDPI})
   rl.InitWindow(resolution.x, resolution.y, "coucou")
 
   game_state.resolution = {
