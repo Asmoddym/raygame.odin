@@ -3,7 +3,16 @@ package macro
 import "engine"
 import rl "vendor:raylib"
 
-pause_system :: proc() {
+
+
+//
+// SYSTEMS
+//
+
+
+
+// General pause system
+pause_system_main :: proc() {
   @(static) selection := 0
 
   if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection -= 1

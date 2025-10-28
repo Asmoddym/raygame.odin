@@ -8,21 +8,7 @@ import "globals"
 
 import rl "vendor:raylib"
 
-main :: proc() {
-  engine.init()
-
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_update_camera_position)
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_animated_sprite_update)
-  engine.systems_register(engine.SystemType.RUNTIME, handle_inputs)
-  engine.systems_register(engine.SystemType.RUNTIME, move_controllable, recurrence_in_ms = 10)
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_text_box_update)
-  engine.systems_register(engine.SystemType.RUNTIME, collision_system)
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_sprite_draw)
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_animated_sprite_draw)
-  engine.systems_register(engine.SystemType.RUNTIME, ui_system_text_box_draw)
-  engine.systems_register(engine.SystemType.PAUSE, pause_system)
-
-  // NPC
+init_npc :: proc() {
   npc := engine.database_create_entity()
   sprite := engine.database_add_component(npc, &table_sprites)
   sprite.texture = rl.LoadTexture("wabbit_alpha.png")
@@ -35,14 +21,15 @@ main :: proc() {
     font_size = 20,
     attached_to_entity_id = npc,
   )
+}
 
-  // Player
-  globals.player = engine.database_create_entity()
-  engine.database_add_component(globals.player, &table_controllables)
-  bounding_box = engine.database_add_component(globals.player, &table_bounding_boxes)
+init_player :: proc() {
+  globals.player_id = engine.database_create_entity()
+  engine.database_add_component(globals.player_id, &table_controllables)
+  bounding_box := engine.database_add_component(globals.player_id, &table_bounding_boxes)
   bounding_box.box = rl.Rectangle { 300, 300, 64.0, 64.0 }
   bounding_box.movable = true
-  player_animated_sprite := engine.database_add_component(globals.player, &table_animated_sprites)
+  player_animated_sprite := engine.database_add_component(globals.player_id, &table_animated_sprites)
 
   ui_animated_sprite_init(player_animated_sprite, {
     int(enums.Direction.NONE) = "idle.png",
@@ -51,6 +38,24 @@ main :: proc() {
     int(enums.Direction.LEFT) = "left.png",
     int(enums.Direction.RIGHT) = "right.png",
   })
+}
+
+main :: proc() {
+  engine.init()
+
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_update_camera_position)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_animated_sprite_update)
+  engine.systems_register(engine.SystemType.RUNTIME, input_system_main)
+  engine.systems_register(engine.SystemType.RUNTIME, controllable_system_handle_inputs, recurrence_in_ms = 10)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_text_box_update)
+  engine.systems_register(engine.SystemType.RUNTIME, bounding_box_system_collision_resolver)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_sprite_draw)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_animated_sprite_draw)
+  engine.systems_register(engine.SystemType.RUNTIME, ui_system_text_box_draw)
+  engine.systems_register(engine.SystemType.PAUSE,   pause_system_main)
+
+  init_npc()
+  init_player()
 
   engine.run()
 }

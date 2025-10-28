@@ -1,13 +1,14 @@
 package macro
 
-import "core:slice"
-import "core:math"
 import "engine"
 import "enums"
-
+import "core:slice"
+import "core:math"
 import rl "vendor:raylib"
 
-// BoundingBox
+
+// COMPONENTS DEFINITION
+
 
 Component_BoundingBox :: struct {
   using base: engine.Component(engine.Metadata),
@@ -19,22 +20,16 @@ Component_BoundingBox :: struct {
 table_bounding_boxes: engine.Table(Component_BoundingBox)
 
 
-@(private="file")
-EdgeData :: struct {
-  id: int,
-  v: f32,
-  type: int,
-}
 
-@(private="file")
-compass := #partial [enums.Direction]rl.Vector2 {
-  .UP = rl.Vector2 { 0, 1 },
-  .RIGHT = rl.Vector2 { 1, 0 },
-  .DOWN = rl.Vector2 { 0, -1 },
-  .LEFT = rl.Vector2 { -1, 0 },
-}
+//
+// SYSTEMS
+//
 
-collision_system :: proc() {
+
+
+// Main collision system using bounding_box components
+// Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
+bounding_box_system_collision_resolver :: proc() {
   @(static) show_bounds := true
 
   if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
@@ -51,8 +46,6 @@ collision_system :: proc() {
 
     if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.GREEN)
   }
-
-  // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
 
   slice.sort_by(x_points[:], proc(i, j: EdgeData) -> bool { return i.v < j.v })
 
@@ -71,6 +64,30 @@ collision_system :: proc() {
   }
 }
 
+
+
+//
+// PRIVATE
+//
+
+
+
+@(private="file")
+EdgeData :: struct {
+  id: int,
+  v: f32,
+  type: int,
+}
+
+@(private="file")
+compass := #partial [enums.Direction]rl.Vector2 {
+  .UP = rl.Vector2 { 0, 1 },
+  .RIGHT = rl.Vector2 { 1, 0 },
+  .DOWN = rl.Vector2 { 0, -1 },
+  .LEFT = rl.Vector2 { -1, 0 },
+}
+
+// Collision resolver
 @(private="file")
 resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: bool) {
   bounding_box := engine.database_get_component(entity_id, &table_bounding_boxes)
@@ -124,6 +141,10 @@ resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: boo
     rl.DrawRectangleRec(collision_rec, rl.RED)
   }
 }
+
+
+// Utils
+
 
 @(private="file")
 calculate_center :: proc(rect: rl.Rectangle) -> rl.Vector2 {
