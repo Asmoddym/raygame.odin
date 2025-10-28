@@ -15,6 +15,7 @@ init_npc :: proc() {
   bounding_box := engine.database_add_component(npc, &table_bounding_boxes)
   bounding_box.box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
   bounding_box.movable = false
+  bounding_box.collidable = true
   text := engine.database_add_component(npc, &table_text_boxes)
   ui_text_box_init(text,
     "J'ai terriblement faim à l'aide :(",
@@ -29,6 +30,7 @@ init_player :: proc() {
   bounding_box := engine.database_add_component(globals.player_id, &table_bounding_boxes)
   bounding_box.box = rl.Rectangle { 300, 300, 64.0, 64.0 }
   bounding_box.movable = true
+  bounding_box.collidable = true
   player_animated_sprite := engine.database_add_component(globals.player_id, &table_animated_sprites)
 
   ui_animated_sprite_init(player_animated_sprite, {
@@ -41,13 +43,26 @@ init_player :: proc() {
 }
 
 init_terrain :: proc() {
-  tree := engine.database_create_entity()
+  tree_trunk_1 := engine.database_create_entity()
+  engine.database_add_component(tree_trunk_1, &table_sprites).texture = rl.LoadTexture("tree_trunk_1.png")
+  tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &table_bounding_boxes)
+  tree_trunk_1_bb.box = rl.Rectangle { 500, 500, 64, 64 }
+  tree_trunk_1_bb.movable = false
+  tree_trunk_1_bb.collidable = true
 
-  c := engine.database_add_component(tree, &table_sprites)
-  c.texture = rl.LoadTexture("tree_1.png")
-  bounding_box := engine.database_add_component(tree, &table_bounding_boxes)
-  bounding_box.box = rl.Rectangle { -100, -100, f32(c.texture.width), f32(c.texture.height) }
-  bounding_box.movable = false
+  tree_trunk_2 := engine.database_create_entity()
+  engine.database_add_component(tree_trunk_2, &table_sprites).texture = rl.LoadTexture("tree_trunk_2.png")
+  tree_trunk_2_bb := engine.database_add_component(tree_trunk_2, &table_bounding_boxes)
+  tree_trunk_2_bb.box = rl.Rectangle { 500, 500 - 64, 64, 64 }
+  tree_trunk_2_bb.movable = false
+  tree_trunk_2_bb.collidable = false
+
+  tree_leaves := engine.database_create_entity()
+  engine.database_add_component(tree_leaves, &table_sprites).texture = rl.LoadTexture("tree_leaves.png")
+  tree_leaves_bb := engine.database_add_component(tree_leaves, &table_bounding_boxes)
+  tree_leaves_bb.box = rl.Rectangle { 500 - 32, 500 - 128 - 64, 128, 128}
+  tree_leaves_bb.movable = false
+  tree_leaves_bb.collidable = false
 }
 
 main :: proc() {

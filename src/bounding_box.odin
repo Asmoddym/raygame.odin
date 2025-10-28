@@ -1,6 +1,5 @@
 package macro
 
-import "core:fmt"
 import "engine"
 import "enums"
 import "core:slice"
@@ -15,6 +14,7 @@ Component_BoundingBox :: struct {
   using base: engine.Component(engine.Metadata),
 
   box: rl.Rectangle,
+  collidable: bool,
   movable: bool,
 }
 
@@ -40,6 +40,13 @@ bounding_box_system_collision_resolver :: proc() {
 
   for bounding_box in table_bounding_boxes.items {
     box := bounding_box.box
+
+    if !bounding_box.collidable {
+      if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.GRAY)
+
+      continue
+    }
+
     entity_id := bounding_box.entity_id
 
     append(&x_points, EdgeData { entity_id, box.x, 0 })

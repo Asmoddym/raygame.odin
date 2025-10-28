@@ -61,7 +61,7 @@ ui_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map[int]s
 ui_system_sprite_draw :: proc() {
   for sprite in table_sprites.items {
     box := engine.database_get_component(sprite.entity_id, &table_bounding_boxes).box
-    source := rl.Rectangle { 0, 0, box.width, box.height }
+    source := rl.Rectangle { 0, 0, f32(sprite.texture.width), f32(sprite.texture.height) }
     dest := box
 
     rl.DrawTexturePro(sprite.texture, source, dest, rl.Vector2 { 0, 0 }, 0, rl.WHITE)

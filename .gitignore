@@ -1,4 +1,6 @@
 ols/
+libresprite/
+
 *.exe
 
 src.bin*/
