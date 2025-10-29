@@ -8,6 +8,7 @@ import "core:time"
 // INTERNAL can be used to run systems regardless from the game state
 SystemType :: enum {
   RUNTIME,
+  DRAW,
   PAUSE,
   INTERNAL,
   SYSTEMS,
@@ -28,22 +29,15 @@ system_register :: proc(type: SystemType, callback: proc(), recurrence_in_ms: f6
 
 
 
-// Main entrypoint for systems update backend-side
-systems_update :: proc() {
-  timer.reset(timer.Type.SYSTEM)
-  now := time.now()
-
-  if game_state.paused {
-    run_systems(&system_registry[.PAUSE], now)
-  } else {
-    run_systems(&system_registry[.RUNTIME], now)
+// Generic system runner, taking a type and calling the callback for each
+systems_run :: proc(type: SystemType, now: time.Time) {
+  for &system in system_registry[type] {
+    if can_update(&system, now) {
+      system.callback()
+      system.last_updated_at = now
+    }
   }
-
-  run_systems(&system_registry[.INTERNAL], now)
-
-  timer.lock(timer.Type.SYSTEM)
 }
-
 
 
 //
@@ -62,17 +56,6 @@ System :: struct {
   recurrence_in_ms: f64,
   callback: proc(),
   last_updated_at: time.Time,
-}
-
-// Generic system runner, taking a list and calling the callback for each
-@(private="file")
-run_systems :: proc(list: ^[dynamic]System, now: time.Time) {
-  for &system in list {
-    if can_update(&system, now) {
-      system.callback()
-      system.last_updated_at = now
-    }
-  }
 }
 
 

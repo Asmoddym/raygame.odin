@@ -45,7 +45,7 @@ table_text_boxes: engine.Table(Component_TextBox)
 
 
 // Draw a list of buttons centered on y and x from engine.game_state.resolution
-ui_button_draw_xy_centered_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int = -1, color: rl.Color = rl.WHITE) {
+drawable_button_draw_xy_centered_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int = -1, color: rl.Color = rl.WHITE) {
   padding := i32(font_size / 3)
   text_height_with_padding := font_size + 2 * padding
 
@@ -63,13 +63,13 @@ ui_button_draw_xy_centered_list :: proc(texts: []string, font_size: i32, on_clic
       f32(beginning_y),
     }
 
-    ui_button_draw(text, position, font_size, on_click[idx], selected == idx, color)
+    drawable_button_draw(text, position, font_size, on_click[idx], selected == idx, color)
     beginning_y += text_height_with_padding + BUTTON_SPACING
   }
 }
 
 // Draw a button with a given size and position
-ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
+drawable_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
   padding := i32(font_size / 3)
   thickness: f32 = 2
 
@@ -98,20 +98,20 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
 
 // Init a text box, generating and storing the metadata to the component pointer
-ui_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_entity_id: int, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+drawable_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_entity_id: int, duration: f64 = -1, color: rl.Color = rl.WHITE) {
   component.duration = duration
   component.instanciated_at = time.now()
   component.attached_to_box = &engine.database_get_component(attached_to_entity_id, &table_bounding_boxes).box
 
-  ui_text_box_generate_metadata(&component.metadata, text, font_size, color)
+  drawable_text_box_generate_metadata(&component.metadata, text, font_size, color)
 
   component.animated = false
   component.ticks = 0
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer
-ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_entity_id: int, duration: f64 = -1, color: rl.Color = rl.WHITE) {
-  ui_text_box_init(component, text, font_size, attached_to_entity_id, duration, color)
+drawable_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_entity_id: int, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+  drawable_text_box_init(component, text, font_size, attached_to_entity_id, duration, color)
 
   component.animated = true
 }
@@ -125,7 +125,7 @@ ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, f
 
 
 // Draw text boxes
-ui_system_text_box_draw :: proc() {
+drawable_system_text_box_draw :: proc() {
   for &item in table_text_boxes.items {
     box := item.attached_to_box
 
@@ -133,16 +133,16 @@ ui_system_text_box_draw :: proc() {
       position := rl.Vector2 { box.x + box.width, box.y }
 
       if item.animated {
-        ui_animated_text_box_draw(&item.metadata, position, item.ticks)
+        drawable_animated_text_box_draw(&item.metadata, position, item.ticks)
       } else {
-        ui_text_box_draw(&item.metadata, position)
+        drawable_text_box_draw(&item.metadata, position)
       }
     }
   }
 }
 
 // Update animated text boxes and remove text boxes whose duration is expired
-ui_system_text_box_update :: proc() {
+drawable_system_text_box_update :: proc() {
   to_delete: [dynamic]int
 
   for &item in table_text_boxes.items {
@@ -165,7 +165,7 @@ ui_system_text_box_update :: proc() {
 }
 
 // Misc system to keep the camera position to the center of the screen
-ui_system_update_camera_position :: proc() {
+drawable_system_update_camera_position :: proc() {
   box := engine.database_get_component(globals.player_id, &table_bounding_boxes).box
 
   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
@@ -191,21 +191,21 @@ TEXT_WIDTH_THRESHOLD: i32 = 200
 
 
 @(private="file")
-ui_text_box_draw :: proc(metadata: ^TextBoxMetadata, position: rl.Vector2, color: rl.Color = rl.WHITE) {
+drawable_text_box_draw :: proc(metadata: ^TextBoxMetadata, position: rl.Vector2, color: rl.Color = rl.WHITE) {
   i32_position: [2]i32 = { i32(position.x), i32(position.y) - metadata.box_height }
-  ui_text_box_draw_from_metadata(metadata, i32_position) 
+  drawable_text_box_draw_from_metadata(metadata, i32_position) 
 }
 
 @(private="file")
-ui_animated_text_box_draw :: proc(metadata: ^TextBoxMetadata, position: rl.Vector2, ticks: int, color: rl.Color = rl.WHITE) {
+drawable_animated_text_box_draw :: proc(metadata: ^TextBoxMetadata, position: rl.Vector2, ticks: int, color: rl.Color = rl.WHITE) {
   i32_position: [2]i32 = { i32(position.x), i32(position.y) - metadata.box_height }
 
   metadata.words = strings.split(metadata.text[:ticks], " ")
-  ui_text_box_draw_from_metadata(metadata, i32_position)
+  drawable_text_box_draw_from_metadata(metadata, i32_position)
 }
 
 @(private="file")
-ui_text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]i32) {
+drawable_text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]i32) {
   bytes: [256]byte
   builder := strings.builder_from_bytes(bytes[:])
 
@@ -224,7 +224,7 @@ ui_text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]
 }
 
 @(private="file")
-ui_text_box_generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, font_size: i32, color: rl.Color) {
+drawable_text_box_generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, font_size: i32, color: rl.Color) {
   bytes: [256]byte
   builder := strings.builder_from_bytes(bytes[:])
   current_width: i32 = 0

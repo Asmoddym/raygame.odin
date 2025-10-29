@@ -9,6 +9,7 @@ Metadata :: struct {}
 // Main base component struct, simply storing entity_id and metadata class
 Component :: struct($T: typeid) {
   entity_id: int,
+  id: int,
 
   metadata: T,
 }
@@ -31,10 +32,15 @@ database_create_entity :: proc() -> int {
 
 // Add a component and link it to an entity_id
 database_add_component :: proc(entity_id: int, table: ^Table($ComponentType)) -> ^ComponentType {
+  @(static) component_count := 0
+
   append(&table.items, ComponentType { })
 
   item := &table.items[len(table.items) - 1]
   item.base.entity_id = entity_id
+  item.base.id = component_count
+
+  component_count += 1
 
   return item
 }

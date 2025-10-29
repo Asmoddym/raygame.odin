@@ -1,5 +1,6 @@
 package engine
 
+import "core:time"
 import "utl/timer"
 import "core:fmt"
 import "core:strings"
@@ -29,17 +30,7 @@ run :: proc() {
     application_game_state_process_changes(previous_state)
     previous_state = game_state
 
-    rl.BeginDrawing()
-
-    if game_state.paused {
-      application_pause_process_frame()
-    } else {
-      application_runtime_process_frame()
-    }
-
-    when ODIN_DEBUG do application_debug_render_information()
-
-    rl.EndDrawing()
+    application_run_frame()
   }
 }
 
@@ -58,6 +49,8 @@ GameState :: struct {
   borderless_window: bool,
   fullscreen: bool,
   resolution: [2]i32,
+
+  drawable_layers: [5]rl.RenderTexture,
 }
 
 
@@ -74,6 +67,8 @@ application_window_init :: proc(resolution: [2]i32) {
     resolution.x == 0 ? rl.GetMonitorWidth(rl.GetCurrentMonitor()) : resolution.x,
     resolution.y == 0 ? rl.GetMonitorHeight(rl.GetCurrentMonitor()) : resolution.y,
   }
+
+  application_game_state_init_drawable_layers()
 
   game_state.borderless_window = false
 
@@ -96,6 +91,7 @@ application_window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
   }
 
   camera_init_offset(game_state.resolution)
+  application_game_state_init_drawable_layers(regenerate = true)
 }
 
 
@@ -103,26 +99,42 @@ application_window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
 // FRAME PROCESSING
 
 
-// Process pause frame (no 2D mode)
-@(private="file")
-application_pause_process_frame :: proc() {
-  rl.ClearBackground(rl.BLACK)
 
-  systems_update()
+application_run_frame :: proc() {
+  now := time.now()
 
-  timer.lock(timer.Type.FRAME)
-}
+  if game_state.paused {
+    rl.BeginDrawing()
+    rl.ClearBackground(rl.BLACK)
 
-// Process runtime frame (2D mode)
-@(private="file")
-application_runtime_process_frame :: proc() {
-  rl.BeginMode2D(camera)
-  rl.ClearBackground(rl.BLACK)
+    timer.reset(timer.Type.SYSTEM)
+    systems_run(.PAUSE, now)
+    timer.lock(timer.Type.SYSTEM)
 
-  systems_update()
+    when ODIN_DEBUG do application_debug_render_information()
+    rl.EndDrawing()
+  } else {
+    timer.reset(timer.Type.SYSTEM)
+    systems_run(.RUNTIME, now)
 
-  timer.lock(timer.Type.FRAME)
-  rl.EndMode2D()
+    rl.BeginDrawing()
+    rl.BeginMode2D(camera)
+    rl.ClearBackground(rl.BLACK)
+
+    systems_run(.DRAW, now)
+    timer.lock(timer.Type.SYSTEM)
+    timer.lock(timer.Type.FRAME)
+
+    rl.EndMode2D()
+
+    when ODIN_DEBUG do application_debug_render_information()
+    rl.EndDrawing()
+  }
+
+  systems_run(.INTERNAL, now)
+
+  timer.lock(timer.Type.SYSTEM)
+
 }
 
 
@@ -159,5 +171,14 @@ application_game_state_process_changes :: proc(previous_state: GameState) {
   } else if game_state.fullscreen != previous_state.fullscreen {
     game_state.borderless_window = false
     application_window_toggle_mode(game_state.fullscreen, proc() { rl.ToggleFullscreen() })
+  }
+}
+
+@(private="file")
+application_game_state_init_drawable_layers :: proc(regenerate: bool = false) {
+  for &layer in game_state.drawable_layers {
+    if regenerate do rl.UnloadRenderTexture(layer)
+
+    layer = rl.LoadRenderTexture(game_state.resolution.x, game_state.resolution.y)
   }
 }
