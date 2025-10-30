@@ -47,8 +47,16 @@ init_terrain :: proc() {
   engine.database_add_component(tree_trunk_1, &table_sprites[0]).texture = rl.LoadTexture("tree_trunk_1.png")
   tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &table_bounding_boxes[0])
   tree_trunk_1_bb.box = rl.Rectangle { 500, 500, 64, 64 }
-  tree_trunk_1_bb.movable = false
+  tree_trunk_1_bb.movable = true
   tree_trunk_1_bb.collidable = true
+
+  root := engine.database_create_entity()
+  engine.database_add_component(root, &table_sprites[0]).texture = rl.LoadTexture("tree_trunk_2.png")
+  root_bb := engine.database_add_component(root, &table_bounding_boxes[0])
+  root_bb.box = rl.Rectangle { 650, 500, 64, 64 }
+  root_bb.movable = false
+  root_bb.collidable = true
+
 
   tree_trunk_2 := engine.database_create_entity()
   engine.database_add_component(tree_trunk_2, &table_sprites[1]).texture = rl.LoadTexture("tree_trunk_2.png")
@@ -75,6 +83,7 @@ main :: proc() {
   engine.system_register(engine.SystemType.RUNTIME,  ui_system_text_box_update)
   engine.system_register(engine.SystemType.RUNTIME,  bounding_box_system_collision_resolver)
   engine.system_register(engine.SystemType.RUNTIME,  ui_system_drawable_draw)
+  engine.system_register(engine.SystemType.RUNTIME,  bounding_box_system_draw)
   engine.system_register(engine.SystemType.RUNTIME,  ui_system_text_box_draw)
   engine.system_register(engine.SystemType.PAUSE,    pause_system_main)
   engine.system_register(engine.SystemType.INTERNAL, pause_system_toggle)

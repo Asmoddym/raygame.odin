@@ -31,9 +31,6 @@ table_bounding_boxes: [5]engine.Table(Component_BoundingBox)
 // Main collision system using bounding_box components
 // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
 bounding_box_system_collision_resolver :: proc() {
-  @(static) show_bounds := true
-
-  if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
   for layer in 0..<5 {
     x_points: [dynamic]EdgeData
     x_active_intervals: [dynamic]int
@@ -43,23 +40,10 @@ bounding_box_system_collision_resolver :: proc() {
     for bounding_box in bounding_box_table.items {
       box := bounding_box.box
 
-      if !bounding_box.collidable {
-        if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.Color { 130, 130, 130, 255 / u8(layer + 1) })
-
-        continue
-      }
-
       entity_id := bounding_box.entity_id
 
       append(&x_points, EdgeData { entity_id, box.x, 0 })
       append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
-
-      if show_bounds {
-        color := rl.Color { 0, 255 / u8(layer + 1), 50 * u8(layer + 1), 255 }
-        rl.DrawRectangleLinesEx(box, 2, color)
-        rl.DrawLineEx(rl.Vector2 { box.x, box.y }, rl.Vector2 { box.x + box.width, box.y + box.height }, 2, color)
-        rl.DrawLineEx(rl.Vector2 { box.x + box.width, box.y }, rl.Vector2 { box.x, box.y + box.height }, 2, color)
-      }
     }
 
     slice.sort_by(x_points[:], proc(i, j: EdgeData) -> bool { return i.v < j.v })
@@ -69,12 +53,40 @@ bounding_box_system_collision_resolver :: proc() {
         entity_id := x.id
 
         for other_entity_id in x_active_intervals {
-          resolve_collision(entity_id, other_entity_id, show_bounds, layer)
+          resolve_collision(entity_id, other_entity_id, layer)
         }
 
         append(&x_active_intervals, x.id)
       } else {
         remove_by_id(&x_active_intervals, x.id)
+      }
+    }
+  }
+}
+
+// Draw bounds if activated
+bounding_box_system_draw :: proc() {
+  if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
+
+  if !show_bounds do return
+
+  for layer in 0..<5 {
+    color := rl.Color { 0, 255 / u8(layer + 1), 50 * u8(layer + 1), 255 }
+
+    for &bounding_box in table_bounding_boxes[layer].items {
+      box := &bounding_box.box
+
+      if !bounding_box.collidable {
+        if show_bounds do rl.DrawRectangleLinesEx(box^, 1, rl.Color { 130, 130, 130, 255 / u8(layer + 1) })
+
+          continue
+      }
+
+      rl.DrawRectangleLinesEx(box^, 2, color)
+
+      if !bounding_box.movable {
+        rl.DrawLineEx(rl.Vector2 { box.x, box.y }, rl.Vector2 { box.x + box.width, box.y + box.height }, 2, color)
+        rl.DrawLineEx(rl.Vector2 { box.x + box.width, box.y }, rl.Vector2 { box.x, box.y + box.height }, 2, color)
       }
     }
   }
@@ -103,10 +115,13 @@ compass := #partial [enums.Direction]rl.Vector2 {
   .LEFT = rl.Vector2 { -1, 0 },
 }
 
+@(private="file")
+show_bounds := true
+
 
 // Collision resolver
 @(private="file")
-resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: bool, layer: int) {
+resolve_collision :: proc(entity_id: int, other_entity_id: int, layer: int) {
   bounding_box := engine.database_get_component(entity_id, &table_bounding_boxes[layer])
   other_bounding_box := engine.database_get_component(other_entity_id, &table_bounding_boxes[layer])
 
@@ -138,19 +153,20 @@ resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: boo
   }
 
   if best_match == .LEFT || best_match == .RIGHT {
-    mid_diff := collision_rec.width / 2
+    diff := collision_rec.width / 2
 
     // As the algorithm begins with X coord, we know box will always be the entity at the right.
-    if bounding_box.movable do box.x += mid_diff
-    if other_bounding_box.movable do other_box.x -= mid_diff
+
+    if bounding_box.movable do box.x += diff
+    if other_bounding_box.movable do other_box.x -= diff
   } else {
-    mid_diff := collision_rec.height / 2
+    diff := collision_rec.height / 2
 
     // Here, we need to check in which direction the collision occurred
-    mid_diff *= best_match == .UP ? 1 : -1
+    diff *= best_match == .UP ? 1 : -1
 
-    if bounding_box.movable do box.y += mid_diff
-    if other_bounding_box.movable do other_box.y -= mid_diff
+    if bounding_box.movable do box.y += diff
+    if other_bounding_box.movable do other_box.y -= diff
   }
 
   if show_bounds {
