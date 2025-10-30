@@ -32,7 +32,7 @@ Component_TextBox :: struct {
 
   duration: f64,
   instanciated_at: time.Time,
-  attached_to_box: ^rl.Rectangle,
+  attached_to_bounding_box: ^rl.Rectangle,
 
   animated: bool,
   ticks: int,
@@ -98,10 +98,10 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
 
 // Init a text box, generating and storing the metadata to the component pointer
-ui_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_entity_id: int, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+ui_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
   component.duration = duration
   component.instanciated_at = time.now()
-  component.attached_to_box = &engine.database_get_component(attached_to_entity_id, &table_bounding_boxes).box
+  component.attached_to_bounding_box = &attached_to_bounding_box.box
 
   ui_text_box_generate_metadata(&component.metadata, text, font_size, color)
 
@@ -110,8 +110,8 @@ ui_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size:
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer
-ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_entity_id: int, duration: f64 = -1, color: rl.Color = rl.WHITE) {
-  ui_text_box_init(component, text, font_size, attached_to_entity_id, duration, color)
+ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+  ui_text_box_init(component, text, font_size, attached_to_bounding_box, duration, color)
 
   component.animated = true
 }
@@ -127,7 +127,7 @@ ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, f
 // Draw text boxes
 ui_system_text_box_draw :: proc() {
   for &item in table_text_boxes.items {
-    box := item.attached_to_box
+    box := item.attached_to_bounding_box
 
     if box != nil {
       position := rl.Vector2 { box.x + box.width, box.y }
@@ -166,7 +166,7 @@ ui_system_text_box_update :: proc() {
 
 // Misc system to keep the camera position to the center of the screen
 ui_system_update_camera_position :: proc() {
-  box := engine.database_get_component(globals.player_id, &table_bounding_boxes).box
+  box := engine.database_get_component(globals.player_id, &table_bounding_boxes[0]).box
 
   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }

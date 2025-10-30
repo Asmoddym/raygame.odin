@@ -25,8 +25,8 @@ table_controllables: engine.Table(Component_Controllable)
 
 // Controllable handling from inputs
 controllable_system_handle_inputs :: proc() {
-  animated_sprite := engine.database_get_component(globals.player_id, &table_animated_sprites)
-  box := &engine.database_get_component(globals.player_id, &table_bounding_boxes).box
+  animated_sprite := engine.database_get_component(globals.player_id, &table_animated_sprites[0])
+  box := &engine.database_get_component(globals.player_id, &table_bounding_boxes[0]).box
 
   animated_sprite.state = int(enums.Direction.NONE)
   if rl.IsKeyDown(rl.KeyboardKey.LEFT) {

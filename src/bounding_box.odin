@@ -18,7 +18,7 @@ Component_BoundingBox :: struct {
   movable: bool,
 }
 
-table_bounding_boxes: engine.Table(Component_BoundingBox)
+table_bounding_boxes: [5]engine.Table(Component_BoundingBox)
 
 
 
@@ -34,40 +34,48 @@ bounding_box_system_collision_resolver :: proc() {
   @(static) show_bounds := true
 
   if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
+  for layer in 0..<5 {
+    x_points: [dynamic]EdgeData
+    x_active_intervals: [dynamic]int
 
-  x_points: [dynamic]EdgeData
-  x_active_intervals: [dynamic]int
+    bounding_box_table := &table_bounding_boxes[layer]
 
-  for bounding_box in table_bounding_boxes.items {
-    box := bounding_box.box
+    for bounding_box in bounding_box_table.items {
+      box := bounding_box.box
 
-    if !bounding_box.collidable {
-      if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.GRAY)
+      if !bounding_box.collidable {
+        if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.Color { 130, 130, 130, 255 / u8(layer + 1) })
 
-      continue
-    }
-
-    entity_id := bounding_box.entity_id
-
-    append(&x_points, EdgeData { entity_id, box.x, 0 })
-    append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
-
-    if show_bounds do rl.DrawRectangleLinesEx(box, 1, rl.GREEN)
-  }
-
-  slice.sort_by(x_points[:], proc(i, j: EdgeData) -> bool { return i.v < j.v })
-
-  for x in x_points {
-    if x.type == 0 {
-      entity_id := x.id
-
-      for other_entity_id in x_active_intervals {
-        resolve_collision(entity_id, other_entity_id, show_bounds)
+        continue
       }
 
-      append(&x_active_intervals, x.id)
-    } else {
-      remove_by_id(&x_active_intervals, x.id)
+      entity_id := bounding_box.entity_id
+
+      append(&x_points, EdgeData { entity_id, box.x, 0 })
+      append(&x_points, EdgeData { entity_id, box.x + box.width, 1 })
+
+      if show_bounds {
+        color := rl.Color { 0, 255 / u8(layer + 1), 50 * u8(layer + 1), 255 }
+        rl.DrawRectangleLinesEx(box, 2, color)
+        rl.DrawLineEx(rl.Vector2 { box.x, box.y }, rl.Vector2 { box.x + box.width, box.y + box.height }, 2, color)
+        rl.DrawLineEx(rl.Vector2 { box.x + box.width, box.y }, rl.Vector2 { box.x, box.y + box.height }, 2, color)
+      }
+    }
+
+    slice.sort_by(x_points[:], proc(i, j: EdgeData) -> bool { return i.v < j.v })
+
+    for x in x_points {
+      if x.type == 0 {
+        entity_id := x.id
+
+        for other_entity_id in x_active_intervals {
+          resolve_collision(entity_id, other_entity_id, show_bounds, layer)
+        }
+
+        append(&x_active_intervals, x.id)
+      } else {
+        remove_by_id(&x_active_intervals, x.id)
+      }
     }
   }
 }
@@ -95,11 +103,12 @@ compass := #partial [enums.Direction]rl.Vector2 {
   .LEFT = rl.Vector2 { -1, 0 },
 }
 
+
 // Collision resolver
 @(private="file")
-resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: bool) {
-  bounding_box := engine.database_get_component(entity_id, &table_bounding_boxes)
-  other_bounding_box := engine.database_get_component(other_entity_id, &table_bounding_boxes)
+resolve_collision :: proc(entity_id: int, other_entity_id: int, show_bounds: bool, layer: int) {
+  bounding_box := engine.database_get_component(entity_id, &table_bounding_boxes[layer])
+  other_bounding_box := engine.database_get_component(other_entity_id, &table_bounding_boxes[layer])
 
   box := &bounding_box.box
   other_box := &other_bounding_box.box
