@@ -38,8 +38,9 @@ bounding_box_system_collision_resolver :: proc() {
     bounding_box_table := &table_bounding_boxes[layer]
 
     for bounding_box in bounding_box_table.items {
-      box := bounding_box.box
+      if !bounding_box.collidable do continue
 
+      box := bounding_box.box
       entity_id := bounding_box.entity_id
 
       append(&x_points, EdgeData { entity_id, box.x, 0 })
