@@ -67,8 +67,10 @@ GameState :: struct {
 // Initialize window from a resolution
 @(private="file")
 application_window_init :: proc(resolution: [2]i32) {
-  rl.SetConfigFlags({rl.ConfigFlag.VSYNC_HINT, rl.ConfigFlag.WINDOW_HIGHDPI})
+  rl.SetConfigFlags({rl.ConfigFlag.WINDOW_HIGHDPI})
   rl.InitWindow(resolution.x, resolution.y, "coucou")
+
+  rl.SetTargetFPS(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 
   game_state.resolution = {
     resolution.x == 0 ? rl.GetMonitorWidth(rl.GetCurrentMonitor()) : resolution.x,
