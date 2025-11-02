@@ -4,6 +4,12 @@ cmd_windows: :terminal .\vendor\builder.bat run debug
 cmd_unix: :terminal ./vendor/builder.sh run debug
 after: i
 
+[run-release]
+mode: float
+cmd_windows: :terminal .\vendor\builder.bat run release
+cmd_unix: :terminal ./vendor/builder.sh run release
+after: i
+
 [check]
 mode: float
 cmd_windows: :terminal .\vendor\builder.bat check debug
