@@ -43,6 +43,11 @@ run :: proc() {
   }
 }
 
+// Unload all data before exiting program
+unload :: proc() {
+  assets_unload()
+}
+
 
 
 //

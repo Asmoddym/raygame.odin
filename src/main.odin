@@ -5,13 +5,12 @@ package macro
 import "engine"
 import "enums"
 import "globals"
-
 import rl "vendor:raylib"
 
 init_npc :: proc() {
   npc := engine.database_create_entity()
   sprite := engine.database_add_component(npc, &table_sprites[1])
-  sprite.texture = rl.LoadTexture("wabbit_alpha.png")
+  sprite.texture = engine.assets_find_or_create(rl.Texture2D, "wabbit_alpha.png")
   bounding_box := engine.database_add_component(npc, &table_bounding_boxes[1])
   bounding_box.box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
   bounding_box.movable = false
@@ -44,21 +43,21 @@ init_player :: proc() {
 
 init_terrain :: proc() {
   tree_trunk_1 := engine.database_create_entity()
-  engine.database_add_component(tree_trunk_1, &table_sprites[globals.PLAYER_LAYER]).texture = rl.LoadTexture("tree_trunk_1.png")
+  engine.database_add_component(tree_trunk_1, &table_sprites[globals.PLAYER_LAYER]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
   tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &table_bounding_boxes[globals.PLAYER_LAYER])
   tree_trunk_1_bb.box = rl.Rectangle { 500, 500, 64, 64 }
   tree_trunk_1_bb.movable = true
   tree_trunk_1_bb.collidable = true
 
   tree_trunk_2 := engine.database_create_entity()
-  engine.database_add_component(tree_trunk_2, &table_sprites[globals.PLAYER_LAYER + 1]).texture = rl.LoadTexture("tree_trunk_2.png")
+  engine.database_add_component(tree_trunk_2, &table_sprites[globals.PLAYER_LAYER + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_2.png")
   tree_trunk_2_bb := engine.database_add_component(tree_trunk_2, &table_bounding_boxes[globals.PLAYER_LAYER + 1])
   tree_trunk_2_bb.box = rl.Rectangle { 500, 500 - 64, 64, 64 }
   tree_trunk_2_bb.movable = false
   tree_trunk_2_bb.collidable = false
 
   tree_leaves := engine.database_create_entity()
-  engine.database_add_component(tree_leaves, &table_sprites[globals.PLAYER_LAYER + 1]).texture = rl.LoadTexture("tree_leaves.png")
+  engine.database_add_component(tree_leaves, &table_sprites[globals.PLAYER_LAYER + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_leaves.png")
   tree_leaves_bb := engine.database_add_component(tree_leaves, &table_bounding_boxes[globals.PLAYER_LAYER + 1])
   tree_leaves_bb.box = rl.Rectangle { 500 - 32, 500 - 128 - 64, 128, 128}
   tree_leaves_bb.movable = false
@@ -67,7 +66,7 @@ init_terrain :: proc() {
 
   // Additional
   root := engine.database_create_entity()
-  engine.database_add_component(root, &table_sprites[globals.PLAYER_LAYER]).texture = rl.LoadTexture("tree_trunk_2.png")
+  engine.database_add_component(root, &table_sprites[globals.PLAYER_LAYER]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
   root_bb := engine.database_add_component(root, &table_bounding_boxes[globals.PLAYER_LAYER])
   root_bb.box = rl.Rectangle { 650, 500, 64, 64 }
   root_bb.movable = false
@@ -94,4 +93,5 @@ main :: proc() {
   init_terrain()
 
   engine.run()
+  engine.unload()
 }

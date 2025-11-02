@@ -11,7 +11,7 @@ import rl "vendor:raylib"
 
 // TODO: Make this a metadata
 Spritesheet :: struct {
-  texture: rl.Texture2D,
+  texture: ^rl.Texture2D,
   index: int,
   tiles: int,
 }
@@ -19,7 +19,7 @@ Spritesheet :: struct {
 Component_Sprite :: struct {
   using base: engine.Component(engine.Metadata),
 
-  texture: rl.Texture2D,
+  texture: ^rl.Texture2D,
 }
 
 Component_AnimatedSprite :: struct {
@@ -42,8 +42,7 @@ ui_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map[int]s
   self.last_updated_at = time.now()
 
   for idx, path in cfg {
-    // Normally this is OK as Texture2D is a simple struct
-    texture := rl.LoadTexture(strings.unsafe_string_to_cstring(path))
+    texture := engine.assets_find_or_create(rl.Texture2D, strings.unsafe_string_to_cstring(path))
 
     self.states[idx] = Spritesheet { texture, 0, int(texture.width / texture.height) }
   }
@@ -68,7 +67,7 @@ ui_system_drawable_draw :: proc() {
       source := rl.Rectangle { 0, 0, f32(sprite.texture.width), f32(sprite.texture.height) }
       dest := box
 
-      rl.DrawTexturePro(sprite.texture, source, dest, rl.Vector2 { 0, 0 }, 0, rl.WHITE)
+      rl.DrawTexturePro(sprite.texture^, source, dest, rl.Vector2 { 0, 0 }, 0, rl.WHITE)
     }
 
     // Draw animated sprites
@@ -84,7 +83,7 @@ ui_system_drawable_draw :: proc() {
       }
       dest := box
 
-      rl.DrawTexturePro(spritesheet.texture, source, dest, rl.Vector2 { 0, 0 }, 0, rl.WHITE)
+      rl.DrawTexturePro(spritesheet.texture^, source, dest, rl.Vector2 { 0, 0 }, 0, rl.WHITE)
     }
   }
 }
