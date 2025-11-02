@@ -3,20 +3,23 @@ package engine
 import "core:fmt"
 import rl "vendor:raylib"
 
-assets_find_or_create :: proc($Type: typeid, args: ..any) -> ^Type {
+assets_find_or_create :: proc($Type: typeid, args: ..any) -> Type {
   if Type == rl.Texture2D {
     cstring := fmt.ctprint(..args)
     identifier := string(cstring)
 
+    fmt.println("> ", identifier)
+
     found_item := assets_find_in(&textures, identifier)
-    if found_item != nil do return &found_item.value
+    if found_item != nil do return found_item.value
 
     append(&textures, Item(rl.Texture2D) { identifier, rl.LoadTexture(cstring) })
 
-    return &textures[len(textures) - 1].value
+    return textures[len(textures) - 1].value
   }
 
-  return nil
+  assert(false, fmt.tprint("assets_find_or_create: unable to store with args ", args))
+  return Type {}
 }
 
 
