@@ -16,7 +16,7 @@ init :: proc() {
   game_state.paused = false
   game_state.closed = false
 
-  application_window_init({ 1600, 900 })
+  application_window_init({ 1024, 768})
   camera_init(game_state.resolution)
 }
 
@@ -72,7 +72,6 @@ GameState :: struct {
 // Initialize window from a resolution
 @(private="file")
 application_window_init :: proc(resolution: [2]i32) {
-  rl.SetConfigFlags({rl.ConfigFlag.WINDOW_HIGHDPI})
   rl.InitWindow(resolution.x, resolution.y, "coucou")
 
   rl.SetTargetFPS(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
@@ -93,16 +92,17 @@ application_window_init :: proc(resolution: [2]i32) {
 @(private="file")
 application_window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
   if toggle {
+    toggler()
     game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
     rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-    toggler()
   } else {
     toggler()
-    game_state.resolution = { 1600, 900 }
+    game_state.resolution = { 1024, 768 }
     rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
   }
 
   camera_init_offset(game_state.resolution)
+  rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
 }
 
 
