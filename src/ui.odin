@@ -73,6 +73,7 @@ ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box:
 
   ui_text_box_generate_metadata(&text_box, text, font_size, color)
 
+  text_box.animation_ended = false
   text_box.animated = false
   text_box.ticks = 0
 
@@ -115,19 +116,29 @@ ui_system_text_box_update :: proc() {
   to_delete: [dynamic]int
 
   for idx in 0..<len(text_boxes) {
-    item := &text_boxes[idx]
+    item        := &text_boxes[idx]
+    time_source := item.instanciated_at
 
-    time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
+    if item.animated {
+      if item.animation_ended {
+        time_source = item.animation_ended_at
+      } else {
+        if item.ticks < item.text_len {
+          time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
+          item.ticks = int(time_diff / 30)
 
-    if item.animated && item.ticks != item.text_len {
-      // 30ms for each letter
-      item.ticks = int(time_diff / 30)
-      if item.ticks > item.text_len do item.ticks = item.text_len
+          if item.ticks == item.text_len {
+            item.animation_ended = true
+            item.animation_ended_at = time.now()
+          }
+        }
+      }
     }
 
-    if item.duration != -1 && time_diff > item.duration {
-      append(&to_delete, idx)
-    }
+    if item.duration == -1 do continue
+
+    time_diff := time.duration_milliseconds(time.diff(time_source, time.now()))
+    if time_diff > item.duration do append(&to_delete, idx)
   }
 
   for idx in to_delete {
@@ -181,8 +192,11 @@ TextBoxMetadata :: struct {
 
   duration: f64,
   instanciated_at: time.Time,
-  attached_to_bounding_box: ^rl.Rectangle,
 
+  animation_ended: bool,
+  animation_ended_at: time.Time,
+
+  attached_to_bounding_box: ^rl.Rectangle,
   animated: bool,
   ticks: int,
 }
