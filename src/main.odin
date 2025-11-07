@@ -15,8 +15,7 @@ init_npc :: proc() {
   bounding_box.box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
   bounding_box.movable = false
   bounding_box.collidable = true
-  text := engine.database_add_component(npc, &table_text_boxes)
-  ui_text_box_init(text,
+  ui_text_box_draw(
     "J'ai terriblement faim à l'aide :(",
     font_size = 20,
     attached_to_bounding_box = bounding_box,

@@ -7,40 +7,6 @@ import "core:time"
 import rl "vendor:raylib"
 
 
-// COMPONENTS DEFINITION
-
-
-TextBoxMetadata :: struct {
-  using base: engine.Metadata,
-
-  lines: i32,
-  text_width: i32,
-  box_width: i32,
-  text_height: i32,
-  box_height: i32,
-
-  words_position: [dynamic][2]i32,
-  words: []string,
-  text: string,
-  text_len: int,
-  font_size: i32,
-  color: rl.Color,
-}
-
-Component_TextBox :: struct {
-  using base: engine.Component(TextBoxMetadata),
-
-  duration: f64,
-  instanciated_at: time.Time,
-  attached_to_bounding_box: ^rl.Rectangle,
-
-  animated: bool,
-  ticks: int,
-}
-
-table_text_boxes: engine.Table(Component_TextBox)
-
-
 // BUTTON
 
 
@@ -98,22 +64,26 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
 
 // Init a text box, generating and storing the metadata to the component pointer
-ui_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
-  component.duration = duration
-  component.instanciated_at = time.now()
-  component.attached_to_bounding_box = &attached_to_bounding_box.box
+ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+  text_box: TextBoxMetadata
 
-  ui_text_box_generate_metadata(&component.metadata, text, font_size, color)
+  text_box.duration = duration
+  text_box.instanciated_at = time.now()
+  text_box.attached_to_bounding_box = &attached_to_bounding_box.box
 
-  component.animated = false
-  component.ticks = 0
+  ui_text_box_generate_metadata(&text_box, text, font_size, color)
+
+  text_box.animated = false
+  text_box.ticks = 0
+
+  append(&text_boxes, text_box)
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer
-ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
-  ui_text_box_init(component, text, font_size, attached_to_bounding_box, duration, color)
+ui_animated_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+  ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, color)
 
-  component.animated = true
+  text_boxes[len(text_boxes) - 1].animated = true
 }
 
 
@@ -126,17 +96,16 @@ ui_animated_text_box_init :: proc(component: ^Component_TextBox, text: string, f
 
 // Draw text boxes
 ui_system_text_box_draw :: proc() {
-  for &item in table_text_boxes.items {
+  for &item in text_boxes {
     box := item.attached_to_bounding_box
 
     if box != nil {
-      position := rl.Vector2 { box.x + box.width, box.y }
+      position := [2]i32 { i32(box.x + box.width), i32(box.y) - item.box_height }
 
-      if item.animated {
-        ui_animated_text_box_draw(&item.metadata, position, item.ticks)
-      } else {
-        ui_text_box_draw(&item.metadata, position)
-      }
+      // Update animated textbox displayed characters
+      if item.animated do item.words = strings.split(item.text[:item.ticks], " ")
+
+      ui_text_box_draw_from_metadata(&item, position)
     }
   }
 }
@@ -145,22 +114,25 @@ ui_system_text_box_draw :: proc() {
 ui_system_text_box_update :: proc() {
   to_delete: [dynamic]int
 
-  for &item in table_text_boxes.items {
+  for idx in 0..<len(text_boxes) {
+    item := &text_boxes[idx]
+
     time_diff := time.duration_milliseconds(time.diff(item.instanciated_at, time.now()))
 
-    if item.animated && item.ticks != item.metadata.text_len {
+    if item.animated && item.ticks != item.text_len {
       // 30ms for each letter
       item.ticks = int(time_diff / 30)
-      if item.ticks > item.metadata.text_len do item.ticks = item.metadata.text_len
+      if item.ticks > item.text_len do item.ticks = item.text_len
     }
 
     if item.duration != -1 && time_diff > item.duration {
-      append(&to_delete, item.entity_id)
+      append(&to_delete, idx)
     }
   }
 
-  for id in to_delete {
-    engine.database_destroy_component(id, &table_text_boxes)
+  for idx in to_delete {
+    unordered_remove(&text_boxes, idx)
+
   }
 }
 
@@ -189,20 +161,36 @@ TEXT_PADDING: i32 = 10
 TEXT_WIDTH_THRESHOLD: i32 = 200
 
 
-
 @(private="file")
-ui_text_box_draw :: proc(metadata: ^TextBoxMetadata, position: rl.Vector2, color: rl.Color = rl.WHITE) {
-  i32_position: [2]i32 = { i32(position.x), i32(position.y) - metadata.box_height }
-  ui_text_box_draw_from_metadata(metadata, i32_position) 
+// TextBox metadata containing all infos to draw it
+TextBoxMetadata :: struct {
+  using base: engine.Metadata,
+
+  lines: i32,
+  text_width: i32,
+  box_width: i32,
+  text_height: i32,
+  box_height: i32,
+
+  words_position: [dynamic][2]i32,
+  words: []string,
+  text: string,
+  text_len: int,
+  font_size: i32,
+  color: rl.Color,
+
+  duration: f64,
+  instanciated_at: time.Time,
+  attached_to_bounding_box: ^rl.Rectangle,
+
+  animated: bool,
+  ticks: int,
 }
 
 @(private="file")
-ui_animated_text_box_draw :: proc(metadata: ^TextBoxMetadata, position: rl.Vector2, ticks: int, color: rl.Color = rl.WHITE) {
-  i32_position: [2]i32 = { i32(position.x), i32(position.y) - metadata.box_height }
+// TextBox storage
+text_boxes: [dynamic]TextBoxMetadata
 
-  metadata.words = strings.split(metadata.text[:ticks], " ")
-  ui_text_box_draw_from_metadata(metadata, i32_position)
-}
 
 @(private="file")
 ui_text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]i32) {
