@@ -103,9 +103,6 @@ ui_system_text_box_draw :: proc() {
     if box != nil {
       position := [2]i32 { i32(box.x + box.width), i32(box.y) - item.box_height }
 
-      // Update animated textbox displayed characters
-      if item.animated do item.words = strings.split(item.text[:item.ticks], " ")
-
       ui_text_box_draw_from_metadata(&item, position)
     }
   }
@@ -131,6 +128,8 @@ ui_system_text_box_update :: proc() {
             item.animation_ended = true
             item.animation_ended_at = time.now()
           }
+
+          item.words = strings.split(item.text[:item.ticks], " ")
         }
       }
     }
@@ -143,7 +142,6 @@ ui_system_text_box_update :: proc() {
 
   for idx in to_delete {
     unordered_remove(&text_boxes, idx)
-
   }
 }
 
@@ -172,8 +170,8 @@ TEXT_PADDING: i32 = 10
 TEXT_WIDTH_THRESHOLD: i32 = 200
 
 
-@(private="file")
 // TextBox metadata containing all infos to draw it
+@(private="file")
 TextBoxMetadata :: struct {
   using base: engine.Metadata,
 
@@ -201,8 +199,8 @@ TextBoxMetadata :: struct {
   ticks: int,
 }
 
-@(private="file")
 // TextBox storage
+@(private="file")
 text_boxes: [dynamic]TextBoxMetadata
 
 
