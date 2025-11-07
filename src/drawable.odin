@@ -14,6 +14,7 @@ Spritesheet :: struct {
   texture: rl.Texture2D,
   index: int,
   tiles: int,
+  frame_duration: f64,
 }
 
 Component_Sprite :: struct {
@@ -43,8 +44,9 @@ ui_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map[int]s
 
   for idx, path in cfg {
     texture := engine.assets_find_or_create(rl.Texture2D, strings.unsafe_string_to_cstring(path))
+    tiles := int(texture.width / texture.height)
 
-    self.states[idx] = Spritesheet { texture, 0, int(texture.width / texture.height) }
+    self.states[idx] = Spritesheet { texture, 0, tiles, 1000 / f64(tiles) }
   }
 }
 
@@ -94,7 +96,7 @@ ui_system_animated_sprite_update :: proc() {
     for &item in table.items {
       current_state := &item.states[item.state]
 
-      if time.duration_milliseconds(time.diff(item.last_updated_at, time.now())) > f64(1000 / current_state.tiles) {
+      if time.duration_milliseconds(time.diff(item.last_updated_at, time.now())) > current_state.frame_duration {
         item.last_updated_at = time.now()
         current_state.index = (current_state.index + 1) % current_state.tiles
       }
