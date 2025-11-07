@@ -92,9 +92,12 @@ application_window_init :: proc(resolution: [2]i32) {
 @(private="file")
 application_window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
   if toggle {
-    toggler()
+    when ODIN_OS == .Darwin do toggler()
+
     game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
     rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
+
+    when ODIN_OS == .Windows do toggler()
   } else {
     toggler()
     game_state.resolution = { 1024, 768 }
