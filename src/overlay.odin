@@ -24,7 +24,7 @@ overlay_current: OverlayType = .NONE
 // Pause mode toggling system
 overlay_system_toggle :: proc() {
   if rl.IsKeyPressed(.ESCAPE) {
-    overlay_current = overlay_current == .NONE ? .PAUSE : .NONE
+    overlay_current = overlay_current == .PAUSE ? .NONE : .PAUSE
 
     engine.game_state.in_blocking_overlay = overlay_current == .PAUSE
   }
@@ -87,9 +87,18 @@ overlay_subsystem_menu :: proc() {
   if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection -= 1
   if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection += 1
 
-  if selection < 0 do selection = 2
-  if selection > 2 do selection = 0
+  if selection < 0 do selection = 1
+  if selection > 1 do selection = 0
 
+  size: [2]i32 = {
+    i32(f32(engine.game_state.resolution.x) * 0.75),
+    i32(f32(engine.game_state.resolution.y) * 0.75),
+  }
+
+  texture := rl.LoadRenderTexture(size.x, size.y)
+
+  rl.BeginTextureMode(texture)
+  rl.ClearBackground(rl.PURPLE)
   ui_button_draw_xy_centered_list(
     { "MENU", "COUCOU" },
     font_size = 40,
@@ -98,6 +107,22 @@ overlay_subsystem_menu :: proc() {
       proc() { engine.game_state.closed = true },
     },
     selected = selection,
+  )
+  rl.EndTextureMode()
+
+  rl.DrawTexture(texture.texture,
+    (engine.game_state.resolution.x - size.x) / 2,
+    (engine.game_state.resolution.y - size.y) / 2,
+    rl.WHITE,
+    )
+
+  rl.DrawRectangleLinesEx(
+    rl.Rectangle {
+    f32((engine.game_state.resolution.x - size.x) / 2),
+    f32((engine.game_state.resolution.y - size.y) / 2),
+      f32(size.x),
+      f32(size.y),
+    }, 2, rl.WHITE,
   )
 }
 
