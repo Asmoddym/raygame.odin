@@ -23,6 +23,7 @@ Type :: enum {
 // Reset a timer
 reset :: proc(type: Type) {
   timers[type].time = time_lib.now()
+  timers[type].offset = 0
 }
 
 // Lock a timer until the next reset() call
@@ -30,9 +31,14 @@ lock :: proc(type: Type) {
   timers[type].elapsed = time_lib.diff(timers[type].time, time_lib.now())
 }
 
+// Append an offset to a timer
+add_offset :: proc(type: Type, offset: f64) {
+  timers[type].offset += offset
+}
+
 // Convert the timer to milliseconds
 as_milliseconds :: proc(type: Type) -> f64 {
-  return time_lib.duration_milliseconds(timers[type].elapsed)
+  return time_lib.duration_milliseconds(timers[type].elapsed) - timers[type].offset
 }
 
 
@@ -48,6 +54,7 @@ as_milliseconds :: proc(type: Type) -> f64 {
 Timer :: struct {
   time: time_lib.Time,
   elapsed: time_lib.Duration,
+  offset: f64,
 }
 
 // Timers store
