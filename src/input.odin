@@ -15,7 +15,6 @@ import rl "vendor:raylib"
 // Input handling (only test stuff for now)
 input_system_main :: proc() {
   if rl.IsKeyPressed(rl.KeyboardKey.A) {
-    // text := engine.database_add_component(globals.player_id, &table_text_boxes)
     box := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
 
     ui_animated_text_box_draw(

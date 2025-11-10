@@ -13,7 +13,7 @@ game_state: GameState
 init :: proc() {
   rl.ChangeDirectory("resources")
 
-  game_state.paused = false
+  game_state.in_overlay = false
   game_state.closed = false
 
   application_window_init({ 1024, 768})
@@ -31,7 +31,7 @@ run :: proc() {
 
     rl.BeginDrawing()
 
-    if game_state.paused {
+    if game_state.in_overlay {
       application_pause_process_frame()
     } else {
       application_runtime_process_frame()
@@ -58,7 +58,7 @@ unload :: proc() {
 
 @(private="file")
 GameState :: struct {
-  paused: bool,
+  in_overlay: bool,
   closed: bool,
   borderless_window: bool,
   fullscreen: bool,

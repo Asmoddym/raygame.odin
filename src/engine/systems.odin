@@ -8,7 +8,7 @@ import "core:time"
 // INTERNAL can be used to run systems regardless from the game state
 SystemType :: enum {
   RUNTIME,
-  PAUSE,
+  OVERLAY,
   INTERNAL,
   SYSTEMS,
 }
@@ -33,8 +33,8 @@ systems_update :: proc() {
   timer.reset(timer.Type.SYSTEM)
   now := time.now()
 
-  if game_state.paused {
-    run_systems(&system_registry[.PAUSE], now)
+  if game_state.in_overlay {
+    run_systems(&system_registry[.OVERLAY], now)
   } else {
     run_systems(&system_registry[.RUNTIME], now)
   }
