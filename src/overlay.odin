@@ -4,6 +4,16 @@ import "engine"
 import rl "vendor:raylib"
 
 
+// Overlay type and declaration, public to be checked in input system for example
+OverlayType :: enum {
+  PAUSE,
+  MENU,
+  NONE,
+}
+
+overlay_current: OverlayType = .NONE
+
+
 
 //
 // SYSTEMS
@@ -14,22 +24,19 @@ import rl "vendor:raylib"
 // Pause mode toggling system
 overlay_system_toggle :: proc() {
   if rl.IsKeyPressed(.ESCAPE) {
-    engine.game_state.in_overlay = !engine.game_state.in_overlay
+    overlay_current = overlay_current == .NONE ? .PAUSE : .NONE
 
-    current_overlay = engine.game_state.in_overlay ? .PAUSE : .NONE
+    engine.game_state.in_blocking_overlay = overlay_current == .PAUSE
   }
 
-  if rl.IsKeyPressed(.TAB) {
-    engine.game_state.in_overlay = !engine.game_state.in_overlay
-
-    current_overlay = engine.game_state.in_overlay ? .MENU : .NONE
+  if rl.IsKeyPressed(.TAB) && !engine.game_state.in_blocking_overlay {
+    overlay_current = overlay_current == .NONE ? .MENU : .NONE
   }
 }
 
 // General overlay system
 overlay_system_main :: proc() {
-
-  switch current_overlay {
+  switch overlay_current {
   case .PAUSE:
     overlay_subsystem_pause()
     break
@@ -49,17 +56,9 @@ overlay_system_main :: proc() {
 
 
 
-OverlayType :: enum {
-  PAUSE,
-  MENU,
-  NONE,
-}
-
-current_overlay: OverlayType = .NONE
-
+// Pause subsystem, considered blocking
+@(private="file")
 overlay_subsystem_pause :: proc() {
-  // rl.ClearBackground(rl.BLACK)
-
   @(static) selection := 0
 
   if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection -= 1
@@ -80,7 +79,8 @@ overlay_subsystem_pause :: proc() {
   )
 }
 
-
+// Menu subsystem, considered non-blocking
+@(private="file")
 overlay_subsystem_menu :: proc() {
   @(static) selection := 0
 
@@ -91,9 +91,10 @@ overlay_subsystem_menu :: proc() {
   if selection > 2 do selection = 0
 
   ui_button_draw_xy_centered_list(
-    { "MENU" },
+    { "MENU", "COUCOU" },
     font_size = 40,
     on_click = {
+      proc() { engine.game_state.closed = true },
       proc() { engine.game_state.closed = true },
     },
     selected = selection,

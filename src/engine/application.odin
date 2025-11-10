@@ -2,6 +2,7 @@ package engine
 
 import "utl/timer"
 import "core:fmt"
+import "core:time"
 import "core:strings"
 import rl "vendor:raylib"
 
@@ -13,7 +14,7 @@ game_state: GameState
 init :: proc() {
   rl.ChangeDirectory("resources")
 
-  game_state.in_overlay = false
+  game_state.in_blocking_overlay = false
   game_state.closed = false
 
   application_window_init({ 1024, 768})
@@ -31,11 +32,8 @@ run :: proc() {
 
     rl.BeginDrawing()
 
-    if game_state.in_overlay {
-      application_pause_process_frame()
-    } else {
-      application_runtime_process_frame()
-    }
+    application_process_frame()
+    timer.lock(timer.Type.FRAME)
 
     when ODIN_DEBUG do application_debug_render_information()
 
@@ -58,11 +56,42 @@ unload :: proc() {
 
 @(private="file")
 GameState :: struct {
-  in_overlay: bool,
+  in_blocking_overlay: bool,
   closed: bool,
   borderless_window: bool,
   fullscreen: bool,
   resolution: [2]i32,
+}
+
+
+// FRAME PROCESSING
+
+
+// Process frame (with 2D mode depending on systems type)
+@(private="file")
+application_process_frame :: proc() {
+  now := time.now()
+  rl.ClearBackground(rl.BLACK)
+
+  timer.reset(timer.Type.SYSTEM)
+
+  // 2D mode takes some time to process, so we want to separate it from the systems timer
+  if !game_state.in_blocking_overlay {
+    sub_timer := time.now()
+    rl.BeginMode2D(camera)
+    timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
+
+    systems_update(.RUNTIME, now)
+
+    sub_timer = time.now()
+    rl.EndMode2D()
+    timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
+  }
+
+  systems_update(.OVERLAY, now)
+  systems_update(.INTERNAL, now)
+
+  timer.lock(timer.Type.SYSTEM)
 }
 
 
@@ -106,33 +135,6 @@ application_window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
 
   camera_init_offset(game_state.resolution)
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
-}
-
-
-
-// FRAME PROCESSING
-
-
-// Process pause frame (no 2D mode)
-@(private="file")
-application_pause_process_frame :: proc() {
-  rl.ClearBackground(rl.BLACK)
-
-  systems_update()
-
-  timer.lock(timer.Type.FRAME)
-}
-
-// Process runtime frame (2D mode)
-@(private="file")
-application_runtime_process_frame :: proc() {
-  rl.BeginMode2D(camera)
-  rl.ClearBackground(rl.BLACK)
-
-  systems_update()
-
-  timer.lock(timer.Type.FRAME)
-  rl.EndMode2D()
 }
 
 

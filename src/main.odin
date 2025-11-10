@@ -24,7 +24,6 @@ init_npc :: proc() {
 
 init_player :: proc() {
   globals.player_id = engine.database_create_entity()
-  engine.database_add_component(globals.player_id, &table_controllables)
   bounding_box := engine.database_add_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
   bounding_box.box = rl.Rectangle { 300, 300, 64.0, 64.0 }
   bounding_box.movable = true
@@ -85,8 +84,7 @@ main :: proc() {
 
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_update_camera_position)
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_animated_sprite_update)
-  engine.system_register(engine.SystemType.RUNTIME,   input_system_main)
-  engine.system_register(engine.SystemType.RUNTIME,   controllable_system_handle_inputs, recurrence_in_ms = 10)
+  engine.system_register(engine.SystemType.RUNTIME,   input_system_main, recurrence_in_ms = 10)
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_text_box_update)
   engine.system_register(engine.SystemType.RUNTIME,   bounding_box_system_collision_resolver)
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_drawable_draw)

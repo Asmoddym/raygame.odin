@@ -1,6 +1,5 @@
 package engine
 
-import "utl/timer"
 import "core:time"
 
 
@@ -29,20 +28,15 @@ system_register :: proc(type: SystemType, callback: proc(), recurrence_in_ms: f6
 
 
 // Main entrypoint for systems update backend-side
-systems_update :: proc() {
-  timer.reset(timer.Type.SYSTEM)
-  now := time.now()
-
-  if game_state.in_overlay {
-    run_systems(&system_registry[.OVERLAY], now)
-  } else {
-    run_systems(&system_registry[.RUNTIME], now)
+systems_update :: proc(type: SystemType, now: time.Time) {
+  for &system in system_registry[type] {
+    if can_update(&system, now) {
+      system.callback()
+      system.last_updated_at = now
+    }
   }
-
-  run_systems(&system_registry[.INTERNAL], now)
-
-  timer.lock(timer.Type.SYSTEM)
 }
+
 
 
 
