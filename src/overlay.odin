@@ -1,5 +1,6 @@
 package macro
 
+import "core:strings"
 import "engine"
 import rl "vendor:raylib"
 
@@ -26,10 +27,10 @@ overlay_system_toggle :: proc() {
   if rl.IsKeyPressed(.ESCAPE) {
     overlay_current = overlay_current == .PAUSE ? .NONE : .PAUSE
 
-    engine.game_state.in_blocking_overlay = overlay_current == .PAUSE
+    engine.game_state.overlay.blocking = overlay_current == .PAUSE
   }
 
-  if rl.IsKeyPressed(.TAB) && !engine.game_state.in_blocking_overlay {
+  if rl.IsKeyPressed(.TAB) && !engine.game_state.overlay.blocking {
     overlay_current = overlay_current == .NONE ? .MENU : .NONE
   }
 }
@@ -46,6 +47,8 @@ overlay_system_main :: proc() {
   case .NONE:
     break
   }
+
+  rl.EndTextureMode()
 }
 
 
@@ -84,21 +87,20 @@ overlay_subsystem_pause :: proc() {
 overlay_subsystem_menu :: proc() {
   @(static) selection := 0
 
+  overlay := &engine.game_state.overlay
+
   if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection -= 1
   if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection += 1
 
   if selection < 0 do selection = 1
   if selection > 1 do selection = 0
 
-  size: [2]i32 = {
-    i32(f32(engine.game_state.resolution.x) * 0.75),
-    i32(f32(engine.game_state.resolution.y) * 0.75),
-  }
-
-  texture := rl.LoadRenderTexture(size.x, size.y)
-
-  rl.BeginTextureMode(texture)
+  rl.BeginTextureMode(overlay.render_texture)
   rl.ClearBackground(rl.PURPLE)
+
+  rl.DrawText(strings.unsafe_string_to_cstring("coucou"), 100, 200, 20, rl.WHITE)
+
+
   ui_button_draw_xy_centered_list(
     { "MENU", "COUCOU" },
     font_size = 40,
@@ -107,21 +109,21 @@ overlay_subsystem_menu :: proc() {
       proc() { engine.game_state.closed = true },
     },
     selected = selection,
+    resolution = overlay.resolution,
   )
   rl.EndTextureMode()
 
-  rl.DrawTexture(texture.texture,
-    (engine.game_state.resolution.x - size.x) / 2,
-    (engine.game_state.resolution.y - size.y) / 2,
-    rl.WHITE,
-    )
+  rl.DrawTexturePro(overlay.render_texture.texture,
+    rl.Rectangle { 0, 0, f32(overlay.resolution.x), -f32(overlay.resolution.y) },
+    rl.Rectangle { f32(engine.game_state.resolution.x - overlay.resolution.x) / 2, f32(engine.game_state.resolution.y - overlay.resolution.y) / 2, f32(overlay.resolution.x), f32(overlay.resolution.y) },
+    rl.Vector2 { 0, 0 }, 0, rl.WHITE)
 
   rl.DrawRectangleLinesEx(
     rl.Rectangle {
-    f32((engine.game_state.resolution.x - size.x) / 2),
-    f32((engine.game_state.resolution.y - size.y) / 2),
-      f32(size.x),
-      f32(size.y),
+    f32((engine.game_state.resolution.x - overlay.resolution.x) / 2),
+    f32((engine.game_state.resolution.y - overlay.resolution.y) / 2),
+      f32(overlay.resolution.x),
+      f32(overlay.resolution.y),
     }, 2, rl.WHITE,
   )
 }

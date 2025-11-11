@@ -3,12 +3,11 @@ package engine
 import "core:fmt"
 import rl "vendor:raylib"
 
+
 assets_find_or_create :: proc($Type: typeid, args: ..any) -> Type {
   if Type == rl.Texture2D {
     cstring := fmt.ctprint(..args)
     identifier := string(cstring)
-
-    fmt.println("> ", identifier)
 
     found_item := assets_find_in(&textures, identifier)
     if found_item != nil do return found_item.value

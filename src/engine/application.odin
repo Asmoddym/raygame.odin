@@ -14,10 +14,10 @@ game_state: GameState
 init :: proc() {
   rl.ChangeDirectory("resources")
 
-  game_state.in_blocking_overlay = false
+  game_state.overlay.blocking = false
   game_state.closed = false
 
-  application_window_init({ 1024, 768})
+  window_init({ 1024, 768 })
   camera_init(game_state.resolution)
 }
 
@@ -56,11 +56,11 @@ unload :: proc() {
 
 @(private="file")
 GameState :: struct {
-  in_blocking_overlay: bool,
   closed: bool,
   borderless_window: bool,
   fullscreen: bool,
   resolution: [2]i32,
+  overlay: Window_Overlay,
 }
 
 
@@ -76,7 +76,7 @@ application_process_frame :: proc() {
   timer.reset(timer.Type.SYSTEM)
 
   // 2D mode takes some time to process, so we want to separate it from the systems timer
-  if !game_state.in_blocking_overlay {
+  if !game_state.overlay.blocking {
     sub_timer := time.now()
     rl.BeginMode2D(camera)
     timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
@@ -92,49 +92,6 @@ application_process_frame :: proc() {
   systems_update(.INTERNAL, now)
 
   timer.lock(timer.Type.SYSTEM)
-}
-
-
-// WINDOW
-
-
-// Initialize window from a resolution
-@(private="file")
-application_window_init :: proc(resolution: [2]i32) {
-  rl.InitWindow(resolution.x, resolution.y, "coucou")
-
-  rl.SetTargetFPS(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
-
-  game_state.resolution = {
-    resolution.x == 0 ? rl.GetMonitorWidth(rl.GetCurrentMonitor()) : resolution.x,
-    resolution.y == 0 ? rl.GetMonitorHeight(rl.GetCurrentMonitor()) : resolution.y,
-  }
-
-  game_state.borderless_window = false
-
-  rl.SetExitKey(.KEY_NULL)
-}
-
-// Generic screen mode switcher.
-// Resets resolution and initializes camera independently from the selected mode.
-// toggler contains a proc performing the actual switch.
-@(private="file")
-application_window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
-  if toggle {
-    when ODIN_OS == .Darwin do toggler()
-
-    game_state.resolution = { rl.GetMonitorWidth(rl.GetCurrentMonitor()), rl.GetMonitorHeight(rl.GetCurrentMonitor()) }
-    rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-
-    when ODIN_OS == .Windows do toggler()
-  } else {
-    toggler()
-    game_state.resolution = { 1024, 768 }
-    rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
-  }
-
-  camera_init_offset(game_state.resolution)
-  rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
 }
 
 
@@ -167,9 +124,9 @@ application_debug_render_information :: proc() {
 application_game_state_process_changes :: proc(previous_state: GameState) {
   if game_state.borderless_window != previous_state.borderless_window {
     game_state.fullscreen = false
-    application_window_toggle_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
+    window_toggle_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
   } else if game_state.fullscreen != previous_state.fullscreen {
     game_state.borderless_window = false
-    application_window_toggle_mode(game_state.fullscreen, proc() { rl.ToggleFullscreen() })
+    window_toggle_mode(game_state.fullscreen, proc() { rl.ToggleFullscreen() })
   }
 }

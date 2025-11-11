@@ -9,10 +9,8 @@ import rl "vendor:raylib"
 
 init_npc :: proc() {
   npc := engine.database_create_entity()
-  sprite := engine.database_add_component(npc, &table_sprites[1])
-  sprite.texture = engine.assets_find_or_create(rl.Texture2D, "wabbit_alpha.png")
   bounding_box := engine.database_add_component(npc, &table_bounding_boxes[1])
-  bounding_box.box = rl.Rectangle { 100, 100, f32(sprite.texture.width), f32(sprite.texture.height) }
+  bounding_box.box = rl.Rectangle { 100, 100, 64, 64 }
   bounding_box.movable = false
   bounding_box.collidable = true
   ui_text_box_draw(
@@ -20,6 +18,13 @@ init_npc :: proc() {
     font_size = 20,
     attached_to_bounding_box = bounding_box,
   )
+  ui_animated_sprite_init(engine.database_add_component(npc, &table_animated_sprites[1]), {
+    int(enums.Direction.NONE) = "idle.png",
+    int(enums.Direction.UP) = "up.png",
+    int(enums.Direction.DOWN) = "down.png",
+    int(enums.Direction.LEFT) = "left.png",
+    int(enums.Direction.RIGHT) = "right.png",
+  })
 }
 
 init_player :: proc() {
