@@ -87,21 +87,22 @@ interface_system_draw :: proc() {
 main :: proc() {
   engine.init()
 
-  engine.scene_create(0, uses_camera = true, blocking = false)
-  engine.scene_create(1, uses_camera = false, blocking = true)
-  engine.scene_set_current(0)
+  // TODO: Make an enum for the ids
+  engine.scene_create(enums.SCENE_ID.MAIN,  uses_camera = true)
+  engine.scene_create(enums.SCENE_ID.PAUSE, uses_camera = false)
+  engine.scene_set_current(enums.SCENE_ID.MAIN)
 
-  engine.system_register(engine.SystemType.RUNTIME,   ui_system_update_camera_position)
-  engine.system_register(engine.SystemType.RUNTIME,   ui_system_animated_sprite_update)
-  engine.system_register(engine.SystemType.RUNTIME,   input_system_main, recurrence_in_ms = 10)
-  engine.system_register(engine.SystemType.RUNTIME,   ui_system_text_box_update)
-  engine.system_register(engine.SystemType.RUNTIME,   bounding_box_system_collision_resolver)
-  engine.system_register(engine.SystemType.RUNTIME,   ui_system_drawable_draw)
-  engine.system_register(engine.SystemType.RUNTIME,   bounding_box_system_draw)
-  engine.system_register(engine.SystemType.RUNTIME,   ui_system_text_box_draw)
-  engine.system_register(engine.SystemType.OVERLAY,   overlay_system_main)
-  engine.system_register(engine.SystemType.INTERNAL,  overlay_system_toggle)
-  // engine.system_register(engine.SystemType.INTERFACE, interface_system_draw)
+  engine.system_register(ui_system_update_camera_position,       { 0 })
+  engine.system_register(ui_system_animated_sprite_update,       { 0 })
+  engine.system_register(input_system_main,                      { 0 }, recurrence_in_ms = 10)
+  engine.system_register(ui_system_text_box_update,              { 0 })
+  engine.system_register(bounding_box_system_collision_resolver, { 0 })
+  engine.system_register(ui_system_drawable_draw,                { 0 })
+  engine.system_register(bounding_box_system_draw,               { 0 })
+  engine.system_register(ui_system_text_box_draw,                { 0 })
+
+  engine.system_register(pause_system_main)
+  engine.system_register(pause_system_toggle)
 
   init_npc()
   init_player()

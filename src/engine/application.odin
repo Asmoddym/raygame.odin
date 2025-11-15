@@ -14,14 +14,10 @@ game_state: GameState
 init :: proc() {
   rl.ChangeDirectory("resources")
 
-  // game_state.overlay.blocking = false
   game_state.closed = false
 
   window_init({ 1024, 768 })
   camera_init(game_state.resolution)
-
-  // scene_create(uses_camera = false, blocking = true)
-  // game_state.current_scene = scene_create(uses_camera = true, blocking = false)
 }
 
 // Run engine after initial configuration
@@ -78,21 +74,19 @@ application_process_frame :: proc() {
 
   timer.reset(timer.Type.SYSTEM)
 
-  // 2D mode takes some time to process, so we want to separate it from the systems timer
-  if !game_state.current_scene.blocking {
+  if game_state.current_scene.uses_camera {
     sub_timer := time.now()
     rl.BeginMode2D(camera)
     timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
 
-    systems_update(.RUNTIME, now)
+    systems_update(game_state.current_scene.id, now)
 
     sub_timer = time.now()
     rl.EndMode2D()
     timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
+  } else {
+    systems_update(game_state.current_scene.id, now)
   }
-
-  systems_update(.OVERLAY, now)
-  systems_update(.INTERNAL, now)
 
   timer.lock(timer.Type.SYSTEM)
 }

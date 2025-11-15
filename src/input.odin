@@ -17,7 +17,7 @@ import rl "vendor:raylib"
 //
 // For now, overlay inputs are handled in their respective systems
 input_system_main :: proc() {
-  if overlay_current == .NONE do input_subsystem_default()
+  if engine.game_state.current_scene.id == 0 do input_subsystem_default()
 }
 
 

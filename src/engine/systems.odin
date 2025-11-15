@@ -1,22 +1,13 @@
 package engine
 
+import "core:slice"
 import "core:time"
-
-
-// System type definition.
-// INTERNAL can be used to run systems regardless from the game state
-SystemType :: enum {
-  RUNTIME,
-  OVERLAY,
-  INTERNAL,
-  SYSTEMS,
-}
 
 
 // Register a system from its type and callback.
 // Optional: recurrence_in_ms, defaulting to -1 to run each frame
-system_register :: proc(type: SystemType, callback: proc(), recurrence_in_ms: f64 = -1) {
-  append(&system_registry[type], System { recurrence_in_ms, callback, time.now() })
+system_register :: proc(callback: proc(), scene_ids: []int = {}, recurrence_in_ms: f64 = -1) {
+  append(&system_registry, System { recurrence_in_ms, scene_ids, slice.length(scene_ids) == 0, callback, time.now() })
 }
 
 
@@ -28,9 +19,9 @@ system_register :: proc(type: SystemType, callback: proc(), recurrence_in_ms: f6
 
 
 // Main entrypoint for systems update backend-side
-systems_update :: proc(type: SystemType, now: time.Time) {
-  for &system in system_registry[type] {
-    if can_update(&system, now) {
+systems_update :: proc(current_scene_id: int, now: time.Time) {
+  for &system in system_registry {
+    if can_update(&system, current_scene_id, now) {
       system.callback()
       system.last_updated_at = now
     }
@@ -48,25 +39,16 @@ systems_update :: proc(type: SystemType, now: time.Time) {
 
 // Main registry
 @(private="file")
-system_registry: [SystemType][dynamic]System
+system_registry: [dynamic]System
 
 // System typedef
 @(private="file")
 System :: struct {
   recurrence_in_ms: f64,
+  scene_ids: []int,
+  run_for_all_scenes: bool,
   callback: proc(),
   last_updated_at: time.Time,
-}
-
-// Generic system runner, taking a list and calling the callback for each
-@(private="file")
-run_systems :: proc(list: ^[dynamic]System, now: time.Time) {
-  for &system in list {
-    if can_update(&system, now) {
-      system.callback()
-      system.last_updated_at = now
-    }
-  }
 }
 
 
@@ -75,6 +57,12 @@ run_systems :: proc(list: ^[dynamic]System, now: time.Time) {
 
 // Check if recurrence is verified for a system
 @(private="file")
-can_update :: proc(system: ^System, now: time.Time) -> bool {
+can_update :: proc(system: ^System, current_scene_id: int, now: time.Time) -> bool {
+  context.user_index = current_scene_id
+
+  if !system.run_for_all_scenes && !slice.any_of_proc(system.scene_ids, proc(id: int) -> bool { return id == context.user_index }) {
+    return false
+  }
+
   return time.duration_milliseconds(time.diff(system.last_updated_at, now)) > system.recurrence_in_ms
 }
