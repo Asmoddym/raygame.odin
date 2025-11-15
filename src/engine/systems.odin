@@ -30,7 +30,6 @@ systems_update :: proc(current_scene_id: int, now: time.Time) {
 
 
 
-
 //
 // PRIVATE
 //
