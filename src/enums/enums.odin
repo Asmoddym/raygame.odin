@@ -2,7 +2,7 @@ package enums
 
 // Player direction
 Direction :: enum {
-  NONE,
+  NONE = -1,
   LEFT,
   RIGHT,
   UP,
