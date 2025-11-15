@@ -7,10 +7,12 @@ import "enums"
 import "globals"
 import rl "vendor:raylib"
 
+BOX_SIZE: f32 = 64
+
 init_npc :: proc() {
   npc := engine.database_create_entity()
   bounding_box := engine.database_add_component(npc, &table_bounding_boxes[1])
-  bounding_box.box = rl.Rectangle { 100, 100, 64, 64 }
+  bounding_box.box = rl.Rectangle { 100, 100, BOX_SIZE, BOX_SIZE }
   bounding_box.movable = false
   bounding_box.collidable = true
   ui_text_box_draw(
@@ -24,13 +26,13 @@ init_npc :: proc() {
     int(enums.Direction.DOWN) = "down.png",
     int(enums.Direction.LEFT) = "left.png",
     int(enums.Direction.RIGHT) = "right.png",
-  })
+  }, enums.Direction.NONE)
 }
 
 init_player :: proc() {
   globals.player_id = engine.database_create_entity()
   bounding_box := engine.database_add_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
-  bounding_box.box = rl.Rectangle { 300, 300, 64.0, 64.0 }
+  bounding_box.box = rl.Rectangle { 300, 300, BOX_SIZE, BOX_SIZE }
   bounding_box.movable = true
   bounding_box.collidable = true
   player_animated_sprite := engine.database_add_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER])
@@ -41,28 +43,28 @@ init_player :: proc() {
     int(enums.Direction.DOWN) = "down.png",
     int(enums.Direction.LEFT) = "left.png",
     int(enums.Direction.RIGHT) = "right.png",
-  })
+  }, enums.Direction.NONE)
 }
 
 init_terrain :: proc() {
   tree_trunk_1 := engine.database_create_entity()
   engine.database_add_component(tree_trunk_1, &table_sprites[globals.PLAYER_LAYER]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
   tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &table_bounding_boxes[globals.PLAYER_LAYER])
-  tree_trunk_1_bb.box = rl.Rectangle { 500, 500, 64, 64 }
+  tree_trunk_1_bb.box = rl.Rectangle { 500, 500, BOX_SIZE, BOX_SIZE }
   tree_trunk_1_bb.movable = true
   tree_trunk_1_bb.collidable = true
 
   tree_trunk_2 := engine.database_create_entity()
   engine.database_add_component(tree_trunk_2, &table_sprites[globals.PLAYER_LAYER + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_2.png")
   tree_trunk_2_bb := engine.database_add_component(tree_trunk_2, &table_bounding_boxes[globals.PLAYER_LAYER + 1])
-  tree_trunk_2_bb.box = rl.Rectangle { 500, 500 - 64, 64, 64 }
+  tree_trunk_2_bb.box = rl.Rectangle { 500, 500 - BOX_SIZE, BOX_SIZE, BOX_SIZE }
   tree_trunk_2_bb.movable = false
   tree_trunk_2_bb.collidable = false
 
   tree_leaves := engine.database_create_entity()
   engine.database_add_component(tree_leaves, &table_sprites[globals.PLAYER_LAYER + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_leaves.png")
   tree_leaves_bb := engine.database_add_component(tree_leaves, &table_bounding_boxes[globals.PLAYER_LAYER + 1])
-  tree_leaves_bb.box = rl.Rectangle { 500 - 32, 500 - 128 - 64, 128, 128}
+  tree_leaves_bb.box = rl.Rectangle { 500 - (BOX_SIZE * 1) / 2, 500 - BOX_SIZE * 2 - BOX_SIZE, BOX_SIZE * 2, BOX_SIZE * 2}
   tree_leaves_bb.movable = false
   tree_leaves_bb.collidable = false
 
@@ -71,7 +73,7 @@ init_terrain :: proc() {
   root := engine.database_create_entity()
   engine.database_add_component(root, &table_sprites[globals.PLAYER_LAYER]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
   root_bb := engine.database_add_component(root, &table_bounding_boxes[globals.PLAYER_LAYER])
-  root_bb.box = rl.Rectangle { 650, 500, 64, 64 }
+  root_bb.box = rl.Rectangle { 650, 500, BOX_SIZE, BOX_SIZE }
   root_bb.movable = false
   root_bb.collidable = true
 }
@@ -92,7 +94,7 @@ main :: proc() {
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
   engine.scene_set_current(enums.SceneID.MAIN)
 
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, fixed_height = 70)
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.09)
 
   engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })

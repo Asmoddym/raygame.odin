@@ -35,23 +35,23 @@ scene_set_current :: proc(#any_int id: int) {
 
 
 // Create an overlay and store it in a scene, with its render texture and resolution.
-scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f64 = -1, fixed_height: int = -1) {
+scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f64 = -1, height_ratio: f64 = -1) {
   scene := &scene_registry[scene_id]
-  resolution := calculate_resolution(width_ratio, fixed_height)
+  resolution := calculate_resolution(width_ratio, height_ratio)
 
   scene.overlays[overlay_id] = Overlay {
     rl.LoadRenderTexture(resolution.x, resolution.y),
     width_ratio,
-    fixed_height,
+    height_ratio,
     resolution,
     overlay_id,
   }
 }
 
-calculate_resolution :: proc(width_ratio: f64, fixed_height: int) -> [2]i32 {
+calculate_resolution :: proc(width_ratio: f64, height_ratio: f64) -> [2]i32 {
  return {
     i32(f64(game_state.resolution.x) * width_ratio),
-    i32(fixed_height),
+    i32(f64(game_state.resolution.y) * height_ratio),
   }
 }
 
@@ -72,7 +72,7 @@ scene_overlay_update_resolutions :: proc() {
 
     for overlay_id in scene.overlays {
       overlay := &scene.overlays[overlay_id]
-      resolution := calculate_resolution(overlay.width_ratio, overlay.fixed_height)
+      resolution := calculate_resolution(overlay.width_ratio, overlay.height_ratio)
 
       rl.UnloadRenderTexture(overlay.render_texture)
 
@@ -95,7 +95,7 @@ scene_overlay_update_resolutions :: proc() {
 Overlay :: struct {
   render_texture: rl.RenderTexture,
   width_ratio: f64,
-  fixed_height: int,
+  height_ratio: f64,
 
   // Internal
   resolution: [2]i32,

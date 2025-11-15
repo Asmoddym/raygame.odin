@@ -39,7 +39,7 @@ table_animated_sprites: [5]engine.Table(Component_AnimatedSprite)
 
 
 // Init an animated sprite from a sprite address and the sprites configuration defined as { ENUM/int = "file.png" }
-ui_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map[int]string) {
+ui_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map[int]string, #any_int default_index: int) {
   self.last_updated_at = time.now()
 
   for idx, path in cfg {
@@ -48,6 +48,8 @@ ui_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map[int]s
 
     self.states[idx] = Spritesheet { texture, 0, tiles, 1000 / f64(tiles) }
   }
+
+  self.state = default_index
 }
 
 
