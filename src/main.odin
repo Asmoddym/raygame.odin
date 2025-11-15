@@ -87,6 +87,10 @@ interface_system_draw :: proc() {
 main :: proc() {
   engine.init()
 
+  engine.scene_create(0, uses_camera = true, blocking = false)
+  engine.scene_create(1, uses_camera = false, blocking = true)
+  engine.scene_set_current(0)
+
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_update_camera_position)
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_animated_sprite_update)
   engine.system_register(engine.SystemType.RUNTIME,   input_system_main, recurrence_in_ms = 10)
@@ -95,7 +99,7 @@ main :: proc() {
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_drawable_draw)
   engine.system_register(engine.SystemType.RUNTIME,   bounding_box_system_draw)
   engine.system_register(engine.SystemType.RUNTIME,   ui_system_text_box_draw)
-  engine.system_register(engine.SystemType.OVERLAY,     overlay_system_main)
+  engine.system_register(engine.SystemType.OVERLAY,   overlay_system_main)
   engine.system_register(engine.SystemType.INTERNAL,  overlay_system_toggle)
   // engine.system_register(engine.SystemType.INTERFACE, interface_system_draw)
 

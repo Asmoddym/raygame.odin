@@ -3,15 +3,6 @@ package engine
 import rl "vendor:raylib"
 
 
-// Overlay data type handling render texture, resolution and init state
-Window_Overlay :: struct {
-  render_texture: rl.RenderTexture,
-  resolution: [2]i32,
-  initialized: bool,
-  blocking: bool,
-}
-
-
 
 //
 // INTERNAL API
@@ -31,8 +22,6 @@ window_init :: proc(resolution: [2]i32) {
   }
 
   game_state.borderless_window = false
-
-  window_init_overlay(&game_state.overlay, game_state.resolution)
 
   rl.SetExitKey(.KEY_NULL)
 }
@@ -55,25 +44,7 @@ window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
   }
 
   camera_init_offset(game_state.resolution)
-  window_init_overlay(&game_state.overlay, game_state.resolution)
+  overlay_update_resolutions()
+
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
 }
-
-
-
-//
-// PRIVATE
-//
-
-
-
-// Init overlay render texture and resolution (3/4 of the base resolution)
-@(private="file")
-window_init_overlay :: proc(overlay: ^Window_Overlay, base_res: [2]i32) {
-  if overlay.initialized do rl.UnloadRenderTexture(overlay.render_texture)
-
-  overlay.initialized = true
-  overlay.resolution = { i32(f32(base_res.x) * 0.75), i32(f32(base_res.y) * 0.75) }
-  overlay.render_texture = rl.LoadRenderTexture(overlay.resolution.x, overlay.resolution.y)
-}
-
