@@ -16,7 +16,7 @@ init :: proc() {
 
   game_state.closed = false
 
-  window_init({ 1024, 768 })
+  window_init({ 1280, 720 })
   camera_init(game_state.resolution)
 }
 
@@ -75,18 +75,21 @@ application_process_frame :: proc() {
   timer.reset(timer.Type.SYSTEM)
 
   if game_state.current_scene.uses_camera {
+    // 2D mode takes some time to process, so we want to separate it from the systems timer
     sub_timer := time.now()
     rl.BeginMode2D(camera)
     timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
 
-    systems_update(game_state.current_scene.id, now)
+    system_update(game_state.current_scene.id, now)
 
     sub_timer = time.now()
     rl.EndMode2D()
     timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
   } else {
-    systems_update(game_state.current_scene.id, now)
+    system_update(game_state.current_scene.id, now)
   }
+
+  system_overlay_update(game_state.current_scene.id, now)
 
   timer.lock(timer.Type.SYSTEM)
 }

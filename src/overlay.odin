@@ -1,56 +1,23 @@
 package macro
-//
-// import "core:fmt"
-// import "core:strings"
-// import "engine"
-// import rl "vendor:raylib"
-//
-// //
-// // // Overlay type and declaration, public to be checked in input system for example
-// // OverlayType :: enum {
-// //   PAUSE,
-// //   MENU,
-// //   NONE,
-// // }
-// //
-// // pause_current: OverlayType = .NONE
-// //
-//
-//
-// //
-// // SYSTEMS
-// //
-//
-//
-//
-// //
-// // PRIVATE
-// //
-//
-//
-//
-// @(private="file")
-// INVENTORY_LINE_HEIGHT_RATIO := f32(0.1)
-//
-// @(private="file")
-// INVENTORY_LINE_WIDTH_RATIO := f32(0.5)
-//
-//
-// // Pause subsystem, considered blocking
-// @(private="file")
-// pause_subsystem_pause :: proc() {
-// }
-//
-// // Inventory line
-// @(private="file")
-// pause_subsystem_inventory_line :: proc() {
-//   // height := i32(f32(engine.game_state.resolution.y) * INVENTORY_LINE_HEIGHT_RATIO)
-//   // width := i32(f32(engine.game_state.resolution.x) * INVENTORY_LINE_WIDTH_RATIO)
-//   //
-//   // position: [2]i32 = { (engine.game_state.resolution.x / 2 - width / 2), (engine.game_state.resolution.y - height) }
-//   //
-//   // rl.DrawRectangle(position.x, position.y, width, height, rl.WHITE)
-// }
+
+import "enums"
+import "engine"
+import rl "vendor:raylib"
+
+
+// Main overlay draw system, inventory only for now
+overlay_system_draw :: proc() {
+  overlay_subsystem_draw_inventory()
+}
+
+overlay_subsystem_draw_inventory :: proc() {
+  overlay := &engine.game_state.current_scene.overlays[int(enums.OverlayID.INVENTORY)]
+
+  position: [2]i32 = { (engine.game_state.resolution.x / 2 - overlay.resolution.x / 2), (engine.game_state.resolution.y - overlay.resolution.y) }
+
+  rl.DrawRectangle(position.x, position.y, overlay.resolution.x, overlay.resolution.y, rl.WHITE)
+}
+
 //
 // // Menu subsystem, considered non-blocking
 // @(private="file")

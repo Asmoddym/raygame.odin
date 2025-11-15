@@ -10,6 +10,12 @@ system_register :: proc(callback: proc(), scene_ids: []int = {}, recurrence_in_m
   append(&system_registry, System { recurrence_in_ms, scene_ids, slice.length(scene_ids) == 0, callback, time.now() })
 }
 
+// Register an overlay system from its type and callback.
+// Optional: recurrence_in_ms, defaulting to -1 to run each frame
+system_overlay_register :: proc(callback: proc(), scene_ids: []int = {}, recurrence_in_ms: f64 = -1) {
+  append(&system_overlay_registry, System { recurrence_in_ms, scene_ids, slice.length(scene_ids) == 0, callback, time.now() })
+}
+
 
 
 //
@@ -19,13 +25,13 @@ system_register :: proc(callback: proc(), scene_ids: []int = {}, recurrence_in_m
 
 
 // Main entrypoint for systems update backend-side
-systems_update :: proc(current_scene_id: int, now: time.Time) {
-  for &system in system_registry {
-    if can_update(&system, current_scene_id, now) {
-      system.callback()
-      system.last_updated_at = now
-    }
-  }
+system_update :: proc(current_scene_id: int, now: time.Time) {
+  system_update_list(&system_registry, current_scene_id, now)
+}
+
+// Main entrypoint for overlay systems update backend-side
+system_overlay_update :: proc(current_scene_id: int, now: time.Time) {
+  system_update_list(&system_overlay_registry, current_scene_id, now)
 }
 
 
@@ -40,6 +46,10 @@ systems_update :: proc(current_scene_id: int, now: time.Time) {
 @(private="file")
 system_registry: [dynamic]System
 
+// Overlays registry
+@(private="file")
+system_overlay_registry: [dynamic]System
+
 // System typedef
 @(private="file")
 System :: struct {
@@ -53,6 +63,16 @@ System :: struct {
 
 // Misc
 
+
+// Perform the update from a list
+system_update_list :: proc(list: ^[dynamic]System, current_scene_id: int, now: time.Time) {
+  for &system in list {
+    if can_update(&system, current_scene_id, now) {
+      system.callback()
+      system.last_updated_at = now
+    }
+  }
+}
 
 // Check if recurrence is verified for a system
 @(private="file")

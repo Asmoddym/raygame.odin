@@ -88,18 +88,22 @@ main :: proc() {
   engine.init()
 
   // TODO: Make an enum for the ids
-  engine.scene_create(enums.SCENE_ID.MAIN,  uses_camera = true)
-  engine.scene_create(enums.SCENE_ID.PAUSE, uses_camera = false)
-  engine.scene_set_current(enums.SCENE_ID.MAIN)
+  engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
+  engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
+  engine.scene_set_current(enums.SceneID.MAIN)
 
-  engine.system_register(ui_system_update_camera_position,       { int(enums.SCENE_ID.MAIN) })
-  engine.system_register(ui_system_animated_sprite_update,       { int(enums.SCENE_ID.MAIN) })
-  engine.system_register(input_system_main,                      { int(enums.SCENE_ID.MAIN) }, recurrence_in_ms = 10)
-  engine.system_register(ui_system_text_box_update,              { int(enums.SCENE_ID.MAIN) })
-  engine.system_register(bounding_box_system_collision_resolver, { int(enums.SCENE_ID.MAIN) })
-  engine.system_register(ui_system_drawable_draw,                { int(enums.SCENE_ID.MAIN) })
-  engine.system_register(bounding_box_system_draw,               { int(enums.SCENE_ID.MAIN) })
-  engine.system_register(ui_system_text_box_draw,                { int(enums.SCENE_ID.MAIN) })
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, fixed_height = 70)
+
+  engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
+  engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
+  engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
+  engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
+  engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
+  engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
+  engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
+  engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
+
+  engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
 
   engine.system_register(pause_system_main)
   engine.system_register(pause_system_toggle)

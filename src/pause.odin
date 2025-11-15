@@ -8,7 +8,7 @@ import rl "vendor:raylib"
 // Pause mode toggling system
 pause_system_toggle :: proc() {
   if rl.IsKeyPressed(.ESCAPE) {
-    engine.scene_set_current(engine.game_state.current_scene.id == int(enums.SCENE_ID.PAUSE) ? enums.SCENE_ID.MAIN : enums.SCENE_ID.PAUSE)
+    engine.scene_set_current(engine.game_state.current_scene.id == int(enums.SceneID.PAUSE) ? enums.SceneID.MAIN : enums.SceneID.PAUSE)
   }
 }
 

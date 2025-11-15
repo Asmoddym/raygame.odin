@@ -39,12 +39,12 @@ window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
     when ODIN_OS == .Windows do toggler()
   } else {
     toggler()
-    game_state.resolution = { 1024, 768 }
+    game_state.resolution = { 1280, 720 }
     rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
   }
 
   camera_init_offset(game_state.resolution)
-  overlay_update_resolutions()
+  scene_overlay_update_resolutions()
 
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
 }
