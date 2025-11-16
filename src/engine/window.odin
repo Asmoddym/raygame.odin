@@ -9,18 +9,16 @@ import rl "vendor:raylib"
 //
 
 
+BASE_RESOLUTION: [2]i32 = { 1280, 720 }
+
 
 // Initialize window from a resolution
-window_init :: proc(resolution: [2]i32) {
-  rl.InitWindow(resolution.x, resolution.y, "coucou")
+window_init :: proc() {
+  rl.InitWindow(BASE_RESOLUTION.x, BASE_RESOLUTION.y, "coucou")
 
   rl.SetTargetFPS(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 
-  game_state.resolution = {
-    resolution.x == 0 ? rl.GetMonitorWidth(rl.GetCurrentMonitor()) : resolution.x,
-    resolution.y == 0 ? rl.GetMonitorHeight(rl.GetCurrentMonitor()) : resolution.y,
-  }
-
+  game_state.resolution = BASE_RESOLUTION
   game_state.borderless_window = false
 
   rl.SetExitKey(.KEY_NULL)
@@ -43,8 +41,10 @@ window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
     rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
   }
 
-  camera_init_offset(game_state.resolution)
+  camera_set_offset_based_on_resolution()
+  camera_set_zoom_based_on_resolution()
   scene_overlay_update_resolutions()
 
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
 }
+

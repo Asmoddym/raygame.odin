@@ -16,8 +16,8 @@ init :: proc() {
 
   game_state.closed = false
 
-  window_init({ 1280, 720 })
-  camera_init(game_state.resolution)
+  window_init()
+  camera_init()
 }
 
 // Run engine after initial configuration
