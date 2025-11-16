@@ -78,23 +78,14 @@ init_terrain :: proc() {
   root_bb.collidable = true
 }
 
-
-interface_system_draw :: proc() {
-  @(static) panel := 0
-
-  if rl.IsKeyPressed(rl.KeyboardKey.TAB) do panel = 1
-  if rl.IsKeyPressed(rl.KeyboardKey.ESCAPE) do panel = 0
-}
-
 main :: proc() {
   engine.init()
 
-  // TODO: Make an enum for the ids
   engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
   engine.scene_set_current(enums.SceneID.MAIN)
 
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.09)
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1, on_init = overlay_init_inventory)
 
   engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })

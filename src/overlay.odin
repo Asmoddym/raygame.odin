@@ -10,70 +10,58 @@ overlay_system_draw :: proc() {
   overlay_subsystem_draw_inventory()
 }
 
+// Draw inventory subsystem
 overlay_subsystem_draw_inventory :: proc() {
   overlay := &engine.game_state.current_scene.overlays[int(enums.OverlayID.INVENTORY)]
 
-  position: [2]i32 = { (engine.game_state.resolution.x / 2 - overlay.resolution.x / 2), (engine.game_state.resolution.y - overlay.resolution.y) }
-
-  rl.DrawRectangle(position.x, position.y, overlay.resolution.x, overlay.resolution.y, rl.WHITE)
+  rl.DrawTexturePro(overlay.render_texture.texture,
+    rl.Rectangle { 0, 0, f32(overlay.resolution.x), -f32(overlay.resolution.y) },
+    rl.Rectangle { overlay.position.x, overlay.position.y, f32(overlay.resolution.x), f32(overlay.resolution.y) },
+    rl.Vector2 { 0, 0 }, 0, rl.WHITE)
 }
 
+// Init inventory overlay after instanciation or resolution change.
 //
-// // Menu subsystem, considered non-blocking
-// @(private="file")
-// pause_subsystem_menu :: proc() {
-//   // overlay := &engine.game_state.overlay
-//   //
-//   // // @(static) initialized := false
-//   // //
-//   // // if !initialized {
-//   //   rl.BeginTextureMode(overlay.render_texture)
-//   //   rl.ClearBackground(rl.BLACK)
-//   //
-//   //   // tiles: i32 = 4
-//   //   // margin: i32 = overlay.resolution.x / 50
-//   //   // square_size := f32((overlay.resolution.x - ((tiles + 1) * margin)) / tiles)
-//   //   //
-//   //   // for y in 0..<2 {
-//   //   //   for x in 0..<tiles{
-//   //   //     rl.DrawRectangleLinesEx(rl.Rectangle { f32(x) * square_size + f32(x + 1) * f32(margin),  f32(y) * square_size + f32(y + 1) * f32(margin), square_size, square_size }, 2, rl.WHITE)
-//   //   //
-//   //   //     rl.DrawText(fmt.ctprint(x + 1, ", ", y + 1), i32(x) * i32(square_size) + i32(x + 1) * margin, i32(y) * i32(square_size) + i32(y + 1) * margin, 20, rl.WHITE)
-//   //   //   }
-//   //   // }
-//   //   //
-//   //
-//   //   //
-//   //   // rl.DrawText(strings.unsafe_string_to_cstring("coucou"), 100, 200, 20, rl.WHITE)
-//   //   //
-//   //   // ui_button_draw_xy_centered_list(
-//   //   //   { "MENU", "COUCOU" },
-//   //   //   font_size = 40,
-//   //   //   on_click = {
-//   //   //     proc() { engine.game_state.closed = true },
-//   //   //     proc() { engine.game_state.closed = true },
-//   //   //   },
-//   //   //   selected = selection,
-//   //   //   resolution = overlay.resolution,
-//   //   // )
-//   //   rl.DrawText(strings.unsafe_string_to_cstring("MENU"), 100, 100, 30, rl.WHITE)
-//   //   rl.EndTextureMode()
-//   // //   initialized = true
-//   // // }
-//   //
-//   //
-//   // rl.DrawTexturePro(overlay.render_texture.texture,
-//   //   rl.Rectangle { 0, 0, f32(overlay.resolution.x), -f32(overlay.resolution.y) },
-//   //   rl.Rectangle { f32(engine.game_state.resolution.x - overlay.resolution.x) / 2, f32(engine.game_state.resolution.y - overlay.resolution.y) / 2, f32(overlay.resolution.x), f32(overlay.resolution.y) },
-//   //   rl.Vector2 { 0, 0 }, 0, rl.WHITE)
-//   //
-//   // rl.DrawRectangleLinesEx(
-//   //   rl.Rectangle {
-//   //   f32((engine.game_state.resolution.x - overlay.resolution.x) / 2),
-//   //   f32((engine.game_state.resolution.y - overlay.resolution.y) / 2),
-//   //     f32(overlay.resolution.x),
-//   //     f32(overlay.resolution.y),
-//   //   }, 2, rl.WHITE,
-//   // )
-// }
+// The overlay is passed as a param because game_state.current_scene could be the pause scene, thus not containing the overlay.
+// The overlay position is stored inside to avoid having to recalculate it everytime.
 //
+// TODO: Maybe store overlays in a separate registry instead of scenes directly, so that we can access them independently from the scene
+// TODO: Maybe put the position calculation in the draw system? It may be useless to store it
+overlay_init_inventory :: proc(overlay: ^engine.Overlay) {
+  rl.BeginTextureMode(overlay.render_texture)
+
+  // 1 and -2 are here to see the lines
+  rl.DrawRectangle(0, 0, overlay.resolution.x, overlay.resolution.y, rl.BLACK)
+  rl.DrawRectangleLines(1, 1, overlay.resolution.x - 1, overlay.resolution.y - 2, rl.WHITE)
+
+  tiles := 5
+  padding := int(f64(overlay.resolution.x) * PADDING_RATIO)
+  tile_width: i32 = overlay.resolution.y - 2 * i32(padding)
+
+  total_width := (tile_width + i32(padding)) * i32(tiles) - i32(padding)
+  init_offset := overlay.resolution.x / 2 - total_width / 2
+
+  for i in 0..<tiles {
+    offset := init_offset + i32(i * (int(tile_width) + padding))
+
+    rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.WHITE)
+  }
+
+  rl.EndTextureMode()
+
+  overlay.position = {
+    f32(engine.game_state.resolution.x / 2 - overlay.resolution.x / 2),
+    f32(engine.game_state.resolution.y - overlay.resolution.y) - f32(overlay.resolution.y) * 0.1,
+  }
+}
+
+
+
+//
+// PRIVATE
+//
+
+
+
+@(private="file")
+PADDING_RATIO := 0.01

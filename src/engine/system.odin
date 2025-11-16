@@ -7,13 +7,13 @@ import "core:time"
 // Register a system from its type and callback.
 // Optional: recurrence_in_ms, defaulting to -1 to run each frame
 system_register :: proc(callback: proc(), scene_ids: []int = {}, recurrence_in_ms: f64 = -1) {
-  append(&system_registry, System { recurrence_in_ms, scene_ids, slice.length(scene_ids) == 0, callback, time.now() })
+  append_to(&system_registry, callback, scene_ids, recurrence_in_ms)
 }
 
 // Register an overlay system from its type and callback.
 // Optional: recurrence_in_ms, defaulting to -1 to run each frame
 system_overlay_register :: proc(callback: proc(), scene_ids: []int = {}, recurrence_in_ms: f64 = -1) {
-  append(&system_overlay_registry, System { recurrence_in_ms, scene_ids, slice.length(scene_ids) == 0, callback, time.now() })
+  append_to(&system_overlay_registry, callback, scene_ids, recurrence_in_ms)
 }
 
 
@@ -61,8 +61,17 @@ System :: struct {
 }
 
 
-// Misc
-
+// Generic method to add a new system
+@(private="file")
+append_to :: proc(registry: ^[dynamic]System, callback: proc(), scene_ids: []int = {}, recurrence_in_ms: f64 = -1) {
+  append(registry, System {
+    recurrence_in_ms,
+    scene_ids,
+    slice.length(scene_ids) == 0,
+    callback,
+    time.now(),
+  })
+}
 
 // Perform the update from a list
 system_update_list :: proc(list: ^[dynamic]System, current_scene_id: int, now: time.Time) {
