@@ -85,7 +85,7 @@ main :: proc() {
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
   engine.scene_set_current(enums.SceneID.MAIN)
 
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1, on_init = overlay_init_inventory)
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
 
   engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })

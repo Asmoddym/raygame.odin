@@ -27,9 +27,6 @@ Overlay :: struct {
   // Internal
   resolution: [2]i32,
   id: int,
-  on_init: proc(o: ^Overlay),
-  // Stored as f32 because we'll use DrawTexturePro with a rl.Rectangle needing f32
-  position: [2]f32,
 }
 
 
@@ -49,7 +46,7 @@ scene_set_current :: proc(#any_int id: int) {
 
 
 // Create an overlay and store it in a scene, with its render texture and resolution.
-scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f64, height_ratio: f64, on_init: proc(o: ^Overlay)) {
+scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f64, height_ratio: f64) {
   scene := &scene_registry[scene_id]
   resolution := calculate_resolution(width_ratio, height_ratio)
 
@@ -59,11 +56,7 @@ scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, w
     height_ratio,
     resolution,
     overlay_id,
-    on_init,
-    { 0, 0 },
   }
-
-  on_init(&scene.overlays[overlay_id])
 }
 
 calculate_resolution :: proc(width_ratio: f64, height_ratio: f64) -> [2]i32 {
@@ -94,7 +87,6 @@ scene_overlay_update_resolutions :: proc() {
 
       overlay.resolution = resolution
       overlay.render_texture = rl.LoadRenderTexture(resolution.x, resolution.y)
-      overlay.on_init(overlay)
     }
   }
 }
