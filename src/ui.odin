@@ -1,5 +1,7 @@
 package macro
 
+import "core:fmt"
+import "core:slice"
 import "engine"
 import "globals"
 import "core:strings"
@@ -70,9 +72,13 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
 
 // Init a text box, generating and storing the metadata to the component pointer
-ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
+ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) -> int {
   text_box: TextBoxMetadata
+  @(static) counter := 0
 
+  counter += 1
+
+  text_box.id = counter
   text_box.duration = duration
   text_box.instanciated_at = time.now()
   text_box.attached_to_bounding_box = &attached_to_bounding_box.box
@@ -84,6 +90,8 @@ ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box:
   text_box.ticks = 0
 
   append(&text_boxes, text_box)
+
+  return counter
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer
@@ -91,6 +99,16 @@ ui_animated_text_box_draw :: proc(text: string, font_size: i32, attached_to_boun
   ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, color)
 
   text_boxes[len(text_boxes) - 1].animated = true
+}
+
+ui_text_box_delete :: proc(id: int) {
+  fmt.println("deleting ", id)
+  context.user_index = id
+  index, found := slice.linear_search_proc(text_boxes[:], proc(md: TextBoxMetadata) -> bool { return md.id == context.user_index })
+
+  if !found do return
+
+  unordered_remove(&text_boxes, index)
 }
 
 
@@ -179,8 +197,7 @@ TEXT_WIDTH_THRESHOLD: i32 = 200
 // TextBox metadata containing all infos to draw it
 @(private="file")
 TextBoxMetadata :: struct {
-  using base: engine.Metadata,
-
+  id: int,
   lines: i32,
   text_width: i32,
   box_width: i32,
@@ -260,6 +277,10 @@ ui_text_box_generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, 
     current_width += size + TEXT_PADDING
 
     strings.builder_reset(&builder)
+  }
+
+  if metadata.text_width < current_width {
+    metadata.text_width = current_width
   }
 
   metadata.text_height = (metadata.lines + 1) * font_size

@@ -58,19 +58,5 @@ database_get_component :: proc(entity_id: int, table: ^Table($ComponentType), de
     }
   }
 
-  error.raise("No component type \"", desc, "\" for entity_id ", entity_id)
-
   return nil
 }
-
-// Check if a component exists in the table address by its entity_id
-database_has_component :: proc(entity_id: int, table: ^Table($ComponentType)) -> bool {
-  for &c in table.items {
-    if c.entity_id == entity_id {
-      return true
-    }
-  }
-
-  return false
-}
-
