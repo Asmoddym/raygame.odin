@@ -102,13 +102,24 @@ ui_animated_text_box_draw :: proc(text: string, font_size: i32, attached_to_boun
 }
 
 ui_text_box_delete :: proc(id: int) {
-  fmt.println("deleting ", id)
   context.user_index = id
   index, found := slice.linear_search_proc(text_boxes[:], proc(md: TextBoxMetadata) -> bool { return md.id == context.user_index })
 
   if !found do return
 
   unordered_remove(&text_boxes, index)
+}
+
+ui_text_box_delete_from_bounding_box :: proc(bounding_box: ^Component_BoundingBox) {
+  to_delete: [dynamic]int
+
+  for &box, idx in text_boxes {
+    if box.attached_to_bounding_box == &bounding_box.box do append(&to_delete, idx)
+  }
+
+  for idx in to_delete {
+    unordered_remove(&text_boxes, idx)
+  }
 }
 
 

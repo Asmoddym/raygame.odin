@@ -2,6 +2,7 @@ package macro
 
 import "enums"
 import "engine"
+import "globals"
 import rl "vendor:raylib"
 
 
@@ -29,7 +30,10 @@ overlay_subsystem_draw_inventory :: proc() {
   for i in 0..<tiles {
     offset := init_offset + i32(i * (int(tile_width) + padding))
 
-    rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.WHITE)
+    rl.DrawRectangleLines(offset, i32(padding), tile_width, tile_width, rl.WHITE)
+    if i == 0 && engine.database_get_component(globals.player_id, &table_backpacks).has_npc {
+    rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.PURPLE)
+    }
   }
 
   rl.EndTextureMode()

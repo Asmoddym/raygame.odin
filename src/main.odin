@@ -16,11 +16,6 @@ init_npc :: proc() {
   bounding_box.box = rl.Rectangle { 100, 100, BOX_SIZE, BOX_SIZE }
   bounding_box.movable = false
   bounding_box.collidable = true
-  ui_text_box_draw(
-    "J'ai terriblement faim à l'aide :(",
-    font_size = 20,
-    attached_to_bounding_box = bounding_box,
-  )
   ui_animated_sprite_init(engine.database_add_component(npc, &table_animated_sprites[1]), {
     int(enums.Direction.NONE) = "idle.png",
     int(enums.Direction.UP) = "up.png",
@@ -32,6 +27,7 @@ init_npc :: proc() {
   collectable := engine.database_add_component(npc, &table_collectables)
   collectable.metadata.pickup_text_box_id = 0
   collectable.metadata.bounding_box = bounding_box
+  collectable.metadata.bounding_box_layer = 1
 }
 
 init_player :: proc() {
@@ -49,6 +45,8 @@ init_player :: proc() {
     int(enums.Direction.LEFT) = "left.png",
     int(enums.Direction.RIGHT) = "right.png",
   }, enums.Direction.NONE)
+  
+  engine.database_add_component(globals.player_id, &table_backpacks).has_npc = false
 }
 
 init_terrain :: proc() {
@@ -87,6 +85,7 @@ init_terrain :: proc() {
 Component_CollectableMetadata :: struct {
   pickup_text_box_id: int,
   bounding_box: ^Component_BoundingBox,
+  bounding_box_layer: int,
 }
 
 Component_Collectable :: struct {
@@ -95,23 +94,52 @@ Component_Collectable :: struct {
 
 table_collectables: engine.Table(Component_Collectable)
 
+Component_Backpack :: struct {
+  using base: engine.Component(engine.Metadata),
+
+  has_npc: bool,
+}
+
+table_backpacks: engine.Table(Component_Backpack)
+
 items_system_pickup :: proc() {
   player_box := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
   player_rect := player_box.box
 
   for &collectable in table_collectables.items {
-    if collectable.entity_id == globals.player_id do continue
-
+    entity_id := collectable.entity_id
     bounding_box := collectable.metadata.bounding_box
+
+    if entity_id == globals.player_id do continue
 
     if rl.CheckCollisionRecs(bounding_box.box, player_rect) {
       if collectable.metadata.pickup_text_box_id == 0 {
+        ui_animated_text_box_draw(
+          "J'ai terriblement faim à l'aide :(",
+          duration = 2000,
+          font_size = 20,
+          attached_to_bounding_box = bounding_box,
+        )
+
+
         collectable.metadata.pickup_text_box_id = ui_text_box_draw(
           "(E) pickup",
           duration = -1,
           font_size = 20,
           attached_to_bounding_box = player_box,
         )
+      }
+
+      if rl.IsKeyPressed(rl.KeyboardKey.E) {
+        engine.database_destroy_component(entity_id, &table_collectables)
+        ui_text_box_delete(collectable.metadata.pickup_text_box_id)
+        ui_text_box_delete_from_bounding_box(bounding_box)
+
+        fmt.println(collectable.metadata.bounding_box_layer)
+        engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box_layer])
+        engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box_layer])
+
+        engine.database_get_component(globals.player_id, &table_backpacks).has_npc = true
       }
     } else {
       if collectable.metadata.pickup_text_box_id != 0 {
