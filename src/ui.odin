@@ -128,11 +128,13 @@ ui_text_box_delete :: proc(id: int) {
 
   if !found do return
 
+  text_box := text_boxes[index]
+
+  fmt.println("Deleted textbox ", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
+
   if text_boxes[index].owner_id != nil do text_boxes[index].owner_id^ = 0
 
   unordered_remove(&text_boxes, index)
-
-  fmt.println("Deleted textbox ", id)
 }
 
 
@@ -185,11 +187,11 @@ ui_system_text_box_update :: proc() {
     if item.duration == -1 do continue
 
     time_diff := time.duration_milliseconds(time.diff(time_source, time.now()))
-    if time_diff > item.duration do append(&to_delete, idx)
+    if time_diff > item.duration do append(&to_delete, item.id)
   }
 
-  for idx in to_delete {
-    unordered_remove(&text_boxes, idx)
+  for id in to_delete {
+    ui_text_box_delete(id)
   }
 }
 

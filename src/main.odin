@@ -121,23 +121,24 @@ items_system_pickup :: proc() {
 
     if rl.CheckCollisionRecs(bounding_box.box, player_rect) {
       if collectable.metadata.pickup_text_box_id == 0 {
-         ui_text_box_draw(
+        ui_text_box_draw(
           "(E) pickup",
           duration = -1,
           font_size = 20,
           attached_to_bounding_box = player_box,
           owner_id = &collectable.metadata.pickup_text_box_id,
         )
-      }
 
-      if collectable.metadata.interaction_text_box_id == 0 {
-        ui_animated_text_box_draw(
-          collectable.interaction_text,
-          font_size = 20,
-          duration = 2000,
-          attached_to_bounding_box = bounding_box,
-          owner_id = &collectable.metadata.interaction_text_box_id,
-        )
+        // These are nested to prevent the interaction text recreation if you just stay on the item
+        if collectable.metadata.interaction_text_box_id == 0 {
+          ui_animated_text_box_draw(
+            collectable.interaction_text,
+            font_size = 20,
+            duration = 2000,
+            attached_to_bounding_box = bounding_box,
+            owner_id = &collectable.metadata.interaction_text_box_id,
+          )
+        }
       }
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
@@ -154,10 +155,6 @@ items_system_pickup :: proc() {
       if collectable.metadata.pickup_text_box_id != 0 {
         ui_text_box_delete(collectable.metadata.pickup_text_box_id)
         collectable.metadata.pickup_text_box_id = 0
-      }
-
-      if collectable.metadata.interaction_text_box_id != 0 {
-        collectable.metadata.interaction_text_box_id = 0
       }
     }
   }
