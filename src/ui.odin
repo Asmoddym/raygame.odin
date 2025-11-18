@@ -80,6 +80,7 @@ ui_text_box_draw :: proc(text: string,
                          attached_to_bounding_box: ^Component_BoundingBox,
                          duration: f64 = -1,
                          owner_id: ^int = nil,
+                         keep_alive_until_false: ^bool = nil,
                          color: rl.Color = rl.WHITE) {
   text_box: TextBoxMetadata
   @(static) counter := 0
@@ -88,6 +89,7 @@ ui_text_box_draw :: proc(text: string,
 
   text_box.id = counter
   text_box.owner_id = owner_id
+  text_box.keep_alive_until_false = keep_alive_until_false
   text_box.duration = duration
   text_box.instanciated_at = time.now()
   text_box.attached_to_bounding_box = &attached_to_bounding_box.box
@@ -100,7 +102,7 @@ ui_text_box_draw :: proc(text: string,
 
   append(&text_boxes, text_box)
 
-  fmt.println("Created textbox ", counter, "(", text, ")")
+  fmt.println("Created textbox", counter, "(", text, ")")
 
   if owner_id != nil do owner_id^ = counter
 }
@@ -114,8 +116,9 @@ ui_animated_text_box_draw :: proc(text: string,
                                   attached_to_bounding_box: ^Component_BoundingBox,
                                   duration: f64 = -1,
                                   owner_id: ^int = nil,
+                                  keep_alive_until_false: ^bool = nil,
                                   color: rl.Color = rl.WHITE) {
-  ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, owner_id, color)
+  ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, owner_id, keep_alive_until_false, color)
 
   text_boxes[len(text_boxes) - 1].animated = true
 }
@@ -130,7 +133,7 @@ ui_text_box_delete :: proc(id: int) {
 
   text_box := text_boxes[index]
 
-  fmt.println("Deleted textbox ", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
+  fmt.println("Deleted textbox", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
 
   if text_boxes[index].owner_id != nil do text_boxes[index].owner_id^ = 0
 
@@ -187,7 +190,7 @@ ui_system_text_box_update :: proc() {
     if item.duration == -1 do continue
 
     time_diff := time.duration_milliseconds(time.diff(time_source, time.now()))
-    if time_diff > item.duration do append(&to_delete, item.id)
+    if !item.keep_alive_until_false^ && time_diff > item.duration do append(&to_delete, item.id)
   }
 
   for id in to_delete {
@@ -225,6 +228,7 @@ TEXT_WIDTH_THRESHOLD: i32 = 200
 TextBoxMetadata :: struct {
   id: int,
   owner_id: ^int,
+  keep_alive_until_false: ^bool,
 
   lines: i32,
   text_width: i32,

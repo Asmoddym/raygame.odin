@@ -31,6 +31,7 @@ init_npc :: proc() {
   collectable.interaction_text = "coucou je suis gentil"
   collectable.metadata.bounding_box = bounding_box
   collectable.metadata.bounding_box_layer = 1
+  collectable.keep_interaction_alive = false
 }
 
 init_player :: proc() {
@@ -84,9 +85,9 @@ init_terrain :: proc() {
   root_bb.collidable = true
 }
 
-
 Component_CollectableMetadata :: struct {
   pickup_text_box_id: int,
+
   interaction_text_box_id: int,
 
   bounding_box: ^Component_BoundingBox,
@@ -97,6 +98,7 @@ Component_Collectable :: struct {
   using base: engine.Component(Component_CollectableMetadata),
 
   interaction_text: string,
+  keep_interaction_alive: bool,
 }
 
 table_collectables: engine.Table(Component_Collectable)
@@ -123,7 +125,6 @@ items_system_pickup :: proc() {
       if collectable.metadata.pickup_text_box_id == 0 {
         ui_text_box_draw(
           "(E) pickup",
-          duration = -1,
           font_size = 20,
           attached_to_bounding_box = player_box,
           owner_id = &collectable.metadata.pickup_text_box_id,
@@ -137,8 +138,11 @@ items_system_pickup :: proc() {
             duration = 2000,
             attached_to_bounding_box = bounding_box,
             owner_id = &collectable.metadata.interaction_text_box_id,
+            keep_alive_until_false = &collectable.keep_interaction_alive,
           )
         }
+      } else {
+        if collectable.metadata.interaction_text_box_id != 0 do collectable.keep_interaction_alive = true
       }
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
@@ -152,6 +156,7 @@ items_system_pickup :: proc() {
         engine.database_get_component(globals.player_id, &table_backpacks).has_npc = true
       }
     } else {
+      collectable.keep_interaction_alive = false
       if collectable.metadata.pickup_text_box_id != 0 {
         ui_text_box_delete(collectable.metadata.pickup_text_box_id)
         collectable.metadata.pickup_text_box_id = 0
