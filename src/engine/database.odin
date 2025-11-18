@@ -1,7 +1,5 @@
 package engine
 
-import "error"
-
 
 // Metadata base class definition, designed to be inherited from if necessary
 Metadata :: struct {}

@@ -73,8 +73,11 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
 // Init a text box, generating and storing the metadata to the component pointer
 //
-// owner_id can be a pointer to an int in which the id will be stored for external checks.
+// owner_id can point to an int in which the id will be stored for external checks.
 // when deleting the textbox, owner_id will be reset to 0.
+//
+// keep_alive_until_false can point to a bool which will be check on update system to force the box NOT to be deleted.
+// when the value is true, the box will stay instanciated.
 ui_text_box_draw :: proc(text: string,
                          font_size: i32,
                          attached_to_bounding_box: ^Component_BoundingBox,
@@ -107,10 +110,9 @@ ui_text_box_draw :: proc(text: string,
   if owner_id != nil do owner_id^ = counter
 }
 
-// Init an animated text box, generating and storing the metadata to the component pointer
+// Init an animated text box, generating and storing the metadata to the component pointer.
 //
-// owner_id can be a pointer to an int in which the id will be stored for external checks.
-// when deleting the textbox, owner_id will be reset to 0.
+// Params are the same as ui_text_box_draw, check for more info.
 ui_animated_text_box_draw :: proc(text: string,
                                   font_size: i32,
                                   attached_to_bounding_box: ^Component_BoundingBox,
