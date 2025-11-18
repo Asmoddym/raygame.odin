@@ -72,13 +72,22 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
 
 // Init a text box, generating and storing the metadata to the component pointer
-ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) -> int {
+//
+// owner_id can be a pointer to an int in which the id will be stored for external checks.
+// when deleting the textbox, owner_id will be reset to 0.
+ui_text_box_draw :: proc(text: string,
+                         font_size: i32,
+                         attached_to_bounding_box: ^Component_BoundingBox,
+                         duration: f64 = -1,
+                         owner_id: ^int = nil,
+                         color: rl.Color = rl.WHITE) {
   text_box: TextBoxMetadata
   @(static) counter := 0
 
   counter += 1
 
   text_box.id = counter
+  text_box.owner_id = owner_id
   text_box.duration = duration
   text_box.instanciated_at = time.now()
   text_box.attached_to_bounding_box = &attached_to_bounding_box.box
@@ -91,35 +100,39 @@ ui_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box:
 
   append(&text_boxes, text_box)
 
-  return counter
+  fmt.println("Created textbox ", counter, "(", text, ")")
+
+  if owner_id != nil do owner_id^ = counter
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer
-ui_animated_text_box_draw :: proc(text: string, font_size: i32, attached_to_bounding_box: ^Component_BoundingBox, duration: f64 = -1, color: rl.Color = rl.WHITE) {
-  ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, color)
+//
+// owner_id can be a pointer to an int in which the id will be stored for external checks.
+// when deleting the textbox, owner_id will be reset to 0.
+ui_animated_text_box_draw :: proc(text: string,
+                                  font_size: i32,
+                                  attached_to_bounding_box: ^Component_BoundingBox,
+                                  duration: f64 = -1,
+                                  owner_id: ^int = nil,
+                                  color: rl.Color = rl.WHITE) {
+  ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, owner_id, color)
 
   text_boxes[len(text_boxes) - 1].animated = true
 }
 
+// Delete a text_box from its ID.
+// If owner_id is not nil, will be reset to 0.
 ui_text_box_delete :: proc(id: int) {
   context.user_index = id
   index, found := slice.linear_search_proc(text_boxes[:], proc(md: TextBoxMetadata) -> bool { return md.id == context.user_index })
 
   if !found do return
 
+  if text_boxes[index].owner_id != nil do text_boxes[index].owner_id^ = 0
+
   unordered_remove(&text_boxes, index)
-}
 
-ui_text_box_delete_from_bounding_box :: proc(bounding_box: ^Component_BoundingBox) {
-  to_delete: [dynamic]int
-
-  for &box, idx in text_boxes {
-    if box.attached_to_bounding_box == &bounding_box.box do append(&to_delete, idx)
-  }
-
-  for idx in to_delete {
-    unordered_remove(&text_boxes, idx)
-  }
+  fmt.println("Deleted textbox ", id)
 }
 
 
@@ -209,6 +222,8 @@ TEXT_WIDTH_THRESHOLD: i32 = 200
 @(private="file")
 TextBoxMetadata :: struct {
   id: int,
+  owner_id: ^int,
+
   lines: i32,
   text_width: i32,
   box_width: i32,

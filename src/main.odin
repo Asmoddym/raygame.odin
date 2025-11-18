@@ -26,6 +26,9 @@ init_npc :: proc() {
 
   collectable := engine.database_add_component(npc, &table_collectables)
   collectable.metadata.pickup_text_box_id = 0
+  collectable.metadata.interaction_text_box_id = 0
+
+  collectable.interaction_text = "coucou je suis gentil"
   collectable.metadata.bounding_box = bounding_box
   collectable.metadata.bounding_box_layer = 1
 }
@@ -45,7 +48,7 @@ init_player :: proc() {
     int(enums.Direction.LEFT) = "left.png",
     int(enums.Direction.RIGHT) = "right.png",
   }, enums.Direction.NONE)
-  
+
   engine.database_add_component(globals.player_id, &table_backpacks).has_npc = false
 }
 
@@ -84,12 +87,16 @@ init_terrain :: proc() {
 
 Component_CollectableMetadata :: struct {
   pickup_text_box_id: int,
+  interaction_text_box_id: int,
+
   bounding_box: ^Component_BoundingBox,
   bounding_box_layer: int,
 }
 
 Component_Collectable :: struct {
   using base: engine.Component(Component_CollectableMetadata),
+
+  interaction_text: string,
 }
 
 table_collectables: engine.Table(Component_Collectable)
@@ -114,28 +121,30 @@ items_system_pickup :: proc() {
 
     if rl.CheckCollisionRecs(bounding_box.box, player_rect) {
       if collectable.metadata.pickup_text_box_id == 0 {
-        ui_animated_text_box_draw(
-          "J'ai terriblement faim à l'aide :(",
-          duration = 2000,
-          font_size = 20,
-          attached_to_bounding_box = bounding_box,
-        )
-
-
-        collectable.metadata.pickup_text_box_id = ui_text_box_draw(
+         ui_text_box_draw(
           "(E) pickup",
           duration = -1,
           font_size = 20,
           attached_to_bounding_box = player_box,
+          owner_id = &collectable.metadata.pickup_text_box_id,
+        )
+      }
+
+      if collectable.metadata.interaction_text_box_id == 0 {
+        ui_animated_text_box_draw(
+          collectable.interaction_text,
+          font_size = 20,
+          duration = 2000,
+          attached_to_bounding_box = bounding_box,
+          owner_id = &collectable.metadata.interaction_text_box_id,
         )
       }
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
         engine.database_destroy_component(entity_id, &table_collectables)
-        ui_text_box_delete(collectable.metadata.pickup_text_box_id)
-        ui_text_box_delete_from_bounding_box(bounding_box)
+        if collectable.metadata.pickup_text_box_id != 0 do ui_text_box_delete(collectable.metadata.pickup_text_box_id)
+        if collectable.metadata.interaction_text_box_id != 0 do ui_text_box_delete(collectable.metadata.interaction_text_box_id)
 
-        fmt.println(collectable.metadata.bounding_box_layer)
         engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box_layer])
         engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box_layer])
 
@@ -145,6 +154,10 @@ items_system_pickup :: proc() {
       if collectable.metadata.pickup_text_box_id != 0 {
         ui_text_box_delete(collectable.metadata.pickup_text_box_id)
         collectable.metadata.pickup_text_box_id = 0
+      }
+
+      if collectable.metadata.interaction_text_box_id != 0 {
+        collectable.metadata.interaction_text_box_id = 0
       }
     }
   }
