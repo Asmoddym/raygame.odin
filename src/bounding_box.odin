@@ -16,6 +16,7 @@ Component_BoundingBox :: struct {
   box: rl.Rectangle,
   collidable: bool,
   movable: bool,
+  layer: int,
 }
 
 table_bounding_boxes: [5]engine.Table(Component_BoundingBox)

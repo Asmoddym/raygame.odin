@@ -10,7 +10,6 @@ Component_CollectableMetadata :: struct {
   interaction_text_box_id: int,
 
   bounding_box: ^Component_BoundingBox,
-  bounding_box_layer: int,
 }
 
 // Collectable component.
@@ -83,8 +82,8 @@ collectable_system_main :: proc() {
         if collectable.metadata.pickup_text_box_id != 0 do ui_text_box_delete(collectable.metadata.pickup_text_box_id)
         if collectable.metadata.interaction_text_box_id != 0 do ui_text_box_delete(collectable.metadata.interaction_text_box_id)
 
-        engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box_layer])
-        engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box_layer])
+        engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box.layer])
+        engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer])
 
         engine.database_get_component(globals.player_id, &table_backpacks).has_npc = true
       }
