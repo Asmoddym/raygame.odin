@@ -4,15 +4,17 @@ import "engine"
 import "globals"
 import rl "vendor:raylib"
 
+
 Component_CollectableMetadata :: struct {
   pickup_text_box_id: int,
-
   interaction_text_box_id: int,
 
   bounding_box: ^Component_BoundingBox,
   bounding_box_layer: int,
 }
 
+// Collectable component.
+// keep_interaction_alive is dynamically set to true to force the interaction text to stay after duration
 Component_Collectable :: struct {
   using base: engine.Component(Component_CollectableMetadata),
 
@@ -20,7 +22,11 @@ Component_Collectable :: struct {
   keep_interaction_alive: bool,
 }
 
+// Table
 table_collectables: engine.Table(Component_Collectable)
+
+
+// WIP: Backpack component. Will hold inventory for entities having one, not necessarily the player.
 
 Component_Backpack :: struct {
   using base: engine.Component(engine.Metadata),
@@ -30,15 +36,23 @@ Component_Backpack :: struct {
 
 table_backpacks: engine.Table(Component_Backpack)
 
+
+
+//
+// SYSTEMS
+//
+
+
+
 collectable_system_main :: proc() {
   player_box := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
   player_rect := player_box.box
 
   for &collectable in table_collectables.items {
+    if collectable.entity_id == globals.player_id do continue
+
     entity_id := collectable.entity_id
     bounding_box := collectable.metadata.bounding_box
-
-    if entity_id == globals.player_id do continue
 
     if rl.CheckCollisionRecs(bounding_box.box, player_rect) {
       if collectable.metadata.pickup_text_box_id == 0 {
@@ -49,7 +63,7 @@ collectable_system_main :: proc() {
           owner_id = &collectable.metadata.pickup_text_box_id,
         )
 
-        // These are nested to prevent the interaction text recreation if you just stay on the item
+        // These two conditions are nested to prevent the interaction text recreation if you just stay on the item
         if collectable.metadata.interaction_text_box_id == 0 {
           ui_animated_text_box_draw(
             collectable.interaction_text,
