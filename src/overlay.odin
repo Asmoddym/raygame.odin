@@ -27,12 +27,16 @@ overlay_subsystem_draw_inventory :: proc() {
   // 1 and -2 are here to see the lines
   rl.DrawRectangleLines(1, 1, overlay.resolution.x - 1, overlay.resolution.y - 2, rl.WHITE)
 
+  backpack_items := engine.database_get_component(globals.player_id, &table_backpacks).items
+
   for i in 0..<tiles {
     offset := init_offset + i32(i * (int(tile_width) + padding))
 
     rl.DrawRectangleLines(offset, i32(padding), tile_width, tile_width, rl.WHITE)
-    if i == 0 && engine.database_get_component(globals.player_id, &table_backpacks).has_npc {
-    rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.PURPLE)
+
+    if i < len(backpack_items) {
+      texture := items_get_icon(backpack_items[i])
+      rl.DrawTexturePro(texture, { 0, 0, f32(texture.width), f32(texture.height) }, { f32(offset), f32(padding), f32(tile_width), f32(tile_width) }, { 0, 0 }, 0, rl.WHITE)
     }
   }
 

@@ -60,6 +60,7 @@ textures: [dynamic]Item(rl.Texture2D)
 
 
 // Find an element in a storage array
+@(private="file")
 assets_find_in :: proc(array: ^[dynamic]Item($Type), identifier: string) -> ^Item(Type) {
   for &item in array {
     if item.identifier == identifier do return &item

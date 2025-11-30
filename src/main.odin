@@ -26,12 +26,13 @@ init_npc :: proc() {
   }, enums.Direction.NONE)
 
   collectable := engine.database_add_component(npc, &table_collectables)
+  collectable.interaction_text = "coucou je suis gentil"
   collectable.metadata.pickup_text_box_id = 0
   collectable.metadata.interaction_text_box_id = 0
-
-  collectable.interaction_text = "coucou je suis gentil"
   collectable.metadata.bounding_box = bounding_box
   collectable.metadata.keep_interaction_alive = false
+
+  engine.database_add_component(npc, &table_backpacks).items = { .FLOWER }
 }
 
 init_player :: proc() {
@@ -50,8 +51,6 @@ init_player :: proc() {
     int(enums.Direction.LEFT) = "left.png",
     int(enums.Direction.RIGHT) = "right.png",
   }, enums.Direction.NONE)
-
-  engine.database_add_component(globals.player_id, &table_backpacks).has_npc = false
 }
 
 init_terrain :: proc() {

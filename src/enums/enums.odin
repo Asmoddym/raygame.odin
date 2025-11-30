@@ -20,3 +20,9 @@ SceneID :: enum {
 OverlayID :: enum {
   INVENTORY,
 }
+
+// Items
+ItemID :: enum {
+  NONE = 0,
+  FLOWER,
+}

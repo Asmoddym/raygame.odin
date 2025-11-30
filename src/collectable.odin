@@ -1,5 +1,6 @@
 package macro
 
+import "enums"
 import "engine"
 import "globals"
 import rl "vendor:raylib"
@@ -29,7 +30,7 @@ table_collectables: engine.Table(Component_Collectable)
 Component_Backpack :: struct {
   using base: engine.Component(engine.Metadata),
 
-  has_npc: bool,
+  items: [dynamic]enums.ItemID,
 }
 
 table_backpacks: engine.Table(Component_Backpack)
@@ -76,9 +77,10 @@ collectable_system_main :: proc() {
       }
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
-        destroy_collectable(&collectable)
+        collectable_backpack := engine.database_get_component(collectable.entity_id, &table_backpacks)
+        engine.database_get_component(globals.player_id, &table_backpacks).items = collectable_backpack.items
 
-        engine.database_get_component(globals.player_id, &table_backpacks).has_npc = true
+        destroy_collectable(&collectable)
       } } else {
       collectable.metadata.keep_interaction_alive = false
       if collectable.metadata.pickup_text_box_id != 0 {
@@ -108,4 +110,5 @@ destroy_collectable :: proc(collectable: ^Component_Collectable) {
   engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box.layer])
   engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer])
   engine.database_destroy_component(entity_id, &table_collectables)
+  engine.database_destroy_component(entity_id, &table_backpacks)
 }
