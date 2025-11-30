@@ -21,7 +21,6 @@ Component_Collectable :: struct {
   keep_interaction_alive: bool,
 }
 
-// Table
 table_collectables: engine.Table(Component_Collectable)
 
 
@@ -50,7 +49,6 @@ collectable_system_main :: proc() {
   for &collectable in table_collectables.items {
     if collectable.entity_id == globals.player_id do continue
 
-    entity_id := collectable.entity_id
     bounding_box := collectable.metadata.bounding_box
 
     if rl.CheckCollisionRecs(bounding_box.box, player_rect) {
@@ -78,16 +76,10 @@ collectable_system_main :: proc() {
       }
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
-        engine.database_destroy_component(entity_id, &table_collectables)
-        if collectable.metadata.pickup_text_box_id != 0 do ui_text_box_delete(collectable.metadata.pickup_text_box_id)
-        if collectable.metadata.interaction_text_box_id != 0 do ui_text_box_delete(collectable.metadata.interaction_text_box_id)
-
-        engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box.layer])
-        engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer])
+        destroy_collectable(&collectable)
 
         engine.database_get_component(globals.player_id, &table_backpacks).has_npc = true
-      }
-    } else {
+      } } else {
       collectable.keep_interaction_alive = false
       if collectable.metadata.pickup_text_box_id != 0 {
         ui_text_box_delete(collectable.metadata.pickup_text_box_id)
@@ -97,3 +89,23 @@ collectable_system_main :: proc() {
   }
 }
 
+
+
+//
+// PRIVATE
+//
+
+
+
+// Destroy a collectable entity
+@(private="file")
+destroy_collectable :: proc(collectable: ^Component_Collectable) {
+  entity_id := collectable.entity_id
+
+  if collectable.metadata.pickup_text_box_id != 0 do ui_text_box_delete(collectable.metadata.pickup_text_box_id)
+  if collectable.metadata.interaction_text_box_id != 0 do ui_text_box_delete(collectable.metadata.interaction_text_box_id)
+
+  engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box.layer])
+  engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer])
+  engine.database_destroy_component(entity_id, &table_collectables)
+}
