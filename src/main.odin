@@ -43,6 +43,7 @@ init_player :: proc() {
   bounding_box.collidable = true
   bounding_box.layer = globals.PLAYER_LAYER
   player_animated_sprite := engine.database_add_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER])
+  engine.database_add_component(globals.player_id, &table_backpacks).max_items = 5
 
   ui_animated_sprite_init(player_animated_sprite, {
     int(enums.Direction.NONE) = "idle.png",

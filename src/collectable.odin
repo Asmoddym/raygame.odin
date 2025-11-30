@@ -1,10 +1,8 @@
 package macro
 
-import "enums"
 import "engine"
 import "globals"
 import rl "vendor:raylib"
-
 
 Component_CollectableMetadata :: struct {
   pickup_text_box_id: int,
@@ -23,17 +21,6 @@ Component_Collectable :: struct {
 }
 
 table_collectables: engine.Table(Component_Collectable)
-
-
-// WIP: Backpack component. Will hold inventory for entities having one, not necessarily the player.
-
-Component_Backpack :: struct {
-  using base: engine.Component(engine.Metadata),
-
-  items: [dynamic]enums.ItemID,
-}
-
-table_backpacks: engine.Table(Component_Backpack)
 
 
 
@@ -78,7 +65,13 @@ collectable_system_main :: proc() {
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
         collectable_backpack := engine.database_get_component(collectable.entity_id, &table_backpacks)
-        engine.database_get_component(globals.player_id, &table_backpacks).items = collectable_backpack.items
+        player_backpack := engine.database_get_component(globals.player_id, &table_backpacks)
+
+        // TODO: Move this to a dedicated system / thingy to handle choosing which items I want if necessary.
+        // Maybe directly transfer items if len(items) == 1?
+        for i: int = 0; i < len(collectable_backpack.items) && (i + len(player_backpack.items)) < player_backpack.max_items; i += 1 {
+          append(&player_backpack.items, collectable_backpack.items[i])
+        }
 
         destroy_collectable(&collectable)
       } } else {
