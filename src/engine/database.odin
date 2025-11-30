@@ -48,8 +48,7 @@ database_destroy_component :: proc(entity_id: int, table: ^Table($ComponentType)
 }
 
 // Get a component from its entity_id the component table address
-// Optional: description, can be set to provide more information if no component is found
-database_get_component :: proc(entity_id: int, table: ^Table($ComponentType), desc: string = "") -> ^ComponentType {
+database_get_component :: proc(entity_id: int, table: ^Table($ComponentType)) -> ^ComponentType {
   for &c in table.items {
     if c.entity_id == entity_id {
       return &c

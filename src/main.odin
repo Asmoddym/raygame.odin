@@ -31,7 +31,7 @@ init_npc :: proc() {
 
   collectable.interaction_text = "coucou je suis gentil"
   collectable.metadata.bounding_box = bounding_box
-  collectable.keep_interaction_alive = false
+  collectable.metadata.keep_interaction_alive = false
 }
 
 init_player :: proc() {

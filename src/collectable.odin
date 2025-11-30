@@ -8,17 +8,17 @@ import rl "vendor:raylib"
 Component_CollectableMetadata :: struct {
   pickup_text_box_id: int,
   interaction_text_box_id: int,
+  keep_interaction_alive: bool,
 
   bounding_box: ^Component_BoundingBox,
 }
 
 // Collectable component.
-// keep_interaction_alive is dynamically set to true to force the interaction text to stay after duration
+// metadata.keep_interaction_alive is dynamically set to true to force the interaction text to stay after duration
 Component_Collectable :: struct {
   using base: engine.Component(Component_CollectableMetadata),
 
   interaction_text: string,
-  keep_interaction_alive: bool,
 }
 
 table_collectables: engine.Table(Component_Collectable)
@@ -68,11 +68,11 @@ collectable_system_main :: proc() {
             duration = 2000,
             attached_to_bounding_box = bounding_box,
             owner_id = &collectable.metadata.interaction_text_box_id,
-            keep_alive_until_false = &collectable.keep_interaction_alive,
+            keep_alive_until_false = &collectable.metadata.keep_interaction_alive,
           )
         }
       } else {
-        if collectable.metadata.interaction_text_box_id != 0 do collectable.keep_interaction_alive = true
+        if collectable.metadata.interaction_text_box_id != 0 do collectable.metadata.keep_interaction_alive = true
       }
 
       if rl.IsKeyPressed(rl.KeyboardKey.E) {
@@ -80,7 +80,7 @@ collectable_system_main :: proc() {
 
         engine.database_get_component(globals.player_id, &table_backpacks).has_npc = true
       } } else {
-      collectable.keep_interaction_alive = false
+      collectable.metadata.keep_interaction_alive = false
       if collectable.metadata.pickup_text_box_id != 0 {
         ui_text_box_delete(collectable.metadata.pickup_text_box_id)
         collectable.metadata.pickup_text_box_id = 0
