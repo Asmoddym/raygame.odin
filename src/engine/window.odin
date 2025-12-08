@@ -19,7 +19,10 @@ window_init :: proc() {
   rl.SetTargetFPS(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 
   game_state.resolution = BASE_RESOLUTION
+
   game_state.borderless_window = false
+  // game_state.borderless_window = true
+  // window_toggle_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
 
   rl.SetExitKey(.KEY_NULL)
 }
