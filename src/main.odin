@@ -95,12 +95,15 @@ import json "core:encoding/json"
 
 main :: proc() {
   data: json.Object = { "a" = "b", "c" = json.Object { "c" = "d" }}
-  marshalled, ok := json.marshal(data)
+  marshalled, ok := json.marshal(data, { pretty = true, use_spaces = true })
 
   parsed, ok2 := json.parse(marshalled)
   fmt.println(string(marshalled))
 
   fmt.println(parsed.(json.Object)["c"])
+  
+  // os.write_entire_file / read_entire_file
+  // https://odin-lang.org/news/read-a-file-line-by-line/
 
 
 
