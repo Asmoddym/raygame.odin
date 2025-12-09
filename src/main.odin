@@ -102,7 +102,8 @@ main :: proc() {
 
   engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
+  engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
+  engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })

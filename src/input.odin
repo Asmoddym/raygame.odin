@@ -1,6 +1,5 @@
 package macro
 
-import "core:fmt"
 import "engine"
 import "globals"
 import "enums"
@@ -15,23 +14,7 @@ import rl "vendor:raylib"
 
 
 // Input handling for default runtime systems.
-//
-// For now, overlay inputs are handled in their respective systems
 input_system_main :: proc() {
-  if engine.game_state.current_scene.id == 0 do input_subsystem_default()
-}
-
-
-
-//
-// PRIVATE
-//
-
-
-
-// Default input system
-@(private="file")
-input_subsystem_default :: proc() {
   bbox := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
 
   // Text box test stuff
@@ -43,14 +26,13 @@ input_subsystem_default :: proc() {
       attached_to_bounding_box = bbox,
     )
   }
-
-  input_subsystem_handle_player_movement(bbox)
 }
 
 // Handle player movement with animated sprite state
-@(private="file")
-input_subsystem_handle_player_movement :: proc(bbox: ^Component_BoundingBox) {
+input_system_player_movement :: proc() {
+  bbox            := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
   animated_sprite := engine.database_get_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER])
+
   animated_sprite.state = int(enums.Direction.NONE)
 
   if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
