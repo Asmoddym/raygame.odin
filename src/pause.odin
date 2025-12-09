@@ -25,14 +25,30 @@ pause_system_main :: proc() {
   if selection < 0 do selection = 2
   if selection > 2 do selection = 0
 
+  if rl.IsKeyPressed(.ENTER) do on_clicks[selection]()
+
   ui_button_draw_xy_centered_list(
-    { "Toggle borderless window", "Toggle fullscreen", "Exit" },
+    texts,
     font_size = 40,
-    on_click = {
-      proc() { engine.game_state.borderless_window = !engine.game_state.borderless_window },
-      proc() { engine.game_state.fullscreen = !engine.game_state.fullscreen },
-      proc() { engine.game_state.closed = true },
-    },
+    on_click = on_clicks,
     selected = selection,
   )
 }
+
+
+
+//
+// PRIVATE
+//
+
+
+
+@(private="file")
+on_clicks: []proc() = {
+  proc() { engine.game_state.borderless_window = !engine.game_state.borderless_window },
+  proc() { engine.game_state.fullscreen = !engine.game_state.fullscreen },
+  proc() { engine.game_state.closed = true },
+}
+
+@(private="file")
+texts: []string = { "Toggle borderless window", "Toggle fullscreen", "Exit" }

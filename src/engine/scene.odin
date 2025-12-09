@@ -59,13 +59,6 @@ scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, w
   }
 }
 
-calculate_resolution :: proc(width_ratio: f64, height_ratio: f64) -> [2]i32 {
- return {
-    i32(f64(game_state.resolution.x) * width_ratio),
-    i32(f64(game_state.resolution.y) * height_ratio),
-  }
-}
-
 
 
 //
@@ -99,7 +92,14 @@ scene_overlay_update_resolutions :: proc() {
 
 
 
-// Scene registry by ID 
+// Scene registry by ID
 @(private="file")
 scene_registry: map[int]Scene
 
+// Calculate resolution from a ratio
+calculate_resolution :: proc(width_ratio: f64, height_ratio: f64) -> [2]i32 {
+ return {
+    i32(f64(game_state.resolution.x) * width_ratio),
+    i32(f64(game_state.resolution.y) * height_ratio),
+  }
+}

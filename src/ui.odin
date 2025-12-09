@@ -55,8 +55,6 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 
   if selected {
     thickness = 6
-
-    if rl.IsKeyPressed(.ENTER) do on_click()
   } else {
     color.r /= 2
     color.g /= 2
@@ -192,7 +190,9 @@ ui_system_text_box_update :: proc() {
     if item.duration == -1 do continue
 
     time_diff := time.duration_milliseconds(time.diff(time_source, time.now()))
-    if !item.keep_alive_until_false^ && time_diff > item.duration do append(&to_delete, item.id)
+    if (item.keep_alive_until_false == nil || !item.keep_alive_until_false^) && time_diff > item.duration {
+      append(&to_delete, item.id)
+    }
   }
 
   for id in to_delete {
