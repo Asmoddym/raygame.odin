@@ -8,7 +8,17 @@ import "enums"
 import "globals"
 import rl "vendor:raylib"
 
+import json "core:encoding/json"
+
 BOX_SIZE: f32 = 64
+
+serialize_collectable :: proc(self: Component_Collectable, a: int) {}
+serialize_animated_sprite:: proc(self: Component_AnimatedSprite, b: bool) {}
+
+serialize_component :: proc {
+  serialize_animated_sprite,
+  serialize_collectable,
+}
 
 init_npc :: proc() {
   npc := engine.database_create_entity()
@@ -32,6 +42,13 @@ init_npc :: proc() {
   collectable.metadata.interaction_text_box_id = 0
   collectable.metadata.bounding_box = bounding_box
   collectable.metadata.keep_interaction_alive = false
+
+  serialize_component(collectable^, 1)
+
+  collectable.serialize = proc(self: Component_Collectable) -> string { return "" }
+  collectable.deserialize = proc(entity_id: int, self: json.Object) -> Component_Collectable {
+    return engine.database_add_component(entity_id, &table_collectables)^
+  }
 
   engine.database_add_component(npc, &table_backpacks).items = { .FLOWER }
 }
@@ -101,7 +118,7 @@ main :: proc() {
   fmt.println(string(marshalled))
 
   fmt.println(parsed.(json.Object)["c"])
-  
+
   // os.write_entire_file / read_entire_file
   // https://odin-lang.org/news/read-a-file-line-by-line/
 

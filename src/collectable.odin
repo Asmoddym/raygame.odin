@@ -15,6 +15,7 @@ Component_CollectableMetadata :: struct {
 // Collectable component.
 // metadata.keep_interaction_alive is dynamically set to true to force the interaction text to stay after duration
 Component_Collectable :: struct {
+  using serializable: engine.Serializable(Component_Collectable),
   using base: engine.Component(Component_CollectableMetadata),
 
   interaction_text: string,
