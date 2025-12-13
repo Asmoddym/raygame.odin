@@ -2,12 +2,23 @@
 
 package macro
 
+import "core:fmt"
 import "engine"
 import "enums"
 import "globals"
 import rl "vendor:raylib"
 
+import json "core:encoding/json"
+
 BOX_SIZE: f32 = 64
+
+serialize_collectable :: proc(self: Component_Collectable, a: int) {}
+serialize_animated_sprite:: proc(self: Component_AnimatedSprite, b: bool) {}
+
+serialize_component :: proc {
+  serialize_animated_sprite,
+  serialize_collectable,
+}
 
 init_npc :: proc() {
   npc := engine.database_create_entity()
@@ -31,6 +42,13 @@ init_npc :: proc() {
   collectable.metadata.interaction_text_box_id = 0
   collectable.metadata.bounding_box = bounding_box
   collectable.metadata.keep_interaction_alive = false
+
+  serialize_component(collectable^, 1)
+
+  collectable.serialize = proc(self: Component_Collectable) -> string { return "" }
+  collectable.deserialize = proc(entity_id: int, self: json.Object) -> Component_Collectable {
+    return engine.database_add_component(entity_id, &table_collectables)^
+  }
 
   engine.database_add_component(npc, &table_backpacks).items = { .FLOWER }
 }
@@ -90,37 +108,52 @@ init_terrain :: proc() {
   root_bb.layer = globals.PLAYER_LAYER
 }
 
+import json "core:encoding/json"
+
 main :: proc() {
-  engine.init()
+  data: json.Object = { "a" = "b", "c" = json.Object { "c" = "d" }}
+  marshalled, ok := json.marshal(data, { pretty = true, use_spaces = true })
 
-  engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
-  engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
-  engine.scene_set_current(enums.SceneID.MAIN)
+  parsed, ok2 := json.parse(marshalled)
+  fmt.println(string(marshalled))
 
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
+  fmt.println(parsed.(json.Object)["c"])
 
-  engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
-  engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
-  engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
-  engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
+  // os.write_entire_file / read_entire_file
+  // https://odin-lang.org/news/read-a-file-line-by-line/
 
-  engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
 
-  engine.system_register(pause_system_main)
-  engine.system_register(pause_system_toggle)
 
-  engine.system_register(collectable_system_main)
-
-  init_npc()
-  init_player()
-  init_terrain()
-
-  engine.run()
-  engine.unload()
+  // engine.init()
+  //
+  // engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
+  // engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
+  // engine.scene_set_current(enums.SceneID.MAIN)
+  //
+  // engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
+  // engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
+  //
+  // engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
+  // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
+  // engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
+  // engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
+  // engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
+  //
+  // engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+  //
+  // engine.system_register(pause_system_main)
+  // engine.system_register(pause_system_toggle)
+  //
+  // engine.system_register(collectable_system_main)
+  //
+  // init_npc()
+  // init_player()
+  // init_terrain()
+  //
+  // engine.run()
+  // engine.unload()
 }

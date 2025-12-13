@@ -1,5 +1,6 @@
 package engine
 
+import json "core:encoding/json"
 
 // Metadata base class definition, designed to be inherited from if necessary
 Metadata :: struct {}
@@ -14,6 +15,11 @@ Component :: struct($T: typeid) {
 // Table definition to allow component storage table instanciation
 Table :: struct($ComponentType: typeid) {
   items: [dynamic]ComponentType,
+}
+
+Serializable :: struct($CType: typeid) {
+  serialize: proc(self: CType) -> string,
+  deserialize: proc(entity_id: int, data: json.Object) -> CType,
 }
 
 
