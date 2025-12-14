@@ -9,8 +9,8 @@ import rl "vendor:raylib"
 //
 
 
-// BASE_RESOLUTION: [2]i32 = { 1280, 720 }
-BASE_RESOLUTION: [2]i32 = { 2560, 1440}
+BASE_RESOLUTION: [2]i32 = { 1280, 720 }
+// BASE_RESOLUTION: [2]i32 = { 2560, 1440}
 
 
 
@@ -22,7 +22,7 @@ window_init :: proc() {
 
   game_state.resolution = BASE_RESOLUTION
 
-  game_state.borderless_window = true
+  game_state.borderless_window = false
   // game_state.borderless_window = true
   // window_toggle_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
 

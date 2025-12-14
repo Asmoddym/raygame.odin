@@ -22,12 +22,21 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
     blue = 100
   }
 
-  if altitude >= -0.3 && altitude < 0.3 {
+  if altitude >= -0.3 && altitude < 0 {
+    // green = u8(math.remap_clamped(altitude, -0.3, 0.3, 50, 200))
+    green = 100
+  }
+
+  if altitude >= 0 && altitude < 0.3 {
     // green = u8(math.remap_clamped(altitude, -0.3, 0.3, 50, 200))
     green = 255
   }
 
-  if altitude >= 0.3 {
+  if altitude >= 0.3 && altitude < 0.4 {
+    red = 200
+  }
+
+  if altitude >= 0.4 {
     red = u8(math.remap_clamped(altitude, 0.3, 0.9, 100, 255))
     green = red
     blue = red
@@ -223,12 +232,12 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
 
   @(static) z: f32 = 0.0
 
-  z += 10
+  z += 1
 
-  for i in 1..<512 {
-    p[i] = int(rand.int31()) % 255 //p[i - 1 % 255]
-  }
-
+  // for i in 1..<512 {
+  //   p[i] = int(rand.int31()) % 255 //p[i - 1 % 255]
+  // }
+  //
 
   mapWidth = int(width / scale)
   mapHeight = int(height / scale)
@@ -256,7 +265,7 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       distance_to_center = math.sqrt(dx * dx + dy * dy * y_scaling_coef)
       altitude = 0.75 - 2 * distance_to_center / max_distance
       //
-      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z, 8, 0.4)
+      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 8, 0.4)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
@@ -274,8 +283,6 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
     }
   }
 
-  fmt.println(mapWidth, mapHeight)
-
   return terrain
 }
 
@@ -291,7 +298,7 @@ display_cell :: proc(cell: ^TerrainCell) {
   rl.DrawRectangle(i32(cell.position.x * scale), i32(cell.position.y * scale), scale, scale, cell.color)
 }
 
-scale :: 1
-noise_scale :: 0.01
+scale :: 4
+noise_scale :: 0.05
 // noise_scale :: 1
 seed :: 1

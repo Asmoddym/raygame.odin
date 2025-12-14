@@ -106,10 +106,10 @@ main :: proc() {
     rl.BeginDrawing()
     rl.ClearBackground(rl.BLACK)
 
-    if int(rl.GetTime()) % 2 == 0 && last_generated_at != int(rl.GetTime()) {
+    // if int(rl.GetTime()) % 2 == 0 && last_generated_at != int(rl.GetTime()) {
   terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
   last_generated_at = int(rl.GetTime())
-    }
+    // }
 
     perlin_noise.draw_terrain(&terrain)
 
