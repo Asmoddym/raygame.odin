@@ -17,13 +17,14 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   red, green, blue: u8 = 0, 0, 0
 
   // fmt.println("altitude: ", altitude)
-  if altitude < 0 {
-    blue = u8(math.remap_clamped(altitude, -0.8, 0, 0, 255))
-    // color = rl.Color { 0, 0, u8(blue), 255 }
+  if altitude < -0.3 {
+    // blue = u8(math.remap_clamped(altitude, -0.8, 0, 0, 255))
+    blue = 100
   }
 
-  if altitude >= 0 && altitude < 0.3 {
-    green = u8(math.remap_clamped(altitude, 0, 0.3, 50, 200))
+  if altitude >= -0.3 && altitude < 0.3 {
+    // green = u8(math.remap_clamped(altitude, -0.3, 0.3, 50, 200))
+    green = 255
   }
 
   if altitude >= 0.3 {
@@ -31,7 +32,6 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
     green = red
     blue = red
   }
-  // fmt.println(red, green, blue)
 
   color = rl.Color { red, green, blue, 255 }
 
@@ -237,7 +237,7 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
 
 
   // 0.25 is for 0.5 * 0.5
-  max_distance = math.sqrt(f32(mapWidth) * f32(mapWidth) * 0.25 + f32(mapHeight) * f32(mapHeight) * 0.25)
+  max_distance = math.sqrt(f32(mapWidth) * f32(mapWidth) * 0.25 + f32(mapHeight) * f32(mapHeight) * 0.25) - f32(mapWidth) / 5
 
   // This is done to compensate the fact that the rectangle window would make the main continent "oval"
   y_scaling_coef = f32(width) / f32(height)
@@ -267,7 +267,7 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       // altitude += noise_value
       // 2 * is to scale the noise to -1 => 1 (negatives are for sea level)
 
-      altitude += 2.0 * noise_value - 1.0 + 0.0
+      altitude += 2.0 * noise_value - 1.0 + 0.1
       // altitude = noise_value
 
       terrain[y][x] = create_cell(y, x, altitude)
@@ -291,7 +291,7 @@ display_cell :: proc(cell: ^TerrainCell) {
   rl.DrawRectangle(i32(cell.position.x * scale), i32(cell.position.y * scale), scale, scale, cell.color)
 }
 
-scale :: 2
-noise_scale :: 0.04
+scale :: 1
+noise_scale :: 0.01
 // noise_scale :: 1
 seed :: 1
