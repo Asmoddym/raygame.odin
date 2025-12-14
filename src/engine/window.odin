@@ -24,7 +24,7 @@ window_init :: proc() {
   // game_state.borderless_window = true
   // window_toggle_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
 
-  rl.SetExitKey(.KEY_NULL)
+  // rl.SetExitKey(.KEY_NULL)
 }
 
 // Generic screen mode switcher.

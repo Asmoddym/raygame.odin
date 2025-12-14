@@ -2,6 +2,7 @@
 
 package macro
 
+import "core:fmt"
 import "engine"
 import "enums"
 import "globals"
@@ -90,37 +91,61 @@ init_terrain :: proc() {
   root_bb.layer = globals.PLAYER_LAYER
 }
 
+import "lib/perlin_noise"
+import math "core:math"
+
 main :: proc() {
   engine.init()
 
-  engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
-  engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
-  engine.scene_set_current(enums.SceneID.MAIN)
+  terrain := perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
+  last_generated_at:= 0
 
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
+  fmt.println(math.remap_clamped(0.5, -0.5, 0, 0, 255))
 
-  engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
-  engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
-  engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
-  engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
+  for !rl.WindowShouldClose() {
+    rl.BeginDrawing()
+    rl.ClearBackground(rl.BLACK)
 
-  engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+    if int(rl.GetTime()) % 2 == 0 && last_generated_at != int(rl.GetTime()) {
+  terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
+  last_generated_at = int(rl.GetTime())
+    }
 
-  engine.system_register(pause_system_main)
-  engine.system_register(pause_system_toggle)
+    perlin_noise.draw_terrain(&terrain)
 
-  engine.system_register(collectable_system_main)
+    rl.DrawFPS(0, 0)
+    rl.EndDrawing()
+  }
 
-  init_npc()
-  init_player()
-  init_terrain()
 
-  engine.run()
-  engine.unload()
+  // engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
+  // engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
+  // engine.scene_set_current(enums.SceneID.MAIN)
+  //
+  // engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
+  // engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
+  //
+  // engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
+  // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
+  // engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
+  // engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
+  // engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
+  //
+  // engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+  //
+  // engine.system_register(pause_system_main)
+  // engine.system_register(pause_system_toggle)
+  //
+  // engine.system_register(collectable_system_main)
+  //
+  // init_npc()
+  // init_player()
+  // init_terrain()
+  //
+  // engine.run()
+  // engine.unload()
 }
