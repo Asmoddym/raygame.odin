@@ -254,9 +254,10 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       dx = f32(f32(mapWidth) * 0.5 - f32(x))
       dy = f32(f32(mapHeight) * 0.5 - f32(y))
       distance_to_center = math.sqrt(dx * dx + dy * dy * y_scaling_coef)
-      altitude = 0.5 - 2 * distance_to_center / max_distance
-
+      altitude = 0.75 - 2 * distance_to_center / max_distance
+      //
       noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z, 8, 0.4)
+
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
       // noise_value := noise.noise_2d_improve_x(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 2
@@ -265,7 +266,8 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       // noise_value: f32 = 0.0 // perlin(f32(x) * noise_scale, f32(y) * noise_scale, 100)
       // altitude += noise_value
       // 2 * is to scale the noise to -1 => 1 (negatives are for sea level)
-      altitude += 2.0 * noise_value - 1.0
+
+      altitude += 2.0 * noise_value - 1.0 + 0.0
       // altitude = noise_value
 
       terrain[y][x] = create_cell(y, x, altitude)
@@ -289,7 +291,7 @@ display_cell :: proc(cell: ^TerrainCell) {
   rl.DrawRectangle(i32(cell.position.x * scale), i32(cell.position.y * scale), scale, scale, cell.color)
 }
 
-scale :: 1
-noise_scale :: 0.03
+scale :: 2
+noise_scale :: 0.04
 // noise_scale :: 1
 seed :: 1
