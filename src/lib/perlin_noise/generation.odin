@@ -18,22 +18,23 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
 
   // fmt.println("altitude: ", altitude)
   if altitude < -0.3 {
-    // blue = u8(math.remap_clamped(altitude, -0.8, 0, 0, 255))
-    blue = 100
+    blue = u8(math.remap_clamped(altitude, -0.8, -0.3, 0, 255))
+    // blue = 100
   }
 
   if altitude >= -0.3 && altitude < 0 {
-    // green = u8(math.remap_clamped(altitude, -0.3, 0.3, 50, 200))
-    green = 100
+    green = u8(math.remap_clamped(altitude, -0.3, 0, 50, 200))
   }
 
   if altitude >= 0 && altitude < 0.3 {
-    // green = u8(math.remap_clamped(altitude, -0.3, 0.3, 50, 200))
-    green = 255
+    green = u8(math.remap_clamped(altitude, 0, 0.3, 50, 200))
+    blue = u8(math.remap_clamped(altitude, 0, 0.3, 0, 100))
+    // green = 255
   }
 
   if altitude >= 0.3 && altitude < 0.4 {
-    red = 200
+    red = u8(math.remap_clamped(altitude, 0.3, 0.4, 150, 230))
+    // red = 200
   }
 
   if altitude >= 0.4 {
@@ -42,6 +43,12 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
     blue = red
   }
 
+  // red = u8(math.remap_clamped(altitude, -1, 1, 0, 255))
+  // green = red
+  // blue = red
+  // if altitude >= 0.2 && altitude < 0.3 {
+  //   red = u8(math.remap_clamped(altitude, 0.2, 0.3, 100, 255))
+  // }
   color = rl.Color { red, green, blue, 255 }
 
   return TerrainCell {
@@ -213,6 +220,7 @@ OctavePerlin :: proc(x, y, z: f32, octaves: int, persistence: f32) -> f32 {
 
     for i in 0..<octaves{
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude
+        // total += noise.noise_3d_fallback(109, { f64(x * frequency), f64(y * frequency), f64(z * frequency) }) * amplitude
         
         maxValue += amplitude
         
@@ -265,7 +273,7 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       distance_to_center = math.sqrt(dx * dx + dy * dy * y_scaling_coef)
       altitude = 0.75 - 2 * distance_to_center / max_distance
       //
-      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 8, 0.4)
+      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 8, 0.3)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
@@ -299,6 +307,6 @@ display_cell :: proc(cell: ^TerrainCell) {
 }
 
 scale :: 4
-noise_scale :: 0.05
+noise_scale :: 0.06
 // noise_scale :: 1
 seed :: 1
