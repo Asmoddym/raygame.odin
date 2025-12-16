@@ -16,6 +16,9 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   color: rl.Color
   red, green, blue: u8 = 0, 0, 0
 
+  altitude := altitude
+  // altitude -= distance_to_center / 1000
+
   if altitude < -0.3 {
     blue = 50
   }
@@ -24,16 +27,28 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
     blue = 200
   }
 
-  if altitude >= 0 && altitude < 0.2 {
-    green = 200
+  if altitude >= 0 && altitude < 0.1 {
+    green = 150
+     }
+  
+  if altitude >= 0.1 && altitude < 0.2 {
+    green = 250
   }
 
-  if altitude >= 0.2 && altitude < 0.3 {
+  if altitude >= 0.2 && altitude < 0.25 {
     blue = 255
   }
 
-  if altitude >= 0.3 && altitude < 0.5 {
-    green = 100
+  if altitude >= 0.25 && altitude < 0.35 {
+    green = 50
+  }
+
+  if altitude >= 0.35 && altitude < 0.45 {
+    green = 150
+  }
+
+  if altitude >= 0.45 && altitude < 0.5 {
+    red = 100
   }
 
   if altitude >= 0.5 && altitude < 0.7 {
@@ -301,10 +316,11 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       altitude: f32 = 0.0
 
       // Distance from the center minus pos
-      dx = f32(f32(mapWidth) * 0.5 - f32(x))
-      dy = f32(f32(mapHeight) * 0.5 - f32(y))
-      distance_to_center = 2/15.0 * math.sqrt(dx * dx + dy * dy * y_scaling_coef)
-      altitude = 0.4 - 2 * distance_to_center / max_distance
+      // dx = f32(f32(mapWidth) * 0.5 - f32(x))
+      // dy = f32(f32(mapHeight) * 0.5 - f32(y))
+      // distance_to_center = math.sqrt(dx * dx + dy * dy * y_scaling_coef)
+
+      // altitude = 0.4 - 2 * (2/15.0 * distance_to_center) / max_distance
 
       noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 15, 0.4)
 
@@ -317,7 +333,7 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       // altitude += noise_value
       // 2 * is to scale the noise to -1 => 1 (negatives are for sea level)
 
-      altitude += 2.0 * noise_value - 1.0 + 0.1
+      altitude += 2.0 * noise_value - 1.0 + 0.3
       // altitude = noise_value
 
       terrain[y][x] = create_cell(y, x, altitude)
@@ -339,7 +355,7 @@ display_cell :: proc(cell: ^TerrainCell) {
   rl.DrawRectangle(i32(cell.position.x * scale), i32(cell.position.y * scale), scale, scale, cell.color)
 }
 
-scale :: 4
-noise_scale :: 0.05
+scale :: 1
+noise_scale :: 0.02
 // noise_scale :: 1
 seed :: 1

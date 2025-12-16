@@ -104,15 +104,18 @@ main :: proc() {
 
   for !rl.WindowShouldClose() {
     rl.BeginDrawing()
+    rl.BeginMode2D(engine.camera)
 
     // if int(rl.GetTime()) % 2 == 0 && last_generated_at != int(rl.GetTime()) {
-  terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
-  last_generated_at = int(rl.GetTime())
+  // terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
+  // last_generated_at = int(rl.GetTime())
     // }
 
+    engine.camera.zoom += 0.01
   rl.ClearBackground(rl.BLACK)
     perlin_noise.draw_terrain(&terrain)
 
+    rl.EndMode2D()
     rl.DrawFPS(0, 0)
     rl.EndDrawing()
   }
