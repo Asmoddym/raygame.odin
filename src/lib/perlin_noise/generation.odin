@@ -25,15 +25,15 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   }
 
   if altitude >= 0 && altitude < 0.2 {
-    green = 100
-  }
-
-  if altitude >= 0.2 && altitude < 0.3 {
     green = 200
   }
 
+  if altitude >= 0.2 && altitude < 0.3 {
+    blue = 255
+  }
+
   if altitude >= 0.3 && altitude < 0.5 {
-    red = 100
+    green = 100
   }
 
   if altitude >= 0.5 && altitude < 0.7 {
@@ -42,7 +42,9 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
 
   // Rivers
   if abs(altitude - 0.5) < 0.03 {
-    blue = 255
+    green = 0
+    red = 0
+    blue = 0
   }
 
   // // fmt.println("altitude: ", altitude)
@@ -301,10 +303,10 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       // Distance from the center minus pos
       dx = f32(f32(mapWidth) * 0.5 - f32(x))
       dy = f32(f32(mapHeight) * 0.5 - f32(y))
-      distance_to_center = 2/10.0 * math.sqrt(dx * dx + dy * dy * y_scaling_coef)
-      altitude = 0.5 - 2 * distance_to_center / max_distance
-      //
-      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 8, 0.4)
+      distance_to_center = 2/15.0 * math.sqrt(dx * dx + dy * dy * y_scaling_coef)
+      altitude = 0.4 - 2 * distance_to_center / max_distance
+
+      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 15, 0.4)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
