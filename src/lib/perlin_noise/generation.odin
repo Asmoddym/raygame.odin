@@ -16,32 +16,63 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   color: rl.Color
   red, green, blue: u8 = 0, 0, 0
 
-  // fmt.println("altitude: ", altitude)
   if altitude < -0.3 {
-    blue = u8(math.remap_clamped(altitude, -0.8, -0.3, 0, 255))
-    // blue = 100
+    blue = 50
   }
 
-  if altitude >= -0.3 && altitude < 0 {
-    green = u8(math.remap_clamped(altitude, -0.3, 0, 50, 200))
+  if altitude > -0.3 && altitude < 0 {
+    blue = 200
   }
 
-  if altitude >= 0 && altitude < 0.3 {
-    green = u8(math.remap_clamped(altitude, 0, 0.3, 50, 200))
-    blue = u8(math.remap_clamped(altitude, 0, 0.3, 0, 100))
-    // green = 255
+  if altitude >= 0 && altitude < 0.2 {
+    green = 100
   }
 
-  if altitude >= 0.3 && altitude < 0.4 {
-    red = u8(math.remap_clamped(altitude, 0.3, 0.4, 150, 230))
-    // red = 200
+  if altitude >= 0.2 && altitude < 0.3 {
+    green = 200
   }
 
-  if altitude >= 0.4 {
-    red = u8(math.remap_clamped(altitude, 0.3, 0.9, 100, 255))
-    green = red
-    blue = red
+  if altitude >= 0.3 && altitude < 0.5 {
+    red = 100
   }
+
+  if altitude >= 0.5 && altitude < 0.7 {
+    red = 200
+  }
+
+  // Rivers
+  if abs(altitude - 0.5) < 0.03 {
+    blue = 255
+  }
+
+  // // fmt.println("altitude: ", altitude)
+  // if altitude < -0.3 {
+  //   blue = u8(math.remap_clamped(altitude, -0.8, -0.3, 0, 255))
+  //   // blue = 100
+  // }
+  //
+  // if altitude >= -0.3 && altitude < 0 {
+  //   green = u8(math.remap_clamped(altitude, -0.3, 0, 50, 200))
+  // }
+  //
+  // if altitude >= 0 && altitude < 0.3 {
+  //   green = u8(math.remap_clamped(altitude, 0, 0.3, 50, 200))
+  //   blue = u8(math.remap_clamped(altitude, 0, 0.3, 0, 100))
+  //   // green = 255
+  // }
+  //
+  // if altitude >= 0.3 && altitude < 0.4 {
+  //   red = u8(math.remap_clamped(altitude, 0.3, 0.4, 150, 230))
+  //   // red = 200
+  // }
+  //
+
+  if altitude >= 0.7 {
+    red = 255
+    green = 255
+    blue = 255
+  }
+
 
   // red = u8(math.remap_clamped(altitude, -1, 1, 0, 255))
   // green = red
@@ -270,10 +301,10 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
       // Distance from the center minus pos
       dx = f32(f32(mapWidth) * 0.5 - f32(x))
       dy = f32(f32(mapHeight) * 0.5 - f32(y))
-      distance_to_center = math.sqrt(dx * dx + dy * dy * y_scaling_coef)
-      altitude = 0.75 - 2 * distance_to_center / max_distance
+      distance_to_center = 2/10.0 * math.sqrt(dx * dx + dy * dy * y_scaling_coef)
+      altitude = 0.5 - 2 * distance_to_center / max_distance
       //
-      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 8, 0.3)
+      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 8, 0.4)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
@@ -307,6 +338,6 @@ display_cell :: proc(cell: ^TerrainCell) {
 }
 
 scale :: 4
-noise_scale :: 0.06
+noise_scale :: 0.05
 // noise_scale :: 1
 seed :: 1
