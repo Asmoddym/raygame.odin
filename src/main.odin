@@ -102,6 +102,16 @@ main :: proc() {
 
   fmt.println(math.remap_clamped(0.5, -0.5, 0, 0, 255))
 
+  t: rl.RenderTexture = rl.LoadRenderTexture(engine.game_state.resolution.x, engine.game_state.resolution.y)
+
+  rl.BeginTextureMode(t)
+  perlin_noise.draw_terrain(&terrain)
+
+  rl.EndTextureMode()
+
+  engine.camera.target = { f32(engine.game_state.resolution.x / 2), f32(engine.game_state.resolution.y / 2) }
+  engine.camera.zoom = 1
+
   for !rl.WindowShouldClose() {
     rl.BeginDrawing()
     rl.BeginMode2D(engine.camera)
@@ -111,9 +121,17 @@ main :: proc() {
   // last_generated_at = int(rl.GetTime())
     // }
 
-    engine.camera.zoom += 0.01
+    if rl.IsKeyDown(rl.KeyboardKey.Q) do engine.camera.zoom += 0.03
+    if rl.IsKeyDown(rl.KeyboardKey.A) do engine.camera.zoom -= 0.03
+
+    if rl.IsKeyDown(rl.KeyboardKey.LEFT) do engine.camera.offset.x += 10
+    if rl.IsKeyDown(rl.KeyboardKey.RIGHT) do engine.camera.offset.x -= 10
+    if rl.IsKeyDown(rl.KeyboardKey.UP) do engine.camera.offset.y += 10
+    if rl.IsKeyDown(rl.KeyboardKey.DOWN) do engine.camera.offset.y -= 10
+
   rl.ClearBackground(rl.BLACK)
-    perlin_noise.draw_terrain(&terrain)
+
+  rl.DrawTexture(t.texture, 0, 0, rl.WHITE)
 
     rl.EndMode2D()
     rl.DrawFPS(0, 0)
