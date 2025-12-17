@@ -268,7 +268,8 @@ OctavePerlin :: proc(x, y, z: f32, octaves: int, persistence: f32) -> f32 {
 
     for i in 0..<octaves{
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude
-        // total += noise.noise_3d_fallback(109, { f64(x * frequency), f64(y * frequency), f64(z * frequency) }) * amplitude
+        // total += noise.noise_3d_improve_xy(109, { f64(x * frequency), f64(y * frequency), f64(z * frequency) }) * amplitude
+        // total += noise.noise_2d(109, { f64(x * frequency), f64(y * frequency) }) * amplitude
         
         maxValue += amplitude
         
@@ -322,7 +323,7 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
 
       // altitude = 0.4 - 2 * (2/15.0 * distance_to_center) / max_distance
 
-      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 15, 0.4)
+      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 5, 0.4)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
