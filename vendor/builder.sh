@@ -23,6 +23,8 @@ COMPILER_ARGS="$COMMON_COMPILER_ARGS"
 if [ "$2" = "debug" ]; then
   BINARY_NAME="$BINARY_NAME-debug"
   COMPILER_ARGS="$COMPILER_ARGS -debug"
+else
+  COMPILER_ARGS="$COMPILER_ARGS -no-bounds-check -o:speed"
 fi
 
 if [ "$1" == "run-strict" ] || [ "$1" == "build-strict" ] || [ "$ACTION" = "check" ]; then

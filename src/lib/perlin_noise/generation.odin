@@ -6,30 +6,36 @@ import rand "core:math/rand"
 import math "core:math"
 import rl "vendor:raylib"
 
+// 16x16
+
 TerrainCell :: struct {
   altitude: f32,
   color: rl.Color,
+  tileset_pos: [2]int,
   position: [2]int,
 }
 
 create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   color: rl.Color
   red, green, blue: u8 = 0, 0, 0
+  tileset_pos: [2]int= { -1, -1 }
 
   altitude := altitude
   // altitude -= distance_to_center / 1000
 
   if altitude < -0.3 {
-    blue = 50
+    // blue = 50
   }
 
   if altitude > -0.3 && altitude < 0 {
+    tileset_pos = { 3, 3 }
     blue = 200
   }
 
   if altitude >= 0 && altitude < 0.1 {
+    tileset_pos = { 0, 5 }
     green = 150
-     }
+  }
   
   if altitude >= 0.1 && altitude < 0.2 {
     green = 250
@@ -44,6 +50,7 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   }
 
   if altitude >= 0.35 && altitude < 0.45 {
+    tileset_pos = { 0, 8 }
     green = 150
   }
 
@@ -102,6 +109,7 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   return TerrainCell {
     altitude,
     color,
+    tileset_pos,
     { x, y },
   }
 }
@@ -282,22 +290,22 @@ OctavePerlin :: proc(x, y, z: f32, octaves: int, persistence: f32) -> f32 {
 
 // All taken from  https://adrianb.io/2014/08/09/perlinnoise.html
 
-generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
+generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32) -> [dynamic][dynamic]TerrainCell {
   mapWidth, mapHeight: int
   // terrain: map[int]map[int]TerrainCell
   terrain: [dynamic][dynamic]TerrainCell
 
   @(static) z: f32 = 0.0
 
-  z += 1
+  // z += 1
 
   // for i in 1..<512 {
   //   p[i] = int(rand.int31()) % 255 //p[i - 1 % 255]
   // }
-  //
 
-  mapWidth = int(width / scale)
-  mapHeight = int(height / scale)
+
+  mapWidth = width / int(scale)
+  mapHeight = height / int(scale)
 
   distance_to_center, max_distance, dx, dy, y_scaling_coef: f32
 
@@ -344,19 +352,27 @@ generate :: proc(#any_int width, height: int) -> [dynamic][dynamic]TerrainCell {
   return terrain
 }
 
-draw_terrain :: proc(terrain: ^[dynamic][dynamic]TerrainCell) {
+draw_terrain :: proc(terrain: ^[dynamic][dynamic]TerrainCell, scale: i32, tileset: rl.Texture2D) {
   for &line in terrain {
     for &cell in line {
-      display_cell(&cell)
+      display_cell(&cell, scale, tileset)
     }
   }
 }
 
-display_cell :: proc(cell: ^TerrainCell) {
-  rl.DrawRectangle(i32(cell.position.x * scale), i32(cell.position.y * scale), scale, scale, cell.color)
+display_cell :: proc(cell: ^TerrainCell, scale: i32, tileset: rl.Texture2D) {
+  if cell.tileset_pos.x == -1 && cell.tileset_pos.y == -1 {
+    rl.DrawRectangle(i32(cell.position.x) * 16, i32(cell.position.y) * 16, 16, 16, cell.color)
+ } else {
+    source := rl.Rectangle { f32(cell.tileset_pos.x), f32(cell.tileset_pos.y), 16, 16 }
+    dest := rl.Rectangle { f32(i32(cell.position.x) * 16), f32(i32(cell.position.y) * 16), f32(16), f32(16 )}
+
+    rl.DrawTexturePro(tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+  }
+
 }
 
-scale :: 1
-noise_scale :: 0.02
+// scale :: 1
+// noise_scale :: 0.02
 // noise_scale :: 1
 seed :: 1

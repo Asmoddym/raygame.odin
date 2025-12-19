@@ -2,6 +2,7 @@
 
 package macro
 
+import "core:os"
 import "core:fmt"
 import "engine"
 import "enums"
@@ -97,43 +98,78 @@ import math "core:math"
 main :: proc() {
   engine.init()
 
-  terrain := perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
+  terrain: [dynamic][dynamic]perlin_noise.TerrainCell
+  // terrain := perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
   last_generated_at:= 0
 
   fmt.println(math.remap_clamped(0.5, -0.5, 0, 0, 255))
 
-  t: rl.RenderTexture = rl.LoadRenderTexture(engine.game_state.resolution.x, engine.game_state.resolution.y)
+  t: rl.RenderTexture = rl.LoadRenderTexture(engine.game_state.resolution.x * 8, engine.game_state.resolution.y * 8)
 
-  rl.BeginTextureMode(t)
-  perlin_noise.draw_terrain(&terrain)
+  // rl.BeginTextureMode(t)
+  // perlin_noise.draw_terrain(&terrain, scale)
+  // fmt.println(rl.GetTime())
+  //
+  // rl.EndTextureMode()
 
-  rl.EndTextureMode()
+  engine.camera.target = { f32(engine.game_state.resolution.x * 4), f32(engine.game_state.resolution.y * 4) }
+  engine.camera.zoom = 0.5
 
-  engine.camera.target = { f32(engine.game_state.resolution.x / 2), f32(engine.game_state.resolution.y / 2) }
-  engine.camera.zoom = 1
+
+  regen:= true
+  scale: i32= 1
+  noise_scale: f32 = 0.02
+
+
+  tileset := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
 
   for !rl.WindowShouldClose() {
-    rl.BeginDrawing()
-    rl.BeginMode2D(engine.camera)
+    deltaTime := rl.GetFrameTime()
+    
+    fmt.println(deltaTime)
+    if rl.IsKeyPressed(rl.KeyboardKey.N) {
+      noise_scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? 0.005 : -0.005
+
+      regen = true
+    }
+
+    if rl.IsKeyPressed(rl.KeyboardKey.S) {
+      regen = true
+      scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? 1 : -1
+    }
+
+    if regen {
+      rl.BeginTextureMode(t)
+      rl.ClearBackground(rl.BLACK)
+      terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y, noise_scale = noise_scale, scale = scale)
+      perlin_noise.draw_terrain(&terrain, scale, tileset)
+      rl.EndTextureMode()
+
+      regen = false
+    }
+
+
 
     // if int(rl.GetTime()) % 2 == 0 && last_generated_at != int(rl.GetTime()) {
-  // terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
-  // last_generated_at = int(rl.GetTime())
     // }
 
-    if rl.IsKeyDown(rl.KeyboardKey.Q) do engine.camera.zoom += 0.03
-    if rl.IsKeyDown(rl.KeyboardKey.A) do engine.camera.zoom -= 0.03
+    if rl.IsKeyDown(rl.KeyboardKey.Q) do engine.camera.zoom += 2 * deltaTime
+    if rl.IsKeyDown(rl.KeyboardKey.A) do engine.camera.zoom -= 2 * deltaTime
 
-    if rl.IsKeyDown(rl.KeyboardKey.LEFT) do engine.camera.offset.x += 10
-    if rl.IsKeyDown(rl.KeyboardKey.RIGHT) do engine.camera.offset.x -= 10
-    if rl.IsKeyDown(rl.KeyboardKey.UP) do engine.camera.offset.y += 10
-    if rl.IsKeyDown(rl.KeyboardKey.DOWN) do engine.camera.offset.y -= 10
+    if rl.IsKeyDown(rl.KeyboardKey.LEFT) do engine.camera.offset.x += 1000 * deltaTime
+    if rl.IsKeyDown(rl.KeyboardKey.RIGHT) do engine.camera.offset.x -= 1000 * deltaTime
+    if rl.IsKeyDown(rl.KeyboardKey.UP) do engine.camera.offset.y += 1000 * deltaTime
+    if rl.IsKeyDown(rl.KeyboardKey.DOWN) do engine.camera.offset.y -= 1000 * deltaTime
+
+    rl.BeginDrawing()
+    rl.BeginMode2D(engine.camera)
 
   rl.ClearBackground(rl.BLACK)
 
   rl.DrawTexture(t.texture, 0, 0, rl.WHITE)
 
     rl.EndMode2D()
+    rl.DrawText(rl.TextFormat("noise_scale: %f, scale: %d\n", noise_scale, scale, engine.camera), 20, 20, 20, rl.WHITE)
     rl.DrawFPS(0, 0)
     rl.EndDrawing()
   }
