@@ -96,8 +96,12 @@ import "lib/perlin_noise"
 import math "core:math"
 
 
-max_chunks:= 10
+max_chunks_per_line := 1
 
+TerrainChunk :: struct {
+  rt: rl.RenderTexture,
+  position: [2]int,
+}
 
 main :: proc() {
   engine.init()
@@ -106,88 +110,58 @@ main :: proc() {
   // terrain := perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y)
   last_generated_at:= 0
 
-  fmt.println(math.remap_clamped(0.5, -0.5, 0, 0, 255))
-
-
-  t: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
-  t2: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
-  t3: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
-  t4: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
-  t5: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
-
-  // rl.BeginTextureMode(t)
-  // perlin_noise.draw_terrain(&terrain, scale)
-  // fmt.println(rl.GetTime())
-  //
-  // rl.EndTextureMode()
-
-  engine.camera.target = { f32(1280 * 4), f32(720 * 4) }
-  engine.camera.zoom = 0.04
-
-
-  regen:= true
   scale: i32= 1
-  noise_scale: f32 = 0.005
+  noise_scale: f32 = 0.015
 
 
   tileset := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
 
+  chunks: [dynamic]TerrainChunk
+
+  engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
+  engine.camera.zoom = 0.04
+
+  current_regen_pos: [2]int = { 0, 0 }
+  regen:= true
+
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
 
-    // fmt.println(deltaTime)
     if rl.IsKeyPressed(rl.KeyboardKey.N) {
       noise_scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? 0.005 : -0.005
+    }
+
+    if rl.IsKeyPressed(rl.KeyboardKey.R) {
+      current_regen_pos = { 0, 0 }
+      clear(&chunks)
 
       regen = true
     }
 
-    if rl.IsKeyPressed(rl.KeyboardKey.S) {
-      regen = true
-      scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? -1 : 1
-    }
+    if regen && current_regen_pos.y != max_chunks_per_line {
+      start_y := current_regen_pos.y * 720
+      start_x := current_regen_pos.x * 1280
 
-    if regen {
+      t: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
+
       rl.BeginTextureMode(t)
       rl.ClearBackground(rl.BLACK)
-      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale)
+      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = start_x, start_y = start_y)
       perlin_noise.draw_terrain(&terrain, scale, tileset)
       rl.EndTextureMode()
 
-      rl.BeginTextureMode(t2)
-      rl.ClearBackground(rl.BLACK)
-      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = 1280, start_y = 0)
-      perlin_noise.draw_terrain(&terrain, scale, tileset)
-      rl.EndTextureMode()
+      append(&chunks,  TerrainChunk { t, { current_regen_pos.x, current_regen_pos.y } })
 
-      rl.BeginTextureMode(t3)
-      rl.ClearBackground(rl.BLACK)
-      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = 0, start_y = 720)
-      perlin_noise.draw_terrain(&terrain, scale, tileset)
-      rl.EndTextureMode()
-
-      rl.BeginTextureMode(t4)
-      rl.ClearBackground(rl.BLACK)
-      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = 0, start_y = -720)
-      perlin_noise.draw_terrain(&terrain, scale, tileset)
-      rl.EndTextureMode()
-
-      rl.BeginTextureMode(t5)
-      rl.ClearBackground(rl.BLACK)
-      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = -1280, start_y = 0)
-      perlin_noise.draw_terrain(&terrain, scale, tileset)
-      rl.EndTextureMode()
-
-      regen = false
+      current_regen_pos.x += 1
+      if current_regen_pos.x == max_chunks_per_line {
+        current_regen_pos.x = 0
+        current_regen_pos.y += 1
+      }
     }
 
 
-
-    // if int(rl.GetTime()) % 2 == 0 && last_generated_at != int(rl.GetTime()) {
-    // }
-
-    if rl.IsKeyDown(rl.KeyboardKey.Q) do engine.camera.zoom += 2 * deltaTime
-    if rl.IsKeyDown(rl.KeyboardKey.A) do engine.camera.zoom -= 2 * deltaTime
+    if rl.IsKeyDown(rl.KeyboardKey.Q) do engine.camera.zoom += 1 * deltaTime
+    if rl.IsKeyDown(rl.KeyboardKey.A) do engine.camera.zoom -= 1 * deltaTime
 
     if rl.IsKeyDown(rl.KeyboardKey.LEFT) do engine.camera.offset.x += 1000 * deltaTime
     if rl.IsKeyDown(rl.KeyboardKey.RIGHT) do engine.camera.offset.x -= 1000 * deltaTime
@@ -199,11 +173,16 @@ main :: proc() {
 
   rl.ClearBackground(rl.BLACK)
 
-  rl.DrawTexture(t.texture, 0, 0, rl.WHITE)
-  rl.DrawTexture(t2.texture, 1280 * 8, 0, rl.WHITE)
-  rl.DrawTexture(t5.texture, -1280 * 8, 0, rl.WHITE)
-  rl.DrawTexture(t3.texture, 0, -720 * 8, rl.WHITE)
-  rl.DrawTexture(t4.texture, 0, 720 * 8, rl.WHITE)
+  for &c in chunks {
+  rl.DrawTexture(c.rt.texture, i32(c.position.x * 1280 * 8), i32(-c.position.y * 720 * 8), rl.WHITE)
+
+  }
+
+  // rl.DrawTexture(t.texture, 0, 0, rl.WHITE)
+  // rl.DrawTexture(t2.texture, 1280 * 8, 0, rl.WHITE)
+  // rl.DrawTexture(t5.texture, -1280 * 8, 0, rl.WHITE)
+  // rl.DrawTexture(t3.texture, 0, -720 * 8, rl.WHITE)
+  // rl.DrawTexture(t4.texture, 0, 720 * 8, rl.WHITE)
 
     rl.EndMode2D()
     rl.DrawText(rl.TextFormat("noise_scale: %f, scale: %d\n", noise_scale, scale, engine.camera), 20, 20, 20, rl.WHITE)

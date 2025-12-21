@@ -15,6 +15,15 @@ TerrainCell :: struct {
   position: [2]int,
 }
   // // fmt.println("altitude: ", altitude)
+
+create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
+  color: rl.Color
+  red, green, blue: u8 = 0, 0, 0
+  tileset_pos: [2]int= { -1, -1 }
+
+  altitude := altitude
+  // altitude -= distance_to_center / 1000
+
   // if altitude < -0.3 {
   //   blue = u8(math.remap_clamped(altitude, -0.8, -0.3, 0, 255))
   //   // blue = 100
@@ -36,14 +45,6 @@ TerrainCell :: struct {
   // }
   //
 
-
-create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
-  color: rl.Color
-  red, green, blue: u8 = 0, 0, 0
-  tileset_pos: [2]int= { -1, -1 }
-
-  altitude := altitude
-  // altitude -= distance_to_center / 1000
 
   if altitude < -0.3 {
     blue = 200
@@ -349,10 +350,11 @@ generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32, #any
 
 
   // 0.25 is for 0.5 * 0.5
-  max_distance = math.sqrt(f32(mapWidth) * f32(mapWidth) * 0.25 + f32(mapHeight) * f32(mapHeight) * 0.25) + f32(mapWidth) /2
+  max_distance = math.sqrt(f32(mapWidth) * f32(mapWidth) * 0.25 + f32(mapHeight) * f32(mapHeight) * 0.25) + f32(mapWidth) / 1.5
 
   // This is done to compensate the fact that the rectangle window would make the main continent "oval"
-  y_scaling_coef = f32(width) / f32(height)
+  // y_scaling_coef = f32(width) / f32(height)
+  y_scaling_coef = 5
 
   // y_scaling_coef -= start_y > 0 ? 4 : 0
 
@@ -371,8 +373,8 @@ generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32, #any
       altitude: f32 = 0.0
 
       // Distance from the center minus pos
-      dx = f32(f32(mapWidth) * 0.5 - f32(relative_x))// + start_x > 0 ? 100 : 0))
-      dy = f32(f32(mapHeight) * 0.5 - f32(relative_y))
+      dx = f32(f32(mapWidth) * 1.5 * 0.5 - f32(relative_x))
+      dy = f32(f32(mapHeight) * 1.5 * 0.5 - f32(relative_y))
       // distance_to_center =  math.sqrt(dx * dx + dy * dy * y_scaling_coef)
       distance_to_center =  math.sqrt(dx * dx + dy * dy * y_scaling_coef)
 
@@ -381,7 +383,7 @@ generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32, #any
       altitude = 0.65 - 2 * (2/26.0 * distance_to_center) / max_distance
       altitude -= 0.4 * (distance_to_center / max_distance)
 
-      noise_value:= OctavePerlin(f32(abs(relative_x)) * noise_scale, f32(abs(relative_y)) * noise_scale, z * noise_scale, 5, 0.4)
+      noise_value:= OctavePerlin(f32(relative_x) * noise_scale, f32(relative_y) * noise_scale, z * noise_scale, 5, 0.4)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
