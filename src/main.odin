@@ -118,8 +118,10 @@ main :: proc() {
 
   chunks: [dynamic]TerrainChunk
 
-  engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
-  engine.camera.zoom = 0.04
+  // engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
+  // engine.camera.zoom = 0.04
+  engine.camera.target = { f32(engine.game_state.resolution.x * 2), f32(engine.game_state.resolution.y * 2) }
+  engine.camera.zoom = 0.75
 
   current_regen_pos: [2]int = { 0, 0 }
   regen:= true

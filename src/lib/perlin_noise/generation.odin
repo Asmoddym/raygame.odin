@@ -16,14 +16,6 @@ TerrainCell :: struct {
 }
   // // fmt.println("altitude: ", altitude)
 
-create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
-  color: rl.Color
-  red, green, blue: u8 = 0, 0, 0
-  tileset_pos: [2]int= { -1, -1 }
-
-  altitude := altitude
-  // altitude -= distance_to_center / 1000
-
   // if altitude < -0.3 {
   //   blue = u8(math.remap_clamped(altitude, -0.8, -0.3, 0, 255))
   //   // blue = 100
@@ -45,79 +37,87 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   // }
   //
 
+create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
+  color: rl.Color
+  red, green, blue: u8 = 0, 0, 0
+  tileset_pos: [2]int= { -1, -1 }
 
-  if altitude < -0.3 {
-    blue = 200
-    // red = 255
-  }
+  altitude := altitude
+  // altitude -= distance_to_center / 1000
 
-  // Sand
-  if altitude > -0.3 && altitude < -0.2 {
-    tileset_pos = { 20, 2 }
-    blue = 200
-  }
-
-  // Hills
-  if altitude >= -0.2 && altitude < -0.1 {
-    tileset_pos = { 10, 0 }
-    green = 150
-  }
-
-  // Hills
-  if altitude >= -0.1 && altitude < 0 {
-    tileset_pos = { 20, 0 }
-    green = 150
-  }
-
-  // Grass
-  if altitude >= 0 && altitude < 0.1 {
-    tileset_pos = { 5, 0 }
-    green = 150
-  }
-
-  // Grass 2
-  if altitude >= 0.1 && altitude < 0.2 {
-    tileset_pos = { 13, 0 }
-    green = 250
-  }
-
-  if altitude >= 0.2 && altitude < 0.25 {
-    blue = 255
-  }
-
-  // Dark grass
-  if altitude >= 0.25 && altitude < 0.35 {
-    tileset_pos = { 4, 6 }
-
-    green = 50
-  }
-
-  // Forest
-  if altitude >= 0.35 && altitude < 0.45 {
-    tileset_pos = { 2, 16 }
-    green = 150
-  }
-
-  // Dark Forest
-  if altitude >= 0.45 && altitude < 0.5 {
-    tileset_pos = { 21, 16 }
-    red = 100
-  }
-
-  // Snow
-  if altitude >= 0.5 && altitude < 0.7 {
-    red = 200
-    // tileset_pos = { 31, 3 }
-    tileset_pos = { 12, 17 }
-  }
-
-  // Other (mountains)
-  if abs(altitude - 0.5) < 0.03 {
-    green = 0
-    red = 0
-    blue = 0
-  }
-
+  //
+  // if altitude < -0.3 {
+  //   blue = 200
+  //   // red = 255
+  // }
+  //
+  // // Sand
+  // if altitude > -0.3 && altitude < -0.2 {
+  //   tileset_pos = { 20, 2 }
+  //   blue = 200
+  // }
+  //
+  // // Hills
+  // if altitude >= -0.2 && altitude < -0.1 {
+  //   tileset_pos = { 10, 0 }
+  //   green = 150
+  // }
+  //
+  // // Hills
+  // if altitude >= -0.1 && altitude < 0 {
+  //   tileset_pos = { 20, 0 }
+  //   green = 150
+  // }
+  //
+  // // Grass
+  // if altitude >= 0 && altitude < 0.1 {
+  //   tileset_pos = { 5, 0 }
+  //   green = 150
+  // }
+  //
+  // // Grass 2
+  // if altitude >= 0.1 && altitude < 0.2 {
+  //   tileset_pos = { 13, 0 }
+  //   green = 250
+  // }
+  //
+  // if altitude >= 0.2 && altitude < 0.25 {
+  //   blue = 255
+  // }
+  //
+  // // Dark grass
+  // if altitude >= 0.25 && altitude < 0.35 {
+  //   tileset_pos = { 4, 6 }
+  //
+  //   green = 50
+  // }
+  //
+  // // Forest
+  // if altitude >= 0.35 && altitude < 0.45 {
+  //   tileset_pos = { 2, 16 }
+  //   green = 150
+  // }
+  //
+  // // Dark Forest
+  // if altitude >= 0.45 && altitude < 0.5 {
+  //   tileset_pos = { 21, 16 }
+  //   red = 100
+  // }
+  //
+  // // Snow
+  // if altitude >= 0.5 && altitude < 0.7 {
+  //   red = 200
+  //   // tileset_pos = { 31, 3 }
+  //   tileset_pos = { 12, 17 }
+  // }
+  //
+  // // Other (mountains)
+  // if abs(altitude - 0.5) < 0.03 {
+  //   green = 0
+  //   red = 0
+  //   blue = 0
+  // }
+  //
   // mountains
   if altitude >= 0.7 && altitude < 0.9 {
     tileset_pos = { 15, 3 }
