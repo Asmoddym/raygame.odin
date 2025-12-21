@@ -95,6 +95,10 @@ init_terrain :: proc() {
 import "lib/perlin_noise"
 import math "core:math"
 
+
+max_chunks:= 10
+
+
 main :: proc() {
   engine.init()
 
@@ -104,7 +108,12 @@ main :: proc() {
 
   fmt.println(math.remap_clamped(0.5, -0.5, 0, 0, 255))
 
-  t: rl.RenderTexture = rl.LoadRenderTexture(engine.game_state.resolution.x * 8, engine.game_state.resolution.y * 8)
+
+  t: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
+  t2: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
+  t3: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
+  t4: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
+  t5: rl.RenderTexture = rl.LoadRenderTexture(1280 * 8, 720 * 8)
 
   // rl.BeginTextureMode(t)
   // perlin_noise.draw_terrain(&terrain, scale)
@@ -112,21 +121,21 @@ main :: proc() {
   //
   // rl.EndTextureMode()
 
-  engine.camera.target = { f32(engine.game_state.resolution.x * 4), f32(engine.game_state.resolution.y * 4) }
-  engine.camera.zoom = 0.5
+  engine.camera.target = { f32(1280 * 4), f32(720 * 4) }
+  engine.camera.zoom = 0.04
 
 
   regen:= true
   scale: i32= 1
-  noise_scale: f32 = 0.02
+  noise_scale: f32 = 0.005
 
 
   tileset := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
 
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
-    
-    fmt.println(deltaTime)
+
+    // fmt.println(deltaTime)
     if rl.IsKeyPressed(rl.KeyboardKey.N) {
       noise_scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? 0.005 : -0.005
 
@@ -135,13 +144,37 @@ main :: proc() {
 
     if rl.IsKeyPressed(rl.KeyboardKey.S) {
       regen = true
-      scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? 1 : -1
+      scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? -1 : 1
     }
 
     if regen {
       rl.BeginTextureMode(t)
       rl.ClearBackground(rl.BLACK)
-      terrain = perlin_noise.generate(engine.game_state.resolution.x, engine.game_state.resolution.y, noise_scale = noise_scale, scale = scale)
+      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale)
+      perlin_noise.draw_terrain(&terrain, scale, tileset)
+      rl.EndTextureMode()
+
+      rl.BeginTextureMode(t2)
+      rl.ClearBackground(rl.BLACK)
+      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = 1280, start_y = 0)
+      perlin_noise.draw_terrain(&terrain, scale, tileset)
+      rl.EndTextureMode()
+
+      rl.BeginTextureMode(t3)
+      rl.ClearBackground(rl.BLACK)
+      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = 0, start_y = 720)
+      perlin_noise.draw_terrain(&terrain, scale, tileset)
+      rl.EndTextureMode()
+
+      rl.BeginTextureMode(t4)
+      rl.ClearBackground(rl.BLACK)
+      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = 0, start_y = -720)
+      perlin_noise.draw_terrain(&terrain, scale, tileset)
+      rl.EndTextureMode()
+
+      rl.BeginTextureMode(t5)
+      rl.ClearBackground(rl.BLACK)
+      terrain = perlin_noise.generate(1280, 720, noise_scale = noise_scale, scale = scale, start_x = -1280, start_y = 0)
       perlin_noise.draw_terrain(&terrain, scale, tileset)
       rl.EndTextureMode()
 
@@ -167,6 +200,10 @@ main :: proc() {
   rl.ClearBackground(rl.BLACK)
 
   rl.DrawTexture(t.texture, 0, 0, rl.WHITE)
+  rl.DrawTexture(t2.texture, 1280 * 8, 0, rl.WHITE)
+  rl.DrawTexture(t5.texture, -1280 * 8, 0, rl.WHITE)
+  rl.DrawTexture(t3.texture, 0, -720 * 8, rl.WHITE)
+  rl.DrawTexture(t4.texture, 0, 720 * 8, rl.WHITE)
 
     rl.EndMode2D()
     rl.DrawText(rl.TextFormat("noise_scale: %f, scale: %d\n", noise_scale, scale, engine.camera), 20, 20, 20, rl.WHITE)

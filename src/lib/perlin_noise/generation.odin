@@ -14,61 +14,6 @@ TerrainCell :: struct {
   tileset_pos: [2]int,
   position: [2]int,
 }
-
-create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
-  color: rl.Color
-  red, green, blue: u8 = 0, 0, 0
-  tileset_pos: [2]int= { -1, -1 }
-
-  altitude := altitude
-  // altitude -= distance_to_center / 1000
-
-  if altitude < -0.3 {
-    // blue = 50
-  }
-
-  if altitude > -0.3 && altitude < 0 {
-    tileset_pos = { 3, 3 }
-    blue = 200
-  }
-
-  if altitude >= 0 && altitude < 0.1 {
-    tileset_pos = { 0, 5 }
-    green = 150
-  }
-  
-  if altitude >= 0.1 && altitude < 0.2 {
-    green = 250
-  }
-
-  if altitude >= 0.2 && altitude < 0.25 {
-    blue = 255
-  }
-
-  if altitude >= 0.25 && altitude < 0.35 {
-    green = 50
-  }
-
-  if altitude >= 0.35 && altitude < 0.45 {
-    tileset_pos = { 0, 8 }
-    green = 150
-  }
-
-  if altitude >= 0.45 && altitude < 0.5 {
-    red = 100
-  }
-
-  if altitude >= 0.5 && altitude < 0.7 {
-    red = 200
-  }
-
-  // Rivers
-  if abs(altitude - 0.5) < 0.03 {
-    green = 0
-    red = 0
-    blue = 0
-  }
-
   // // fmt.println("altitude: ", altitude)
   // if altitude < -0.3 {
   //   blue = u8(math.remap_clamped(altitude, -0.8, -0.3, 0, 255))
@@ -91,7 +36,100 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   // }
   //
 
-  if altitude >= 0.7 {
+
+create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
+  color: rl.Color
+  red, green, blue: u8 = 0, 0, 0
+  tileset_pos: [2]int= { -1, -1 }
+
+  altitude := altitude
+  // altitude -= distance_to_center / 1000
+
+  if altitude < -0.3 {
+    blue = 200
+    // red = 255
+  }
+
+  // Sand
+  if altitude > -0.3 && altitude < -0.2 {
+    tileset_pos = { 20, 2 }
+    blue = 200
+  }
+
+  // Hills
+  if altitude >= -0.2 && altitude < -0.1 {
+    tileset_pos = { 10, 0 }
+    green = 150
+  }
+
+  // Hills
+  if altitude >= -0.1 && altitude < 0 {
+    tileset_pos = { 20, 0 }
+    green = 150
+  }
+
+  // Grass
+  if altitude >= 0 && altitude < 0.1 {
+    tileset_pos = { 5, 0 }
+    green = 150
+  }
+
+  // Grass 2
+  if altitude >= 0.1 && altitude < 0.2 {
+    tileset_pos = { 13, 0 }
+    green = 250
+  }
+
+  if altitude >= 0.2 && altitude < 0.25 {
+    blue = 255
+  }
+
+  // Dark grass
+  if altitude >= 0.25 && altitude < 0.35 {
+    tileset_pos = { 4, 6 }
+
+    green = 50
+  }
+
+  // Forest
+  if altitude >= 0.35 && altitude < 0.45 {
+    tileset_pos = { 2, 16 }
+    green = 150
+  }
+
+  // Dark Forest
+  if altitude >= 0.45 && altitude < 0.5 {
+    tileset_pos = { 21, 16 }
+    red = 100
+  }
+
+  // Snow
+  if altitude >= 0.5 && altitude < 0.7 {
+    red = 200
+    // tileset_pos = { 31, 3 }
+    tileset_pos = { 12, 17 }
+  }
+
+  // Other (mountains)
+  if abs(altitude - 0.5) < 0.03 {
+    green = 0
+    red = 0
+    blue = 0
+  }
+
+  // mountains
+  if altitude >= 0.7 && altitude < 0.9 {
+    tileset_pos = { 15, 3 }
+
+    red = 255
+    green = 255
+    blue = 255
+  }
+
+  // Snowy mountains
+  if altitude >= 0.9 {
+    tileset_pos = { 28, 3 }
+
     red = 255
     green = 255
     blue = 255
@@ -290,7 +328,7 @@ OctavePerlin :: proc(x, y, z: f32, octaves: int, persistence: f32) -> f32 {
 
 // All taken from  https://adrianb.io/2014/08/09/perlinnoise.html
 
-generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32) -> [dynamic][dynamic]TerrainCell {
+generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32, #any_int start_x: int = 0, #any_int start_y: int = 0 ) -> [dynamic][dynamic]TerrainCell {
   mapWidth, mapHeight: int
   // terrain: map[int]map[int]TerrainCell
   terrain: [dynamic][dynamic]TerrainCell
@@ -311,27 +349,39 @@ generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32) -> [
 
 
   // 0.25 is for 0.5 * 0.5
-  max_distance = math.sqrt(f32(mapWidth) * f32(mapWidth) * 0.25 + f32(mapHeight) * f32(mapHeight) * 0.25) - f32(mapWidth) / 5
+  max_distance = math.sqrt(f32(mapWidth) * f32(mapWidth) * 0.25 + f32(mapHeight) * f32(mapHeight) * 0.25) + f32(mapWidth) /2
 
   // This is done to compensate the fact that the rectangle window would make the main continent "oval"
   y_scaling_coef = f32(width) / f32(height)
 
+  // y_scaling_coef -= start_y > 0 ? 4 : 0
+
+  fmt.println(y_scaling_coef)
+
     terrain = make([dynamic][dynamic]TerrainCell, mapHeight)
 
-  for y in 0..<mapHeight {
+  for y in 0..<(mapHeight) {
     terrain[y] = make([dynamic]TerrainCell, mapWidth)
+    relative_y := y + start_y
 
-    for x in 0..<mapWidth {
+    for x in 0..<(mapWidth) {
+
+      relative_x := x + start_x
+
       altitude: f32 = 0.0
 
       // Distance from the center minus pos
-      // dx = f32(f32(mapWidth) * 0.5 - f32(x))
-      // dy = f32(f32(mapHeight) * 0.5 - f32(y))
-      // distance_to_center = math.sqrt(dx * dx + dy * dy * y_scaling_coef)
+      dx = f32(f32(mapWidth) * 0.5 - f32(relative_x))// + start_x > 0 ? 100 : 0))
+      dy = f32(f32(mapHeight) * 0.5 - f32(relative_y))
+      // distance_to_center =  math.sqrt(dx * dx + dy * dy * y_scaling_coef)
+      distance_to_center =  math.sqrt(dx * dx + dy * dy * y_scaling_coef)
 
-      // altitude = 0.4 - 2 * (2/15.0 * distance_to_center) / max_distance
+      // altitude = 0.1 - 2 * (2/8.0 * distance_to_center) / max_distance
 
-      noise_value:= OctavePerlin(f32(x) * noise_scale, f32(y) * noise_scale, z * noise_scale, 5, 0.4)
+      altitude = 0.65 - 2 * (2/26.0 * distance_to_center) / max_distance
+      altitude -= 0.4 * (distance_to_center / max_distance)
+
+      noise_value:= OctavePerlin(f32(abs(relative_x)) * noise_scale, f32(abs(relative_y)) * noise_scale, z * noise_scale, 5, 0.4)
 
       // fmt.println(altitude)
       // noise_value := noise.noise_2d(local_seed, { f64(x) * noise_scale, f64(y) * noise_scale }) / 1.3
@@ -342,7 +392,7 @@ generate :: proc(#any_int width, height: int, scale: i32, noise_scale: f32) -> [
       // altitude += noise_value
       // 2 * is to scale the noise to -1 => 1 (negatives are for sea level)
 
-      altitude += 2.0 * noise_value - 1.0 + 0.3
+      altitude += 2.0 * noise_value - 1.0
       // altitude = noise_value
 
       terrain[y][x] = create_cell(y, x, altitude)
@@ -362,10 +412,10 @@ draw_terrain :: proc(terrain: ^[dynamic][dynamic]TerrainCell, scale: i32, tilese
 
 display_cell :: proc(cell: ^TerrainCell, scale: i32, tileset: rl.Texture2D) {
   if cell.tileset_pos.x == -1 && cell.tileset_pos.y == -1 {
-    rl.DrawRectangle(i32(cell.position.x) * 16, i32(cell.position.y) * 16, 16, 16, cell.color)
+    rl.DrawRectangle(i32(cell.position.x) * 8, i32(cell.position.y) * 8, 8, 8, cell.color)
  } else {
-    source := rl.Rectangle { f32(cell.tileset_pos.x), f32(cell.tileset_pos.y), 16, 16 }
-    dest := rl.Rectangle { f32(i32(cell.position.x) * 16), f32(i32(cell.position.y) * 16), f32(16), f32(16 )}
+    source := rl.Rectangle { f32(cell.tileset_pos.x) * 16, f32(cell.tileset_pos.y) * 16, -16, -16 }
+    dest := rl.Rectangle { f32(i32(cell.position.x) * 8), f32(i32(cell.position.y) * 8), f32(8), f32(8 )}
 
     rl.DrawTexturePro(tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
   }
