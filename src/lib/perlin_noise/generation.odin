@@ -37,10 +37,126 @@ TerrainCell :: struct {
   // }
   //
 
+TerrainCellType :: enum {
+  OCEAN,
+  SAND,
+  DARK_FOREST,
+  SNOW,
+  TYPES,
+}
+
+TerrainCellDescriptor :: struct {
+  type: TerrainCellType,
+  interval: [2]f32,
+  tileset_position: [2]int,
+}
+
+tileset_descriptors: [TerrainCellType.TYPES]TerrainCellDescriptor = {
+  { .OCEAN, { -1, 0.6 }, { 26, 10 } },
+  { .SAND, { 0.6, 0.7 }, { 20, 2 } },
+  { .DARK_FOREST, { 0.7, 0.9 }, { 21, 16 } },
+  { .SNOW, { 0.9, 1 }, { 12, 17 } },
+}
+
+switch_method:= 2
+threshold: f32= 0.015
+
 create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   color: rl.Color
   red, green, blue: u8 = 0, 0, 0
   tileset_pos: [2]int= { -1, -1 }
+
+  overlap_interval: [2]f32 = { altitude - threshold, altitude + threshold }
+
+  if switch_method % 3 == 0 {
+
+    for idx in 0..<int(TerrainCellType.TYPES) {
+      descriptor := tileset_descriptors[idx]
+
+      if altitude >= descriptor.interval.x && altitude < descriptor.interval.y {
+        tileset_pos = descriptor.tileset_position
+      }
+    }
+
+  } else if switch_method % 3 == 1 {
+
+    for idx in 0..<int(TerrainCellType.TYPES) {
+      descriptor := tileset_descriptors[idx]
+
+      if overlap_interval.x >= descriptor.interval.x && overlap_interval.y < descriptor.interval.y {
+        tileset_pos = descriptor.tileset_position
+      }
+    }
+
+  } else {
+
+    for idx in 0..<int(TerrainCellType.TYPES) {
+      descriptor := tileset_descriptors[idx]
+
+      if overlap_interval.x >= descriptor.interval.x && overlap_interval.y < descriptor.interval.y {
+        tileset_pos = descriptor.tileset_position
+      }
+    }
+
+    for idx in 1..<int(TerrainCellType.TYPES) {
+      previous_descriptor := tileset_descriptors[idx - 1]
+      descriptor := tileset_descriptors[idx]
+
+      descriptor_overlap: [2]f32 = { previous_descriptor.interval.y - threshold, descriptor.interval.x + threshold }
+
+      if altitude >= descriptor_overlap.x && altitude <= descriptor_overlap.y {
+        distance         := 100 - math.remap_clamped(altitude, descriptor_overlap.x, descriptor_overlap.y, 0, 100)
+        other_desc_id    := idx + (distance < 50.0 ? 0 : -1)
+        other_descriptor := tileset_descriptors[other_desc_id]
+        chances := int(rand.int31()) % 100
+
+        tileset_pos = chances <= int(distance) ? other_descriptor.tileset_position : descriptor.tileset_position
+        break
+      }
+    }
+
+  }
+
+  // for idx in 0..<int(TerrainCellType.TYPES) {
+  //   descriptor := tileset_descriptors[idx]
+  //
+  //   if altitude >= descriptor.interval.x && altitude < descriptor.interval.y {
+  //     distance_from_previous_to_current_desc: int = 101
+  //     distance_to_from_current_to_next_desc: int = 101
+  //
+  //     if idx - 1 >= 0 {
+  //       distance := altitude - tileset_descriptors[idx - 1].interval.y
+  //
+  //       distance_from_previous_to_current_desc = 100 - int(math.remap_clamped(altitude, 0, tileset_descriptors[idx - 1].interval.y, 0, 100))
+  //     }
+  //
+  //     if idx + 1 < int(TerrainCellType.TYPES) {
+  //       distance := tileset_descriptors[idx + 1].interval.x - altitude
+  //
+  //       distance_from_previous_to_current_desc = 100 - int(math.remap_clamped(altitude, 0, tileset_descriptors[idx + 1].interval.x, 0, 100))
+  //     }
+  //
+  //     other_desc_id: int = idx + (distance_from_previous_to_current_desc < distance_to_from_current_to_next_desc ? -1 : 1)
+  //     if other_desc_id < 0 || other_desc_id >= int(TerrainCellType.TYPES) {
+  //       tileset_pos = descriptor.tileset_position
+  //       break
+  //     }
+  //
+  //     other_descriptor := tileset_descriptors[idx + (distance_from_previous_to_current_desc < distance_to_from_current_to_next_desc ? -1 : 1)]
+  //     distance := max(distance_from_previous_to_current_desc, distance_to_from_current_to_next_desc)
+  //
+  //     chances := int(rand.int31()) % distance
+  //
+  //     if switch_method {
+  //       tileset_pos = chances <= distance ? descriptor.tileset_position : other_descriptor.tileset_position
+  //     } else {
+  //       tileset_pos = descriptor.tileset_position
+  //     }
+  //     break
+  //     }
+  //
+  //     // tileset_pos = descriptor.tileset_position
+  //   }
 
   altitude := altitude
   // altitude -= distance_to_center / 1000
@@ -119,23 +235,23 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   // }
   //
   // mountains
-  if altitude >= 0.7 && altitude < 0.9 {
-    tileset_pos = { 15, 3 }
-
-    red = 255
-    green = 255
-    blue = 255
-  }
-
-  // Snowy mountains
-  if altitude >= 0.9 {
-    tileset_pos = { 28, 3 }
-
-    red = 255
-    green = 255
-    blue = 255
-  }
-
+  // if altitude >= 0.7 && altitude < 0.9 {
+  //   tileset_pos = { 15, 3 }
+  //
+  //   red = 255
+  //   green = 255
+  //   blue = 255
+  // }
+  //
+  // // Snowy mountains
+  // if altitude >= 0.9 {
+  //   tileset_pos = { 28, 3 }
+  //
+  //   red = 255
+  //   green = 255
+  //   blue = 255
+  // }
+  //
 
   // red = u8(math.remap_clamped(altitude, -1, 1, 0, 255))
   // green = red

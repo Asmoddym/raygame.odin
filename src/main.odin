@@ -121,10 +121,12 @@ main :: proc() {
   // engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
   // engine.camera.zoom = 0.04
   engine.camera.target = { f32(engine.game_state.resolution.x * 2), f32(engine.game_state.resolution.y * 2) }
-  engine.camera.zoom = 0.75
+  engine.camera.zoom = 1.25
 
   current_regen_pos: [2]int = { 0, 0 }
-  regen:= true
+  regen:= false
+
+  schedule_regen:= true
 
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
@@ -133,11 +135,21 @@ main :: proc() {
       noise_scale += rl.IsKeyDown(rl.KeyboardKey.LEFT_SHIFT) ? 0.005 : -0.005
     }
 
+    if rl.IsKeyPressed(rl.KeyboardKey.S) {
+      perlin_noise.switch_method += 1
+
+      schedule_regen = true
+    }
+
     if rl.IsKeyPressed(rl.KeyboardKey.R) {
+      schedule_regen = true
+    }
+
+    if schedule_regen {
       current_regen_pos = { 0, 0 }
       clear(&chunks)
-
       regen = true
+      schedule_regen = false
     }
 
     if regen && current_regen_pos.y != max_chunks_per_line {
@@ -187,7 +199,7 @@ main :: proc() {
   // rl.DrawTexture(t4.texture, 0, 720 * 8, rl.WHITE)
 
     rl.EndMode2D()
-    rl.DrawText(rl.TextFormat("noise_scale: %f, scale: %d\n", noise_scale, scale, engine.camera), 20, 20, 20, rl.WHITE)
+    rl.DrawText(rl.TextFormat("noise_scale: %f, switch_method: %d\n", noise_scale, int(perlin_noise.switch_method), engine.camera), 20, 20, 20, rl.WHITE)
     rl.DrawFPS(0, 0)
     rl.EndDrawing()
   }
