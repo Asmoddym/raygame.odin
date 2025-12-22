@@ -123,8 +123,8 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
       source := rl.Rectangle {
         f32(cell.tileset_pos.x) * f32(handle.tile_size),
         f32(cell.tileset_pos.y) * f32(handle.tile_size),
-        f32(-handle.tile_size),
-        f32(-handle.tile_size),
+        f32(handle.tile_size),
+        f32(handle.tile_size),
       }
 
       dest := rl.Rectangle {
@@ -138,6 +138,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
     }
   }
 
+  rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
   rl.EndTextureMode()
 }
 

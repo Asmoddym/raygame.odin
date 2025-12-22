@@ -104,11 +104,11 @@ main :: proc() {
   current_regen_pos : [2]int = { 0, 0 }
   regen             := false
   prepare_for_regen := true
-  terrain_handle    := terrain.initialize_handle(500, 500, tileset, continent_dimensions = { 5000, 5000 })
+  terrain_handle    := terrain.initialize_handle(100, 100, tileset, continent_dimensions = { 600, 1000 })
 
   // engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
   // engine.camera.zoom = 0.04
-  engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(-terrain_handle.chunk_size.y * (max_chunks_per_line / 2 * 4/6)) * f32(terrain_handle.tile_size) }
+  engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(-terrain_handle.chunk_size.y * (max_chunks_per_line / 2)) }
   engine.camera.zoom = 0.025
 
 
@@ -148,14 +148,22 @@ main :: proc() {
     rl.BeginDrawing()
     rl.BeginMode2D(engine.camera)
 
-  rl.ClearBackground(rl.BLACK)
+    rl.ClearBackground(rl.BLACK)
 
-  for &c in terrain_handle.chunks {
-    rl.DrawTexture(
-      c.render_texture.texture,
-      i32(c.position.x * terrain_handle.chunk_size.x) * terrain_handle.tile_size,
-      i32(-c.position.y * terrain_handle.chunk_size.y) * terrain_handle.tile_size,
-      rl.WHITE)
+    for &c in terrain_handle.chunks {
+      // Using thie method to invert the texture as that's the way Raylib works
+      rl.DrawTextureRec(
+        c.render_texture.texture,
+        rl.Rectangle {
+          0, 0,
+          f32(terrain_handle.chunk_size.x * int(terrain_handle.tile_size)),
+          -f32(terrain_handle.chunk_size.y * int(terrain_handle.tile_size)) },
+        rl.Vector2 {
+          f32(c.position.x * terrain_handle.chunk_size.x) * f32(terrain_handle.tile_size),
+          f32(c.position.y * terrain_handle.chunk_size.y) * f32(terrain_handle.tile_size),
+        },
+        rl.WHITE,
+      )
   }
 
     rl.EndMode2D()
