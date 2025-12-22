@@ -59,7 +59,7 @@ tileset_descriptors: [TerrainCellType.TYPES]TerrainCellDescriptor = {
 }
 
 switch_method:= 2
-threshold: f32= 0.015
+threshold: f32= 0.03
 
 create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   color: rl.Color
@@ -110,7 +110,7 @@ create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
         other_descriptor := tileset_descriptors[other_desc_id]
         chances := int(rand.int31()) % 100
 
-        tileset_pos = chances <= int(distance) ? other_descriptor.tileset_position : descriptor.tileset_position
+        tileset_pos = chances <= int(distance * 6/5) ? other_descriptor.tileset_position : descriptor.tileset_position
         break
       }
     }
