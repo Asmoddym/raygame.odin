@@ -7,30 +7,52 @@ import rand "core:math/rand"
 
 // Main perlin noise generation with default octaves and persistence.
 // It uses z too, but as I don't need it for now, I set it to 0.
-octave_perlin :: proc(raw_x, raw_y: int, noise_scale, persistence: f32) -> f32 {
+octave_perlin :: proc(handle: ^Handle, raw_x, raw_y: int, noise_scale, persistence: f32) -> f32 {
   x := f32(raw_x) * noise_scale
   y := f32(raw_y) * noise_scale
 
   total: f32  = 0
   frequency: f32  = 1
   amplitude: f32  = 1
-  maxValue: f32 = 0  // Used for normalizing result to 0.0 - 1.0
+  max_value: f32 = 0  // Used for normalizing result to 0.0 - 1.0
 
-  for _ in 0..<octaves{
-    total += perlin(x * frequency, y * frequency, 0) * amplitude
+  for _ in 0..<octaves {
+    total += compute_point(&handle.permutation, x * frequency, y * frequency, 0) * amplitude
 
-    maxValue += amplitude
+    max_value += amplitude
     amplitude *= persistence
     frequency *= 2
   }
 
-  return total/maxValue
+  return total / max_value
 }
 
-repermutate :: proc() {
+// Default perlin noise generation
+perlin :: proc(handle: ^Handle, raw_x, raw_y: int, noise_scale: f32) -> f32 {
+  x := f32(raw_x) * noise_scale
+  y := f32(raw_y) * noise_scale
+
+  return compute_point(&handle.permutation, x, y, 0)
+}
+
+// Regenerate random permutation
+repermutate :: proc(handle: ^Handle) {
   for i in 0..<512 {
-    p[i] = int(rand.int31()) % 255
+    handle.permutation[i] = int(rand.int31()) % 255
   }
+}
+
+
+Handle :: struct {
+  permutation: [512]int,
+}
+
+initialize_handle :: proc() -> Handle {
+  handle: Handle
+
+  repermutate(&handle)
+
+  return handle
 }
 
 
@@ -61,13 +83,13 @@ fade :: proc(t: f32) -> f32 {
   return t * t * t * (t * (t * 6 - 15) + 10)
 }
 
-@(private="file")
-// Permutation function, used to initialize p.
-permutate :: proc() {
-  for x in 0..<512 {
-    p[x] = permutation[x%256]
-  }
-}
+// @(private="file")
+// // Permutation function, used to initialize p.
+// permutate :: proc() {
+//   for x in 0..<512 {
+//     p[x] = permutation[x%256]
+//   }
+// }
 
 @(private="file")
 // Simple inc method
@@ -106,7 +128,7 @@ grad :: proc(hash: int, x, y, z: f32) -> f32 {
 
 // Compute Perlin noise for coordinates (x, y).
 @(private="file")
-perlin :: proc(x, y, z: f32) -> f32 {
+compute_point :: proc(p: ^[512]int, x, y, z: f32) -> f32 {
   xi: int = int(x) & 255                 // Calculate the "unit cube" that the point asked will be located in
   yi: int = int(y) & 255                 // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
   zi: int = int(z) & 255                 // plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
@@ -166,24 +188,25 @@ octaves :: 5
 @(private="file")
 scale :: 1
 
-// Hash lookup table as defined by Ken Perlin.  This is a randomly
-// arranged array of all numbers from 0-255 inclusive.
-@(private="file")
-permutation: [256]int = { 151,160,137,91,90,15,
-  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-  190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-  88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
-  77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-  102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
-  135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
-  5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-  223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
-  129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
-  251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
-  49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180 }
-
-@(private="file")
-// Main permutation array. Initialized on first perlin() call.
-p: [512]int
-
+//
+// // Hash lookup table as defined by Ken Perlin.  This is a randomly
+// // arranged array of all numbers from 0-255 inclusive.
+// @(private="file")
+// permutation: [256]int = { 151,160,137,91,90,15,
+//   131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+//   190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+//   88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+//   77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+//   102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+//   135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+//   5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+//   223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+//   129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+//   251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+//   49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+//   138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180 }
+//
+// @(private="file")
+// // Main permutation array. Initialized on first perlin() call.
+// p: [512]int
+//

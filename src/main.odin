@@ -96,7 +96,7 @@ import "lib/perlin_noise"
 import "terrain"
 import rand "core:math/rand"
 
-max_chunks_per_line := 20
+max_chunks_per_line := 10
 
 main :: proc() {
   engine.init()
@@ -113,7 +113,7 @@ main :: proc() {
   // engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(terrain_handle.chunk_size.y * max_chunks_per_line * max_chunks_per_line / 2) }
   engine.camera.zoom = 0.025
 
-  @(static) seed: u64 = 5 // 7 is also nice
+  @(static) seed: u64 = 10
 
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
@@ -147,7 +147,8 @@ main :: proc() {
       terrain_handle.chunks = {}
 
       rand.reset(seed)
-      perlin_noise.repermutate()
+      perlin_noise.repermutate(&terrain_handle.biome_noise_handle)
+      perlin_noise.repermutate(&terrain_handle.default_noise_handle)
     }
 
     if regen && current_regen_pos.y != max_chunks_per_line {
