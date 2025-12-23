@@ -1,11 +1,13 @@
 package terrain
 
+import "core:relative"
 import "base:builtin"
 import rand "core:math/rand"
 import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import rl "vendor:raylib"
 
+debug_draw_mode := 2
 
 // Chunk data struct to the x and y coords.
 // Holds the render_texture loaded with (handle.chunk_size * handle_tile_size) pixels for width and height.
@@ -66,6 +68,16 @@ generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
 // PROCS
 
 
+generate_base_altitude_value :: proc(x, y: int) -> f32 {
+  base_altitude_value := perlin_noise.octave_perlin(x, y, noise_scale = 0.0015, persistence = 0.4)
+
+  return math.remap_clamped(base_altitude_value, 0, 1, -2.5, 2)
+}
+
+generate_detail_value :: proc(x, y: int) -> f32 {
+  return perlin_noise.octave_perlin(x, y, noise_scale = 0.015, persistence = 0.5)
+}
+
 // Terrain generation for a given chunk x and y.
 // Takes the handle too to be able to calculate the distance from the continent
 @(private="file")
@@ -78,20 +90,30 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
     terrain[y] = make([dynamic]TerrainCell, handle.chunk_size.x)
 
     for x in 0..<handle.chunk_size.x {
-      noise_value, altitude: f32
+      detail_value, base_altitude_value, altitude: f32
       altitude = 0
 
       relative_y = y + handle.chunk_size.y * chunk_y
       relative_x = x + handle.chunk_size.x * chunk_x
 
-      biome_value := perlin_noise.octave_perlin(relative_x, relative_y, noise_scale = 0.0015, persistence = 0.4)
-      biome_value = math.remap_clamped(biome_value, 0, 1, -2.5, 2)
+      if debug_draw_mode == 0 {
+        base_altitude_value = generate_base_altitude_value(relative_x, relative_y)
+        detail_value = generate_detail_value(relative_x, relative_y)
 
-      noise_value = perlin_noise.octave_perlin(relative_x, relative_y, noise_scale = 0.015, persistence = 0.5)
-      altitude += 2.0 * noise_value - 1
-      altitude += biome_value
+        altitude += 2.0 * detail_value - 1
+        altitude += base_altitude_value
+      } else if debug_draw_mode == 1 {
+        base_altitude_value = generate_base_altitude_value(relative_x, relative_y)
 
-      terrain[y][x] = create_cell(y, x, altitude, biome_value)
+        altitude += base_altitude_value
+      } else if debug_draw_mode == 2 {
+        biome_value:= perlin_noise.octave_perlin(relative_x, relative_y, noise_scale = 0.001, persistence = 0)
+        // return math.remap_clamped(base_altitude_value, 0, 1, -2.5, 2)
+
+        altitude += biome_value
+      }
+
+      terrain[y][x] = create_cell(y, x, altitude)
     }
   }
 
@@ -132,7 +154,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 // Single cell creation.
 // Will iterate through the biome descriptors and apply a tileset position to the cell.
 @(private="file")
-create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
+create_cell :: proc(y, x: int, altitude: f32) -> TerrainCell {
   tileset_pos: [2]int= { -1, -1 }
 
   overlap_interval: [2]f32 = { altitude - threshold, altitude + threshold }
@@ -161,7 +183,6 @@ create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
 
   return TerrainCell {
     altitude,
-    biome_value,
     tileset_pos,
     { x, y },
   }
@@ -205,7 +226,6 @@ BiomeDescriptor :: struct {
 @(private="file")
 TerrainCell :: struct {
   altitude: f32,
-  biome_value: f32,
   tileset_pos: [2]int,
   position: [2]int,
 }

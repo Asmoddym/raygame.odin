@@ -29,7 +29,7 @@ import "lib/perlin_noise"
 //   }, enums.Direction.NONE)
 //
 //   collectable := engine.database_add_component(npc, &table_collectables)
-//   collectable.interaction_text = "coucou je suis gentil"
+//   collectable.interaction_text = "seed je suis gentil"
 //   collectable.metadata.pickup_text_box_id = 0
 //   collectable.metadata.interaction_text_box_id = 0
 //   collectable.metadata.bounding_box = bounding_box
@@ -113,15 +113,22 @@ main :: proc() {
   // engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(terrain_handle.chunk_size.y * max_chunks_per_line * max_chunks_per_line / 2) }
   engine.camera.zoom = 0.025
 
-  @(static) coucou: u64 = 5
+  @(static) seed: u64 = 5 // 7 is also nice
 
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
 
+
+    if rl.IsKeyPressed(rl.KeyboardKey.D) {
+      terrain.debug_draw_mode += 1
+      terrain.debug_draw_mode %= 3
+      prepare_for_regen = true
+    }
+
     if rl.IsKeyPressed(rl.KeyboardKey.R) {
       prepare_for_regen = true
 
-      coucou += 1
+      seed += 1
     }
 
     if prepare_for_regen {
@@ -139,7 +146,7 @@ main :: proc() {
       delete(terrain_handle.chunks)
       terrain_handle.chunks = {}
 
-      rand.reset(coucou)
+      rand.reset(seed)
       perlin_noise.repermutate()
     }
 
@@ -185,7 +192,7 @@ main :: proc() {
   }
 
     rl.EndMode2D()
-    rl.DrawText(rl.TextFormat("> ", engine.camera, coucou), 20, 20, 20, rl.WHITE)
+    rl.DrawText(rl.TextFormat("> ", engine.camera, seed), 20, 20, 20, rl.WHITE)
     rl.DrawFPS(0, 0)
     rl.EndDrawing()
   }
