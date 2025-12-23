@@ -186,6 +186,7 @@ TerrainCellType :: enum {
   DARK_FOREST,
   SNOWY_FOREST,
   MOUNTAINS_1,
+  SNOW,
   SNOWY_MOUNTAINS,
   VOLCANO,
   TYPES,
@@ -232,9 +233,10 @@ biome_descriptors: [TerrainCellType.TYPES]BiomeDescriptor = {
   { .FOREST, { 0.35, 0.45 }, { 2, 16 } },
   { .DARK_FOREST, { 0.45, 0.5 }, { 21, 16 } },
   { .MOUNTAINS_1, { 0.5, 0.7 }, { 15, 3 } },
-  { .SNOWY_FOREST, { 0.7, 0.8 }, { 12, 17 } },
-  { .SNOWY_MOUNTAINS, { 0.8, 0.9 }, { 28, 3 } },
-  { .VOLCANO, { 0.9, 1.2}, { 21, 9 } },
+  { .SNOW, { 0.7, 0.8 }, { 20, 3 } },
+  { .SNOWY_FOREST, { 0.8, 0.9 }, { 12, 17 } },
+  { .SNOWY_MOUNTAINS, { 0.9, 1.1 }, { 28, 3 } },
+  { .VOLCANO, { 1.1, 2 }, { 21, 9 } },
 }
 
 // Interval threshold between biomes.
