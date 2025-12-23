@@ -8,6 +8,7 @@ import "engine"
 import "enums"
 import "globals"
 import rl "vendor:raylib"
+import "lib/perlin_noise"
 
 // BOX_SIZE: f32 = 64
 //
@@ -93,6 +94,7 @@ import rl "vendor:raylib"
 // }
 
 import "terrain"
+import rand "core:math/rand"
 
 max_chunks_per_line := 20
 
@@ -104,25 +106,41 @@ main :: proc() {
   current_regen_pos : [2]int = { 0, 0 }
   regen             := false
   prepare_for_regen := true
-  terrain_handle    := terrain.initialize_handle(100, 100, tileset, continent_dimensions = { 600, 1000 })
+  terrain_handle    := terrain.initialize_handle(100, 100, tileset, continent_dimensions = { 500, 500 })
 
   // engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
   // engine.camera.zoom = 0.04
-  engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(-terrain_handle.chunk_size.y * (max_chunks_per_line / 2)) }
+  // engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(terrain_handle.chunk_size.y * max_chunks_per_line * max_chunks_per_line / 2) }
   engine.camera.zoom = 0.025
 
+  @(static) coucou: u64 = 5
 
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
 
     if rl.IsKeyPressed(rl.KeyboardKey.R) {
       prepare_for_regen = true
+
+      coucou += 1
     }
 
     if prepare_for_regen {
       current_regen_pos = { 0, 0 }
       regen = true
       prepare_for_regen = false
+
+      for &c in terrain_handle.chunks {
+        rl.UnloadRenderTexture(c.render_texture)
+        for &line in c.terrain {
+          delete(line)
+        }
+        delete(c.terrain)
+      }
+      delete(terrain_handle.chunks)
+      terrain_handle.chunks = {}
+
+      rand.reset(coucou)
+      perlin_noise.repermutate()
     }
 
     if regen && current_regen_pos.y != max_chunks_per_line {
@@ -151,23 +169,23 @@ main :: proc() {
     rl.ClearBackground(rl.BLACK)
 
     for &c in terrain_handle.chunks {
-      // Using thie method to invert the texture as that's the way Raylib works
+      // Using this method to invert the texture as that's the way Raylib works
       rl.DrawTextureRec(
         c.render_texture.texture,
         rl.Rectangle {
           0, 0,
-          f32(terrain_handle.chunk_size.x * int(terrain_handle.tile_size)),
-          -f32(terrain_handle.chunk_size.y * int(terrain_handle.tile_size)) },
+          f32(terrain_handle.chunk_size.x * int(terrain_handle.displayed_tile_size)),
+          -f32(terrain_handle.chunk_size.y * int(terrain_handle.displayed_tile_size)) },
         rl.Vector2 {
-          f32(c.position.x * terrain_handle.chunk_size.x) * f32(terrain_handle.tile_size),
-          f32(c.position.y * terrain_handle.chunk_size.y) * f32(terrain_handle.tile_size),
+          f32(c.position.x * terrain_handle.chunk_size.x) * f32(terrain_handle.displayed_tile_size),
+          f32(c.position.y * terrain_handle.chunk_size.y) * f32(terrain_handle.displayed_tile_size),
         },
         rl.WHITE,
       )
   }
 
     rl.EndMode2D()
-    rl.DrawText(rl.TextFormat("", engine.camera), 20, 20, 20, rl.WHITE)
+    rl.DrawText(rl.TextFormat("> ", engine.camera, coucou), 20, 20, 20, rl.WHITE)
     rl.DrawFPS(0, 0)
     rl.EndDrawing()
   }

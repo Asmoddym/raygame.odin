@@ -2,13 +2,12 @@
 
 package perlin_noise
 import math "core:math"
+import rand "core:math/rand"
 
 
 // Main perlin noise generation with default octaves and persistence.
 // It uses z too, but as I don't need it for now, I set it to 0.
-//
-// Normally, x and y should be passed as f32 WITH the * noise_scale applied but to ease things, I'm doing it here.
-octave_perlin :: proc(raw_x, raw_y: int) -> f32 {
+octave_perlin :: proc(raw_x, raw_y: int, noise_scale, persistence: f32) -> f32 {
   x := f32(raw_x) * noise_scale
   y := f32(raw_y) * noise_scale
 
@@ -26,6 +25,12 @@ octave_perlin :: proc(raw_x, raw_y: int) -> f32 {
   }
 
   return total/maxValue
+}
+
+repermutate :: proc() {
+  for i in 0..<512 {
+    p[i] = int(rand.int31()) % 255
+  }
 }
 
 
@@ -102,13 +107,6 @@ grad :: proc(hash: int, x, y, z: f32) -> f32 {
 // Compute Perlin noise for coordinates (x, y).
 @(private="file")
 perlin :: proc(x, y, z: f32) -> f32 {
-  @(static) initialized := false
-
-  if !initialized {
-    permutate()
-    initialized = true
-  }
-
   xi: int = int(x) & 255                 // Calculate the "unit cube" that the point asked will be located in
   yi: int = int(y) & 255                 // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
   zi: int = int(z) & 255                 // plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
@@ -163,18 +161,10 @@ perlin :: proc(x, y, z: f32) -> f32 {
 @(private="file")
 octaves :: 5
 
-// Default persistence
-@(private="file")
-persistence :: 0.4
-
 // Main scale, set to minimum (1), then converted to anything where it's needed.
 // For instance, each "pixel" is used as a 16x16 displayed cell.
 @(private="file")
 scale :: 1
-
-// The bigger the noise scale, the bigger the shapes.
-@(private="file")
-noise_scale: f32 = 0.015
 
 // Hash lookup table as defined by Ken Perlin.  This is a randomly
 // arranged array of all numbers from 0-255 inclusive.

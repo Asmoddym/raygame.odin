@@ -9,7 +9,7 @@ import rl "vendor:raylib"
 //
 
 
-// BASE_RESOLUTION: [2]i32 = { 1280, 720 }
+// BASE_RESOLUTION: [2]i32 = { 1600, 900 }
 BASE_RESOLUTION: [2]i32 = { 2560, 1440}
 
 

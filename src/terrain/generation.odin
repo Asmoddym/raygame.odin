@@ -1,5 +1,7 @@
 package terrain
 
+import "core:fmt"
+import "base:builtin"
 import rand "core:math/rand"
 import math "core:math"
 import perlin_noise "../lib/perlin_noise"
@@ -24,6 +26,7 @@ Handle :: struct {
   chunks: [dynamic]Chunk,
   tileset: rl.Texture,
   tile_size: i32,
+  displayed_tile_size: i32,
   continent_dimensions: [2]int,
 }
 
@@ -33,12 +36,13 @@ Handle :: struct {
 
 // Handle initializer.
 // Takes the chunk dimensions and the tileset to be used for this terrain as well as the continent dimensions (check Handle definition for more info)
-initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.Texture, continent_dimensions: [2]int) -> Handle {
+initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.Texture, continent_dimensions: [2]int, tile_size: i32 = 16, displayed_tile_size: i32 = 16) -> Handle {
   return Handle {
     { chunk_width, chunk_height },
     {},
     tileset,
-    16,
+    tile_size,
+    displayed_tile_size,
     continent_dimensions,
   }
 }
@@ -46,7 +50,7 @@ initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.T
 // Generate the chunk at the given x and y coords.
 generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
   append(&handle.chunks, Chunk {
-    rl.LoadRenderTexture(i32(handle.chunk_size.x) * handle.tile_size, i32(handle.chunk_size.y) * handle.tile_size),
+    rl.LoadRenderTexture(i32(handle.chunk_size.x) * handle.displayed_tile_size, i32(handle.chunk_size.y) * handle.displayed_tile_size),
     generate_chunk_terrain(handle, x, y),
     { x, y },
   })
@@ -79,7 +83,7 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
   terrain           = make([dynamic][dynamic]TerrainCell, handle.chunk_size.y)
 
   // 0.25 is for 0.5 * 0.5
-  max_distance = math.sqrt(continent_width * continent_width * 0.25 + continent_height * continent_height * 0.25) + continent_width / 1.5
+  max_distance = math.sqrt(continent_width * continent_width * 0.25 + continent_height * continent_height * 0.25) //+ continent_width / 1.9
 
   for y in 0..<handle.chunk_size.y {
     relative_x, relative_y: int
@@ -88,21 +92,28 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
 
     for x in 0..<handle.chunk_size.x {
       noise_value, altitude: f32
+      altitude = 0
 
       relative_y = y + handle.chunk_size.y * chunk_y
       relative_x = x + handle.chunk_size.x * chunk_x
 
       // Distance from the center minus pos
-      dx = f32(continent_width * 1.5 * 0.5 - f32(relative_x))
-      dy = f32(continent_height * 1.5 * 0.5 - f32(relative_y))
-      distance_to_center =  math.sqrt(dx * dx + dy * dy * y_scaling_coef)
+      // dx = f32(continent_width * 1.5 * 0.5 - f32(relative_x))
+      // dy = f32(continent_height * 1.5 * 0.5 - f32(relative_y))
+      // distance_to_center =  math.sqrt(dx * dx + dy * dy * y_scaling_coef)
 
       // Pretty much random calculations, but it looks rather nice
-      altitude = 0.65 - 2 * (2/26.0 * distance_to_center) / max_distance
-      altitude -= 0.4 * (distance_to_center / max_distance)
+      // altitude = 0.65 - 2 * (2/26.0 * distance_to_center) / max_distance
+      // altitude -= 0.4 * (distance_to_center / max_distance)
 
-      noise_value = perlin_noise.octave_perlin(relative_x, relative_y)
-      altitude += 2.0 * noise_value - 1.0
+      // altitude = 0.75 - 2 * (distance_to_center) / max_distance
+
+      biome_value := perlin_noise.octave_perlin(relative_x, relative_y, noise_scale = 0.0015, persistence = 0.4)
+      biome_value = math.remap_clamped(biome_value, 0, 1, -2.5, 2)
+
+      noise_value = perlin_noise.octave_perlin(relative_x, relative_y, noise_scale = 0.015, persistence = 0.5)
+      altitude += 2.0 * noise_value - 1
+      altitude += biome_value
 
       terrain[y][x] = create_cell(y, x, altitude)
     }
@@ -128,10 +139,10 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
       }
 
       dest := rl.Rectangle {
-        f32(i32(cell.position.x) * handle.tile_size),
-        f32(i32(cell.position.y) * handle.tile_size),
-        f32(handle.tile_size),
-        f32(handle.tile_size),
+        f32(i32(cell.position.x) * handle.displayed_tile_size),
+        f32(i32(cell.position.y) * handle.displayed_tile_size),
+        f32(handle.displayed_tile_size),
+        f32(handle.displayed_tile_size),
       }
 
       rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
@@ -227,7 +238,7 @@ TerrainCell :: struct {
 // This is done to compensate the fact that the rectangle window would make the main continent "oval"
 // Actually, we'll voluntarily give it an oval shape
 @(private="file")
-y_scaling_coef: f32 = 5
+y_scaling_coef: f32 = 1.5
 
 // Biome descriptors; will change.
 @(private="file")
