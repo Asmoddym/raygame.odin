@@ -106,7 +106,7 @@ main :: proc() {
   current_regen_pos : [2]int = { 0, 0 }
   regen             := false
   prepare_for_regen := true
-  terrain_handle    := terrain.initialize_handle(100, 100, tileset, continent_dimensions = { 500, 500 })
+  terrain_handle    := terrain.initialize_handle(100, 100, tileset)
 
   // engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
   // engine.camera.zoom = 0.04
