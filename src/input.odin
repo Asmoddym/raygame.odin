@@ -15,6 +15,8 @@ import rl "vendor:raylib"
 
 // Input handling for default runtime systems.
 input_system_main :: proc() {
+  time := rl.GetFrameTime()
+
   bbox := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
 
   // Text box test stuff
@@ -25,6 +27,14 @@ input_system_main :: proc() {
       duration = 2000,
       attached_to_bounding_box = bbox,
     )
+  }
+
+  if rl.IsKeyDown(rl.KeyboardKey.A) {
+    engine.camera.zoom -= 1 * time
+  }
+
+  if rl.IsKeyDown(rl.KeyboardKey.Q) {
+    engine.camera.zoom += 1 * time
   }
 }
 
