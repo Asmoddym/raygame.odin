@@ -6,6 +6,7 @@ import "engine"
 import "enums"
 import "globals"
 import rl "vendor:raylib"
+import "terrain"
 
 BOX_SIZE: f32 = 64
 
@@ -26,7 +27,7 @@ init_npc :: proc() {
   }, enums.Direction.NONE)
 
   collectable := engine.database_add_component(npc, &table_collectables)
-  collectable.interaction_text = "coucou je suis gentil"
+  collectable.interaction_text = "seed je suis gentil"
   collectable.metadata.pickup_text_box_id = 0
   collectable.metadata.interaction_text_box_id = 0
   collectable.metadata.bounding_box = bounding_box
@@ -90,6 +91,7 @@ init_terrain :: proc() {
   root_bb.layer = globals.PLAYER_LAYER
 }
 
+
 main :: proc() {
   engine.init()
 
@@ -99,6 +101,8 @@ main :: proc() {
 
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
+
+  engine.system_register(terrain.system_draw,                    { int(enums.SceneID.MAIN) })
 
   engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
@@ -119,7 +123,7 @@ main :: proc() {
 
   init_npc()
   init_player()
-  init_terrain()
+  terrain.init()
 
   engine.run()
   engine.unload()

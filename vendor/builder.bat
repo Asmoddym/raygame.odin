@@ -24,7 +24,7 @@ if "%1" == "run" (
   if "%2" == "debug" (
     set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
   ) else if "%2" == "release" (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -out:%BINARY_NAME%.exe -no-bounds-check -o:speed
   ) else (
     echo "Second argument should be [debug|release]"
     exit /b 1
@@ -35,7 +35,7 @@ if "%1" == "run-strict" (
   if "%2" == "debug" (
     set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
   ) else if "%2" == "release" (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -out:%BINARY_NAME%.exe -no-bounds-check -o:speed
   ) else (
     echo "Second argument should be [debug|release]"
     exit /b 1
@@ -46,7 +46,7 @@ if "%1" == "build" (
   if "%2" == "debug" (
     set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
   ) else if "%2" == "release" (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% -out:%BINARY_NAME%.exe -no-bounds-check -o:speed
   ) else (
     echo "Second argument should be [debug|release]"
     exit /b 1
@@ -57,7 +57,7 @@ if "%1" == "build-strict" (
   if "%2" == "debug" (
     set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -debug -out:%BINARY_NAME%-debug.exe
   ) else if "%2" == "release" (
-    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -out:%BINARY_NAME%.exe
+    set COMPILER_ARGS=%COMMON_COMPILER_ARGS% %STRICT_COMPILER_ARGS% -out:%BINARY_NAME%.exe -no-bounds-check -o:speed
   ) else (
     echo "Second argument should be [debug|release]"
     exit /b 1

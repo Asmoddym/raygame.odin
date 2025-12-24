@@ -47,3 +47,9 @@ Add Coc config:
 # Kanban
 
 https://github.com/users/Asmoddym/projects/4
+
+
+# Optis:
+
+-o:speed in release mode
+-no-bounds-check for maybe better timings
