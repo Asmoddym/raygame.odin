@@ -124,7 +124,11 @@ application_debug_render_information :: proc() {
     rl.DrawText(strings.unsafe_string_to_cstring(str), 10, 10, 20, rl.LIME)
   }
 
-  rl.DrawText(strings.unsafe_string_to_cstring(fmt.tprintf("Res: %dx%d (%s)", game_state.resolution.x, game_state.resolution.y, game_state.fullscreen ? "Fullscreen" : (game_state.borderless_window ? "Borderless" : "windowed"))), 10, game_state.resolution.y - 28, 20, rl.WHITE)
+  screen_state := game_state.fullscreen ? "Fullscreen" : (game_state.borderless_window ? "Borderless" : "windowed")
+
+  text := rl.TextFormat("Res: %dx%d (%s)\nCam: %f,%f (zoom: %f)", game_state.resolution.x, game_state.resolution.y, screen_state , camera.target.x, camera.target.y, camera.zoom)
+
+  rl.DrawText(text, 10, game_state.resolution.y - 48, 20, rl.WHITE)
 }
 
 

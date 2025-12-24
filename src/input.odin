@@ -29,12 +29,11 @@ input_system_main :: proc() {
     )
   }
 
-  if rl.IsKeyDown(rl.KeyboardKey.A) {
-    engine.camera.zoom -= 1 * time
-  }
+  if engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y {
+    engine.camera.zoom += rl.GetMouseWheelMove() * ZOOM_SPEED
 
-  if rl.IsKeyDown(rl.KeyboardKey.Q) {
-    engine.camera.zoom += 1 * time
+    engine.camera.zoom = min(ZOOM_INTERVAL.y, engine.camera.zoom)
+    engine.camera.zoom = max(ZOOM_INTERVAL.x, engine.camera.zoom)
   }
 }
 
@@ -66,3 +65,20 @@ input_system_player_movement :: proc() {
   }
 }
 
+
+
+//
+// PRIVATE
+//
+
+
+// CONSTANTS
+
+
+// Zoom interval
+@(private="file")
+ZOOM_INTERVAL: [2]f32 = { 0.1, 2 }
+
+// Zoom speed
+@(private="file")
+ZOOM_SPEED: f32 = 0.05
