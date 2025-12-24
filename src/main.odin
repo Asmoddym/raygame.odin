@@ -2,15 +2,11 @@
 
 package macro
 
-import "core:os"
-import "core:fmt"
 import "engine"
 import "enums"
 import "globals"
 import rl "vendor:raylib"
-import "lib/perlin_noise"
 import "terrain"
-import rand "core:math/rand"
 
 BOX_SIZE: f32 = 64
 
@@ -95,14 +91,9 @@ init_terrain :: proc() {
   root_bb.layer = globals.PLAYER_LAYER
 }
 
-seed: u64 = 16
 
 main :: proc() {
-
   engine.init()
-
-  // TODO: Put this in engine
-  rand.reset(seed)
 
   engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
