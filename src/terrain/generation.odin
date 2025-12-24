@@ -9,7 +9,7 @@ import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import rl "vendor:raylib"
 
-debug_draw_mode := 0
+debug_draw_mode := 1
 
 // Chunk data struct to the x and y coords.
 // Holds the render_texture loaded with (handle.chunk_size * handle_tile_size) pixels for width and height.
@@ -76,9 +76,9 @@ generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
 
 
 generate_base_altitude_value :: proc(handle: ^perlin_noise.Handle, x, y: int) -> f32 {
-  base_altitude_value := perlin_noise.octave_perlin(handle, x, y, noise_scale = 0.0015, persistence = 0.4)
+  base_altitude_value := perlin_noise.octave_perlin(handle, x, y, noise_scale = 0.004, persistence = 0.4)
 
-  return math.remap_clamped(base_altitude_value, 0, 1, -2.3, 2)
+  return math.remap_clamped(base_altitude_value, 0, 1, -2, 2) + 0.1
 }
 
 generate_detail_value :: proc(handle: ^perlin_noise.Handle, x, y: int) -> f32 {
@@ -90,6 +90,12 @@ generate_detail_value :: proc(handle: ^perlin_noise.Handle, x, y: int) -> f32 {
 @(private="file")
 generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynamic][dynamic]TerrainCell {
   terrain := make([dynamic][dynamic]TerrainCell, handle.chunk_size.y)
+
+  continent_width : f32= 600.0
+  continent_height :f32 = 300.0
+
+  biome_value: f32 = 0
+ max_distance := f32(math.sqrt(continent_width * continent_width * 0.25 + continent_height * continent_height * 0.25)) //+ continent_width / 1.9
 
   for y in 0..<handle.chunk_size.y {
     relative_x, relative_y: int
@@ -103,20 +109,24 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
       relative_y = y + handle.chunk_size.y * chunk_y
       relative_x = x + handle.chunk_size.x * chunk_x
 
-      biome_value := perlin_noise.octave_perlin(&handle.biome_noise_handle, relative_x, relative_y, noise_scale = 0.01, persistence = 0.4)
-      // biome_value := perlin_noise.perlin(&handle.biome_noise_handle, relative_x, relative_y, noise_scale = 0.05)
+      // biome_value := perlin_noise.octave_perlin(&handle.biome_noise_handle, relative_x, relative_y, noise_scale = 0.001, persistence = 1)
+      biome_value := perlin_noise.octave_perlin(&handle.biome_noise_handle, relative_x, relative_y, noise_scale = 0.015, persistence = 0.3)
 
-      if debug_draw_mode == 0 {
-        base_altitude_value = generate_base_altitude_value(&handle.default_noise_handle, relative_x, relative_y)
-        detail_value = generate_detail_value(&handle.default_noise_handle, relative_x, relative_y)
+      dx := f32(continent_width* 1.5 * 0.5 - f32(relative_x))
+      dy := f32(continent_height* 1.5 * 0.5 - f32(relative_y))
+      distance_to_center := math.sqrt(dx * dx + dy * dy)
 
-        altitude += 2.0 * detail_value - 1
-        altitude += base_altitude_value
-      }
+      base_altitude_value = generate_base_altitude_value(&handle.default_noise_handle, relative_x, relative_y)
+      detail_value = generate_detail_value(&handle.default_noise_handle, relative_x, relative_y)
 
-      // altitude += 2.0 * biome_value - 1
+      altitude += 2.0 * detail_value - 1
+      altitude += base_altitude_value
 
-      terrain[y][x] = create_cell(y, x, altitude, biome_value)
+      // altitude = 0.65 - 2 * (2/26.0 * distance_to_center) / max_distance
+      // altitude -= 0.1 * (distance_to_center / max_distance)
+      //
+
+      terrain[y][x] = create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
     }
   }
 
@@ -146,7 +156,21 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
         f32(handle.displayed_tile_size),
       }
 
-      rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+      // gray_scale := u8(math.remap_clamped(f32(cell.biome_value ), 0, 1, 0, 255))
+
+
+      // gray_scale := u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, cell.altitude < -0.2 ? 50 : 255))
+      // gray_scale := u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, cell.biome_value >= 0.5 && cell.biome_value <= 0.505 ? 255 : 0))
+      if debug_draw_mode % 2 == 0 {
+        rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+      } else {
+        gray_scale: u8
+
+          // gray_scale = u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, 255))
+          gray_scale = cell.biome_value > 0.7 ? u8(math.remap_clamped(cell.biome_value, 0, 1, 100, 255)) : 0
+
+        rl.DrawRectangleRec(dest, rl.Color { gray_scale, gray_scale, gray_scale, 255 })
+      }
     }
   }
 
@@ -157,7 +181,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 // Single cell creation.
 // Will iterate through the biome descriptors and apply a tileset position to the cell.
 @(private="file")
-create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
+create_cell :: proc(y, x: int, altitude, biome_value, base_altitude_value, detail_value: f32) -> TerrainCell {
   tileset_pos: [2]int= { -1, -1 }
 
   altitude_overlap_interval: [2]f32 = { altitude - layer_threshold, altitude + layer_threshold }
@@ -167,36 +191,32 @@ create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
 
   for idx in 0..<len(biome_descriptors) {
     current_biome := &biome_descriptors[idx]
-    previous_biome := idx - 1 >= 0 ? &biome_descriptors[idx - 1] : current_biome
-    next_biome := idx + 1 < len(biome_descriptors) ? &biome_descriptors[idx + 1] : current_biome
+    // previous_biome := idx - 1 >= 0 ? &biome_descriptors[idx - 1] : current_biome
+    // next_biome := idx + 1 < len(biome_descriptors) ? &biome_descriptors[idx + 1] : current_biome
 
     if biome_overlap_interval.x >= current_biome.interval.x && biome_overlap_interval.y < current_biome.interval.y {
       biome = &biome_descriptors[idx]
     }
 
-    overall_descriptor_overlap: [2]f32 = { previous_biome.interval.y - biome_threshold, next_biome.interval.x + biome_threshold }
-
-    if altitude >= overall_descriptor_overlap.x && altitude <= overall_descriptor_overlap.y {
-      distance := 100 - math.remap_clamped(altitude, overall_descriptor_overlap.x, overall_descriptor_overlap.y, 0, 100)
-      chances := int(rand.int31()) % 100
-
-      if chances >= 20 {
-        biome = current_biome
-        break
-      }
-
-      if distance < 15 {
-        biome = next_biome
-      } else if distance >= 15 && distance < 85 {
-        biome = current_biome
-      } else {
-        biome = previous_biome
-      }
-
-      break
-    }
+    // overall_descriptor_overlap: [2]f32 = { previous_biome.interval.y - biome_threshold, next_biome.interval.x + biome_threshold }
+    //
+    // if altitude >= overall_descriptor_overlap.x && altitude <= overall_descriptor_overlap.y {
+    //   distance := 100 - math.remap_clamped(altitude, overall_descriptor_overlap.x, overall_descriptor_overlap.y, 0, 100)
+    //   chances := int(rand.int31()) % 100
+    //
+    //   if distance < 15 {
+    //     biome = next_biome
+    //   } else if distance >= 15 && distance < 85 {
+    //     biome = current_biome
+    //   } else {
+    //     biome = previous_biome
+    //   }
+    //
+    //   break
+    // }
 
 
+    // OLD METHOD
     // descriptor_overlap := [2]f32 { biome_descriptors[idx - 1].interval.y - biome_threshold, descriptor.interval.x + biome_threshold }
     //
     // if biome_value >= descriptor_overlap.x && biome_value <= descriptor_overlap.y {
@@ -209,6 +229,7 @@ create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
     //   break
     // }
   }
+
 
   for idx in 0..<len(biome.layers) {
     current_layer := &biome.layers[idx]
@@ -225,7 +246,7 @@ create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
       distance := 100 - math.remap_clamped(altitude, overall_descriptor_overlap.x, overall_descriptor_overlap.y, 0, 100)
       chances := int(rand.int31()) % 100
 
-      if chances >= 20 {
+      if chances >= 10 {
         tileset_pos = current_layer.tileset_position
         break
       }
@@ -244,6 +265,9 @@ create_cell :: proc(y, x: int, altitude, biome_value: f32) -> TerrainCell {
 
   return TerrainCell {
     altitude,
+    biome_value,
+    base_altitude_value,
+    detail_value,
     tileset_pos,
     { x, y },
   }
@@ -260,6 +284,7 @@ TerrainCellType :: enum {
   SAND,
   GRASS_1,
   GRASS_2,
+  GRASS_3,
   HILL_1,
   HILL_2,
   DARK_DRASS_1,
@@ -283,7 +308,6 @@ LayerDescriptor :: struct {
 
 BiomeType :: enum {
   PLAINS,
-  TOUNDRA,
   FOREST,
   BIOMES,
 }
@@ -299,6 +323,9 @@ BiomeDescriptor :: struct {
 @(private="file")
 TerrainCell :: struct {
   altitude: f32,
+  biome_value: f32,
+  base_altitude_value: f32,
+  detail_value: f32,
   tileset_pos: [2]int,
   position: [2]int,
 }
@@ -317,48 +344,41 @@ y_scaling_coef: f32 = 1.5
 biome_descriptors: [BiomeType.BIOMES]BiomeDescriptor = {
   {
     .PLAINS,
-    { 0, 0.5 },
+    { 0, 0.65 },
     {
       { .OCEAN, { -10, -0.3 }, { 26, 10 } },
       { .SAND, { -0.3, -0.2 }, { 20, 2 } },
       { .GRASS_1, { -0.2, -0.1 }, { 5, 0 } },
       { .GRASS_2, { -0.1, 0 }, { 13, 0 } },
       { .HILL_1, { 0, 0.1 }, { 10, 0 } },
-      { .HILL_2, { 0.1, 10 }, { 20, 0 } },
-      // { .OCEAN, { -10, -0.3 }, { 26, 10 } },
-      // { .SAND, { -0.3, -0.2 }, { 20, 2 } },
-      // { .GRASS_1, { -0.2, -0.1 }, { 5, 0 } },
-      // { .GRASS_2, { -0.1, 0 }, { 13, 0 } },
-      // { .HILL_1, { 0, 0.1 }, { 10, 0 } },
-      // { .HILL_2, { 0.1, 0.25 }, { 20, 0 } },
-      // { .DARK_DRASS_1, { 0.25, 0.35 }, { 4, 6 } },
-      // { .FOREST, { 0.35, 0.45 }, { 2, 16 } },
-      // { .DARK_FOREST, { 0.45, 0.5 }, { 21, 16 } },
-      // { .MOUNTAINS_1, { 0.5, 0.7 }, { 15, 3 } },
-      // { .SNOW, { 0.7, 0.8 }, { 20, 3 } },
-      // { .SNOWY_FOREST, { 0.8, 0.9 }, { 12, 17 } },
-      // { .SNOWY_MOUNTAINS, { 0.9, 1.1 }, { 28, 3 } },
-      // { .VOLCANO, { 1.1, 2 }, { 21, 9 } },
+      { .HILL_2, { 0.1, 0.25 }, { 20, 0 } },
+      { .DARK_DRASS_1, { 0.25, 0.35 }, { 4, 6 } },
+      { .FOREST, { 0.35, 0.45 }, { 2, 16 } },
+      { .DARK_FOREST, { 0.45, 0.5 }, { 21, 16 } },
+      { .MOUNTAINS_1, { 0.5, 0.7 }, { 15, 3 } },
+      { .SNOW, { 0.7, 0.8 }, { 20, 3 } },
+      { .SNOWY_FOREST, { 0.8, 0.9 }, { 12, 17 } },
+      { .SNOWY_MOUNTAINS, { 0.9, 1.1 }, { 28, 3 } },
+      { .VOLCANO, { 1.1, 2 }, { 21, 9 } },
     },
   },
   {
     .FOREST,
-    { 0.5, 0.6 },
+    { 0.65, 10 },
     {
       { .OCEAN, { -10, -0.3 }, { 26, 10 } },
       { .SAND, { -0.3, -0.2 }, { 20, 2 } },
-      { .FOREST, { -0.2, 0.5 }, { 2, 16 } },
-      { .DARK_FOREST, { 0.5, 10 }, { 21, 16 } },
-    },
-  },
-  {
-    .TOUNDRA,
-    { 0.6, 9 },
-    {
-      { .OCEAN, { -10, -0.3 }, { 26, 10 } },
-      { .SAND, { -0.3, -0.2 }, { 20, 2 } },
-      { .SNOWY_FOREST, { -0.2, 0.5 }, { 12, 17 } },
-      { .SNOWY_MOUNTAINS, { 0.5, 10 }, { 28, 3 } },
+      { .GRASS_1, { -0.2, -0.1 }, { 5, 0 } },
+      { .FOREST, { -0.1, 0 },       { 21, 16 } },
+      { .FOREST, { 0, 0.1 },        { 2, 16 } },
+      { .DARK_FOREST, { 0.1, 0.2 }, { 21, 16 } },
+      { .FOREST, { 0.2, 0.3 },      { 2, 16 } },
+      { .DARK_FOREST, { 0.3, 0.4 }, { 21, 16 } },
+      { .FOREST, { 0.4, 0.5 },      { 2, 16 } },
+      { .DARK_FOREST, { 0.5, 0.6 }, { 21, 16 } },
+      { .FOREST, { 0.6, 0.7 },      { 2, 16 } },
+      { .DARK_FOREST, { 0.7, 0.8 }, { 21, 16 } },
+      { .SNOWY_FOREST, { 0.8, 10 }, { 12, 17 } },
     },
   },
 }
@@ -366,7 +386,7 @@ biome_descriptors: [BiomeType.BIOMES]BiomeDescriptor = {
 // Interval layer_threshold between biome layers.
 // Used to calculate the "width" of the shared border.
 @(private="file")
-layer_threshold: f32 = 0.005
+layer_threshold: f32 = 0.01
 
 // Interval layer_threshold between biomes.
 // Used to calculate the "width" of the shared border.

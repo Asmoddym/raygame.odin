@@ -106,14 +106,15 @@ main :: proc() {
   current_regen_pos : [2]int = { 0, 0 }
   regen             := false
   prepare_for_regen := true
-  terrain_handle    := terrain.initialize_handle(100, 100, tileset)
+  terrain_handle    := terrain.initialize_handle(200, 200, tileset)
 
   // engine.camera.target = { f32(max_chunks_per_line * 1280 * 4), f32(-max_chunks_per_line * 720 * 4) }
   // engine.camera.zoom = 0.04
   // engine.camera.target = { f32(terrain_handle.chunk_size.x * max_chunks_per_line / 2) * f32(terrain_handle.tile_size), f32(terrain_handle.chunk_size.y * max_chunks_per_line * max_chunks_per_line / 2) }
-  engine.camera.zoom = 0.025
+  engine.camera.zoom = 0.1
+  engine.camera.target = { f32(engine.game_state.resolution.x * 2), f32(engine.game_state.resolution.y * 2) }
 
-  @(static) seed: u64 = 10
+  @(static) seed: u64 = 16
 
   for !rl.WindowShouldClose() {
     deltaTime := rl.GetFrameTime()
@@ -121,7 +122,6 @@ main :: proc() {
 
     if rl.IsKeyPressed(rl.KeyboardKey.D) {
       terrain.debug_draw_mode += 1
-      terrain.debug_draw_mode %= 3
       prepare_for_regen = true
     }
 
