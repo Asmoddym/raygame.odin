@@ -95,44 +95,14 @@ init_terrain :: proc() {
   root_bb.layer = globals.PLAYER_LAYER
 }
 
-max_chunks_per_line := 10
-
-engine_terrain :: proc() {
-  for &c in terrain_handle.chunks {
-    // Using this method to invert the texture as that's the way Raylib works
-    rl.DrawTextureRec(
-      c.render_texture.texture,
-      rl.Rectangle {
-        0, 0,
-        f32(terrain_handle.chunk_size.x * int(terrain_handle.displayed_tile_size)),
-        -f32(terrain_handle.chunk_size.y * int(terrain_handle.displayed_tile_size)) },
-        rl.Vector2 {
-          f32(c.position.x * terrain_handle.chunk_size.x) * f32(terrain_handle.displayed_tile_size),
-          f32(c.position.y * terrain_handle.chunk_size.y) * f32(terrain_handle.displayed_tile_size),
-        },
-        rl.WHITE,
-    )
-  }
-}
-
-terrain_handle: terrain.Handle
 seed: u64 = 16
 
 main :: proc() {
+
   engine.init()
 
-  tileset        := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
-  terrain_handle = terrain.initialize_handle(30, 30, tileset)
-
+  // TODO: Put this in engine
   rand.reset(seed)
-  perlin_noise.repermutate(&terrain_handle.biome_noise_handle)
-  perlin_noise.repermutate(&terrain_handle.default_noise_handle)
-
-  for y in 0..<max_chunks_per_line {
-    for x in 0..<max_chunks_per_line {
-      terrain.generate_chunk(&terrain_handle, x, y)
-    }
-  }
 
   engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
@@ -141,7 +111,7 @@ main :: proc() {
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
 
-  engine.system_register(engine_terrain,                         { int(enums.SceneID.MAIN) })
+  engine.system_register(terrain.system_draw,                    { int(enums.SceneID.MAIN) })
 
   engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
@@ -162,7 +132,7 @@ main :: proc() {
 
   init_npc()
   init_player()
-  // init_terrain()
+  terrain.init()
 
   engine.run()
   engine.unload()
