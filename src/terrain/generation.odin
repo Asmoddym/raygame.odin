@@ -1,15 +1,17 @@
 #+feature dynamic-literals
+
+// There can be some interesting stuff to get from https://www.youtube.com/watch?v=6BdYzfVOyBY
+// I followed it on my very first try to have continents but I removed it later in favor of my base_altitude method.
+//
+// Could be worth checking out to have some nice oceans though.
+
 package terrain
 
-import "core:fmt"
-import "core:relative"
 import "base:builtin"
 import rand "core:math/rand"
 import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import rl "vendor:raylib"
-
-debug_draw_mode := 1
 
 // Chunk data struct to the x and y coords.
 // Holds the render_texture loaded with (handle.chunk_size * handle_tile_size) pixels for width and height.
@@ -75,14 +77,23 @@ generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
 // PROCS
 
 
-generate_base_altitude_value :: proc(handle: ^perlin_noise.Handle, x, y: int) -> f32 {
-  base_altitude_value := perlin_noise.octave_perlin(handle, x, y, noise_scale = 0.004, persistence = 0.4)
+// Base altitude generation using default_noise_handle.
+// Values are exagerated to force some altitude changes.
+generate_base_altitude_value :: proc(handle: ^Handle, x, y: int) -> f32 {
+  base_altitude_value := perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.004, persistence = 0.4)
 
   return math.remap_clamped(base_altitude_value, 0, 1, -2, 2) + 0.1
 }
 
-generate_detail_value :: proc(handle: ^perlin_noise.Handle, x, y: int) -> f32 {
-  return perlin_noise.octave_perlin(handle, x, y, noise_scale = 0.015, persistence = 0.5)
+// Detail value generation using default_noise_handle.
+generate_detail_value :: proc(handle: ^Handle, x, y: int) -> f32 {
+  return perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.015, persistence = 0.5)
+}
+
+// Biome value generation using biome_noise_handle.
+// Not very detailed and used for some additional details such as forest patches.
+generate_biome_value :: proc(handle: ^Handle, x, y: int) -> f32 {
+  return perlin_noise.octave_perlin(&handle.biome_noise_handle, x, y, noise_scale = 0.015, persistence = 0.3)
 }
 
 // Terrain generation for a given chunk x and y.
@@ -90,12 +101,6 @@ generate_detail_value :: proc(handle: ^perlin_noise.Handle, x, y: int) -> f32 {
 @(private="file")
 generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynamic][dynamic]TerrainCell {
   terrain := make([dynamic][dynamic]TerrainCell, handle.chunk_size.y)
-
-  continent_width : f32= 600.0
-  continent_height :f32 = 300.0
-
-  biome_value: f32 = 0
- max_distance := f32(math.sqrt(continent_width * continent_width * 0.25 + continent_height * continent_height * 0.25)) //+ continent_width / 1.9
 
   for y in 0..<handle.chunk_size.y {
     relative_x, relative_y: int
@@ -109,22 +114,12 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
       relative_y = y + handle.chunk_size.y * chunk_y
       relative_x = x + handle.chunk_size.x * chunk_x
 
-      // biome_value := perlin_noise.octave_perlin(&handle.biome_noise_handle, relative_x, relative_y, noise_scale = 0.001, persistence = 1)
-      biome_value := perlin_noise.octave_perlin(&handle.biome_noise_handle, relative_x, relative_y, noise_scale = 0.015, persistence = 0.3)
-
-      dx := f32(continent_width* 1.5 * 0.5 - f32(relative_x))
-      dy := f32(continent_height* 1.5 * 0.5 - f32(relative_y))
-      distance_to_center := math.sqrt(dx * dx + dy * dy)
-
-      base_altitude_value = generate_base_altitude_value(&handle.default_noise_handle, relative_x, relative_y)
-      detail_value = generate_detail_value(&handle.default_noise_handle, relative_x, relative_y)
+      biome_value := generate_biome_value(handle, relative_x, relative_y)
+      base_altitude_value = generate_base_altitude_value(handle, relative_x, relative_y)
+      detail_value = generate_detail_value(handle, relative_x, relative_y)
 
       altitude += 2.0 * detail_value - 1
       altitude += base_altitude_value
-
-      // altitude = 0.65 - 2 * (2/26.0 * distance_to_center) / max_distance
-      // altitude -= 0.1 * (distance_to_center / max_distance)
-      //
 
       terrain[y][x] = create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
     }
@@ -156,21 +151,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
         f32(handle.displayed_tile_size),
       }
 
-      // gray_scale := u8(math.remap_clamped(f32(cell.biome_value ), 0, 1, 0, 255))
-
-
-      // gray_scale := u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, cell.altitude < -0.2 ? 50 : 255))
-      // gray_scale := u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, cell.biome_value >= 0.5 && cell.biome_value <= 0.505 ? 255 : 0))
-      // if debug_draw_mode % 2 == 0 {
-        rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
-      // } else {
-      //   gray_scale: u8
-      //
-      //     // gray_scale = u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, 255))
-      //     gray_scale = cell.biome_value > 0.7 ? u8(math.remap_clamped(cell.biome_value, 0, 1, 100, 255)) : 0
-      //
-        // rl.DrawRectangleRec(dest, rl.Color { gray_scale, gray_scale, gray_scale, 255 })
-      // }
+      rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
     }
   }
 
@@ -179,7 +160,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 }
 
 // Single cell creation.
-// Will iterate through the biome descriptors and apply a tileset position to the cell.
+// Will iterate through the biomes and apply a tileset position to the cell.
 @(private="file")
 create_cell :: proc(y, x: int, altitude, biome_value, base_altitude_value, detail_value: f32) -> TerrainCell {
   tileset_pos: [2]int= { -1, -1 }
@@ -191,45 +172,12 @@ create_cell :: proc(y, x: int, altitude, biome_value, base_altitude_value, detai
 
   for idx in 0..<len(biome_descriptors) {
     current_biome := &biome_descriptors[idx]
-    // previous_biome := idx - 1 >= 0 ? &biome_descriptors[idx - 1] : current_biome
-    // next_biome := idx + 1 < len(biome_descriptors) ? &biome_descriptors[idx + 1] : current_biome
 
+    // Very naive approach but if kinda works for forest patches
     if biome_overlap_interval.x >= current_biome.interval.x && biome_overlap_interval.y < current_biome.interval.y {
       biome = &biome_descriptors[idx]
     }
-
-    // overall_descriptor_overlap: [2]f32 = { previous_biome.interval.y - biome_threshold, next_biome.interval.x + biome_threshold }
-    //
-    // if altitude >= overall_descriptor_overlap.x && altitude <= overall_descriptor_overlap.y {
-    //   distance := 100 - math.remap_clamped(altitude, overall_descriptor_overlap.x, overall_descriptor_overlap.y, 0, 100)
-    //   chances := int(rand.int31()) % 100
-    //
-    //   if distance < 15 {
-    //     biome = next_biome
-    //   } else if distance >= 15 && distance < 85 {
-    //     biome = current_biome
-    //   } else {
-    //     biome = previous_biome
-    //   }
-    //
-    //   break
-    // }
-
-
-    // OLD METHOD
-    // descriptor_overlap := [2]f32 { biome_descriptors[idx - 1].interval.y - biome_threshold, descriptor.interval.x + biome_threshold }
-    //
-    // if biome_value >= descriptor_overlap.x && biome_value <= descriptor_overlap.y {
-    //   distance         := 100 - math.remap_clamped(biome_value, descriptor_overlap.x, descriptor_overlap.y, 0, 100)
-    //   other_desc_id    := idx + (distance < 50.0 ? 0 : -1)
-    //   other_descriptor := &biome_descriptors[other_desc_id]
-    //   chances          := int(rand.int31()) % 100
-    //
-    //   biome = chances <= int(distance /2 ) ? other_descriptor : descriptor
-    //   break
-    // }
   }
-
 
   for idx in 0..<len(biome.layers) {
     current_layer := &biome.layers[idx]
@@ -298,7 +246,14 @@ TerrainCellType :: enum {
   TYPES,
 }
 
-// Internal descriptor for "biomes"
+// All available biome types.
+BiomeType :: enum {
+  PLAINS,
+  FOREST,
+  BIOMES,
+}
+
+// Internal descriptor for biome layers
 @(private="file")
 LayerDescriptor :: struct {
   type: TerrainCellType,
@@ -306,12 +261,7 @@ LayerDescriptor :: struct {
   tileset_position: [2]int,
 }
 
-BiomeType :: enum {
-  PLAINS,
-  FOREST,
-  BIOMES,
-}
-
+// Internal descriptor for biomes
 BiomeDescriptor :: struct {
   type: BiomeType,
   interval: [2]f32,
@@ -333,11 +283,6 @@ TerrainCell :: struct {
 
 // CONSTANTS
 
-
-// This is done to compensate the fact that the rectangle window would make the main continent "oval"
-// Actually, we'll voluntarily give it an oval shape
-@(private="file")
-y_scaling_coef: f32 = 1.5
 
 // Biome descriptors; will change.
 @(private="file")
