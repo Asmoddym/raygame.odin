@@ -9,8 +9,8 @@ import rl "vendor:raylib"
 //
 
 
-// BASE_RESOLUTION: [2]i32 = { 1600, 900 }
-BASE_RESOLUTION: [2]i32 = { 2560, 1440}
+BASE_RESOLUTION: [2]i32 = { 1600, 900 }
+// BASE_RESOLUTION: [2]i32 = { 2560, 1440}
 
 
 
@@ -26,7 +26,7 @@ window_init :: proc() {
   // game_state.borderless_window = true
   // window_toggle_mode(game_state.borderless_window, proc() { rl.ToggleBorderlessWindowed() })
 
-  // rl.SetExitKey(.KEY_NULL)
+  rl.SetExitKey(.KEY_NULL)
 }
 
 // Generic screen mode switcher.

@@ -161,16 +161,16 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 
       // gray_scale := u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, cell.altitude < -0.2 ? 50 : 255))
       // gray_scale := u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, cell.biome_value >= 0.5 && cell.biome_value <= 0.505 ? 255 : 0))
-      if debug_draw_mode % 2 == 0 {
+      // if debug_draw_mode % 2 == 0 {
         rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
-      } else {
-        gray_scale: u8
-
-          // gray_scale = u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, 255))
-          gray_scale = cell.biome_value > 0.7 ? u8(math.remap_clamped(cell.biome_value, 0, 1, 100, 255)) : 0
-
-        rl.DrawRectangleRec(dest, rl.Color { gray_scale, gray_scale, gray_scale, 255 })
-      }
+      // } else {
+      //   gray_scale: u8
+      //
+      //     // gray_scale = u8(math.remap_clamped(f32(int(cell.biome_value * 10.0)), 0, 10, 100, 255))
+      //     gray_scale = cell.biome_value > 0.7 ? u8(math.remap_clamped(cell.biome_value, 0, 1, 100, 255)) : 0
+      //
+        // rl.DrawRectangleRec(dest, rl.Color { gray_scale, gray_scale, gray_scale, 255 })
+      // }
     }
   }
 
