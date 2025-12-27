@@ -19,6 +19,9 @@ camera: rl.Camera2D
 camera_init :: proc() {
   camera.target = rl.Vector2 { 0, 0 }
   camera.rotation = 0.0
+
+  rl.SetMousePosition(game_state.resolution.x / 2, game_state.resolution.y / 2)
+
   camera_set_offset_based_on_resolution()
   camera_set_zoom_based_on_resolution()
 }
