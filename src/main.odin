@@ -8,7 +8,7 @@ import "globals"
 import rl "vendor:raylib"
 import "terrain"
 
-BOX_SIZE: f32 = 64
+BOX_SIZE: f32 = 32
 
 init_npc :: proc() {
   npc := engine.database_create_entity()

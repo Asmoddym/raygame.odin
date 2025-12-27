@@ -1,5 +1,6 @@
 package macro
 
+import "core:fmt"
 import "engine"
 import "globals"
 import "enums"
@@ -35,6 +36,37 @@ input_system_main :: proc() {
     engine.camera.zoom = min(ZOOM_INTERVAL.y, engine.camera.zoom)
     engine.camera.zoom = max(ZOOM_INTERVAL.x, engine.camera.zoom)
   }
+
+  if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
+    engine.camera.target.x -= 800 * time
+  }
+
+  if rl.IsKeyDown(rl.KeyboardKey.RIGHT) {
+    engine.camera.target.x += 800 * time
+  }
+
+  if rl.IsKeyDown(rl.KeyboardKey.UP) {
+    engine.camera.target.y -= 800 * time
+  }
+
+  if rl.IsKeyDown(rl.KeyboardKey.DOWN) {
+    engine.camera.target.y += 800 * time
+  }
+
+  relative_x := engine.game_state.resolution.x - i32(rl.GetMouseX())
+  relative_y := engine.game_state.resolution.y - i32(rl.GetMouseY())
+
+  if relative_x < BORDER_OFFSET {
+    engine.camera.target.x += 800 * time
+  } else if relative_x > engine.game_state.resolution.x - BORDER_OFFSET {
+    engine.camera.target.x -= 800 * time
+  }
+
+  if relative_y < BORDER_OFFSET {
+    engine.camera.target.y += 800 * time
+  } else if relative_y > engine.game_state.resolution.y - BORDER_OFFSET {
+    engine.camera.target.y -= 800 * time
+  }
 }
 
 // Handle player movement with animated sprite state
@@ -44,25 +76,25 @@ input_system_player_movement :: proc() {
 
   animated_sprite.state = int(enums.Direction.NONE)
 
-  if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
-    bbox.box.x -= 3
-    animated_sprite.state = int(enums.Direction.LEFT)
-  }
-
-  if rl.IsKeyDown(rl.KeyboardKey.RIGHT) {
-    bbox.box.x += 3
-    animated_sprite.state = int(enums.Direction.RIGHT)
-  }
-
-  if rl.IsKeyDown(rl.KeyboardKey.UP) {
-    bbox.box.y -= 3
-    animated_sprite.state = int(enums.Direction.UP)
-  }
-
-  if rl.IsKeyDown(rl.KeyboardKey.DOWN) {
-    bbox.box.y += 3
-    animated_sprite.state = int(enums.Direction.DOWN)
-  }
+  // if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
+  //   bbox.box.x -= 3
+  //   animated_sprite.state = int(enums.Direction.LEFT)
+  // }
+  //
+  // if rl.IsKeyDown(rl.KeyboardKey.RIGHT) {
+  //   bbox.box.x += 3
+  //   animated_sprite.state = int(enums.Direction.RIGHT)
+  // }
+  //
+  // if rl.IsKeyDown(rl.KeyboardKey.UP) {
+  //   bbox.box.y -= 3
+  //   animated_sprite.state = int(enums.Direction.UP)
+  // }
+  //
+  // if rl.IsKeyDown(rl.KeyboardKey.DOWN) {
+  //   bbox.box.y += 3
+  //   animated_sprite.state = int(enums.Direction.DOWN)
+  // }
 }
 
 
@@ -77,8 +109,10 @@ input_system_player_movement :: proc() {
 
 // Zoom interval
 @(private="file")
-ZOOM_INTERVAL: [2]f32 = { 0.1, 2 }
+ZOOM_INTERVAL: [2]f32 = { 0.3, 3 }
 
 // Zoom speed
 @(private="file")
 ZOOM_SPEED: f32 = 0.05
+
+BORDER_OFFSET: i32 = 20
