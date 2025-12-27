@@ -30,8 +30,10 @@ input_system_main :: proc() {
     )
   }
 
-  if engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y {
-    engine.camera.zoom += rl.GetMouseWheelMove() * ZOOM_SPEED
+  wheel_move := rl.GetMouseWheelMove()
+
+  if wheel_move != 0 && (engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y) {
+    engine.camera.zoom += wheel_move * ZOOM_SPEED
 
     engine.camera.zoom = min(ZOOM_INTERVAL.y, engine.camera.zoom)
     engine.camera.zoom = max(ZOOM_INTERVAL.x, engine.camera.zoom)
@@ -67,6 +69,17 @@ input_system_main :: proc() {
   } else if relative_y > engine.game_state.resolution.y - BORDER_OFFSET {
     engine.camera.target.y -= 800 * time
   }
+
+  size := i32(BOX_SIZE) / 2
+
+  multiplier: f32 = 1 / engine.camera.zoom
+
+  mouse_pos:= [2]i32 {
+    i32(multiplier * f32(rl.GetMouseX() - i32(engine.camera.offset.x)) + engine.camera.target.x),
+    i32(multiplier * f32(rl.GetMouseY() - i32(engine.camera.offset.y)) + engine.camera.target.y),
+  }
+
+  rl.DrawRectangle(size * (mouse_pos.x / size), size * (mouse_pos.y / size), size, size, rl.Color { 255, 255, 255, 100 })
 }
 
 // Handle player movement with animated sprite state
