@@ -30,6 +30,5 @@ camera_set_offset_based_on_resolution :: proc() {
 
 // Set the zoom based on a little resolution calculation
 camera_set_zoom_based_on_resolution :: proc() {
-  // camera.zoom = (f32(game_state.resolution.x) / f32(BASE_RESOLUTION.x)) / 1.2
-  camera.zoom = 1
+  camera.zoom = (f32(game_state.resolution.x) / f32(BASE_RESOLUTION.x)) / 1.2
 }
