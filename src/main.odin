@@ -104,25 +104,31 @@ main :: proc() {
 
   engine.system_register(terrain.system_draw,                    { int(enums.SceneID.MAIN) })
 
-  engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
   engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
+  // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
 
-  engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+  // engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
 
   engine.system_register(pause_system_main)
   engine.system_register(pause_system_toggle)
 
-  engine.system_register(collectable_system_main)
+  // engine.system_register(collectable_system_main)
 
-  init_npc()
-  init_player()
+  bbox := engine.database_add_component(engine.database_create_entity(), &table_bounding_boxes[4])
+  bbox.box = rl.Rectangle { 0, 0, 16, 16 }
+  bbox.movable = false
+  bbox.collidable = false
+  bbox.layer = 4
+
+  // init_npc()
+  // init_player()
   terrain.init()
 
   engine.run()

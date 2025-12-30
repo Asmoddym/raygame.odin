@@ -133,7 +133,7 @@ ui_text_box_delete :: proc(id: int) {
 
   text_box := text_boxes[index]
 
-  fmt.println("Deleted textbox", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
+  // fmt.println("Deleted textbox", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
 
   if text_boxes[index].owner_id != nil do text_boxes[index].owner_id^ = 0
 
@@ -204,7 +204,7 @@ ui_system_text_box_update :: proc() {
 ui_system_update_camera_position :: proc() {
   box := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER]).box
 
-  // engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
+  engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }
 
 
