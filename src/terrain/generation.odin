@@ -35,6 +35,18 @@ Handle :: struct {
   biome_noise_handle: perlin_noise.Handle,
 }
 
+// Terrain cell data (display-only for now) struct.
+// tileset_pos holds the x,y position in the tileset (X first).
+TerrainCell :: struct {
+  altitude: f32,
+  biome_value: f32,
+  base_altitude_value: f32,
+  detail_value: f32,
+  tileset_pos: [2]int,
+  position: [2]int,
+}
+
+
 
 // PROCS
 
@@ -66,6 +78,35 @@ generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
   draw_chunk(handle, last_chunk)
 }
 
+// Draw a generated chunk.
+// tile_size is inversed in the source definition to display it in the right order.
+draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
+  rl.BeginTextureMode(chunk.render_texture)
+  rl.ClearBackground(rl.BLACK)
+
+  for &line in chunk.terrain {
+    for &cell in line {
+      source := rl.Rectangle {
+        f32(cell.tileset_pos.x) * f32(handle.tile_size),
+        f32(cell.tileset_pos.y) * f32(handle.tile_size),
+        f32(handle.tile_size),
+        f32(handle.tile_size),
+      }
+
+      dest := rl.Rectangle {
+        f32(i32(cell.position.x) * handle.displayed_tile_size),
+        f32(i32(cell.position.y) * handle.displayed_tile_size),
+        f32(handle.displayed_tile_size),
+        f32(handle.displayed_tile_size),
+      }
+
+      rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+    }
+  }
+
+  rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
+  rl.EndTextureMode()
+}
 
 
 //
@@ -126,37 +167,6 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
   }
 
   return terrain
-}
-
-// Draw a generated chunk.
-// tile_size is inversed in the source definition to display it in the right order.
-@(private="file")
-draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
-  rl.BeginTextureMode(chunk.render_texture)
-  rl.ClearBackground(rl.BLACK)
-
-  for &line in chunk.terrain {
-    for &cell in line {
-      source := rl.Rectangle {
-        f32(cell.tileset_pos.x) * f32(handle.tile_size),
-        f32(cell.tileset_pos.y) * f32(handle.tile_size),
-        f32(handle.tile_size),
-        f32(handle.tile_size),
-      }
-
-      dest := rl.Rectangle {
-        f32(i32(cell.position.x) * handle.displayed_tile_size),
-        f32(i32(cell.position.y) * handle.displayed_tile_size),
-        f32(handle.displayed_tile_size),
-        f32(handle.displayed_tile_size),
-      }
-
-      rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
-    }
-  }
-
-  rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
-  rl.EndTextureMode()
 }
 
 // Single cell creation.
@@ -266,18 +276,6 @@ BiomeDescriptor :: struct {
   type: BiomeType,
   interval: [2]f32,
   layers: [dynamic]LayerDescriptor,
-}
-
-// Terrain cell data (display-only for now) struct.
-// tileset_pos holds the x,y position in the tileset (X first).
-@(private="file")
-TerrainCell :: struct {
-  altitude: f32,
-  biome_value: f32,
-  base_altitude_value: f32,
-  detail_value: f32,
-  tileset_pos: [2]int,
-  position: [2]int,
 }
 
 

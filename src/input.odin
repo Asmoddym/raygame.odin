@@ -1,5 +1,7 @@
 package macro
 
+import "core:slice"
+import "terrain"
 import "core:fmt"
 import "engine"
 import "globals"
@@ -44,26 +46,31 @@ input_system_main :: proc() {
   if rl.IsKeyDown(rl.KeyboardKey.UP)    do engine.camera.target.y -= 800 * time * 1 / engine.camera.zoom
   if rl.IsKeyDown(rl.KeyboardKey.DOWN)  do engine.camera.target.y += 800 * time * 1 / engine.camera.zoom
 
-  relative_x := engine.game_state.resolution.x - i32(rl.GetMouseX())
-  relative_y := engine.game_state.resolution.y - i32(rl.GetMouseY())
+  // relative_x := engine.game_state.resolution.x - i32(rl.GetMouseX())
+  // relative_y := engine.game_state.resolution.y - i32(rl.GetMouseY())
 
-  if relative_x < BORDER_OFFSET {
-    engine.camera.target.x += 800 * time
-  } else if relative_x > engine.game_state.resolution.x - BORDER_OFFSET {
-    engine.camera.target.x -= 800 * time
-  }
-
-  if relative_y < BORDER_OFFSET {
-    engine.camera.target.y += 800 * time
-  } else if relative_y > engine.game_state.resolution.y - BORDER_OFFSET {
-    engine.camera.target.y -= 800 * time
-  }
-
+  // if relative_x < BORDER_OFFSET {
+  //   engine.camera.target.x += 800 * time
+  // } else if relative_x > engine.game_state.resolution.x - BORDER_OFFSET {
+  //   engine.camera.target.x -= 800 * time
+  // }
+  //
+  // if relative_y < BORDER_OFFSET {
+  //   engine.camera.target.y += 800 * time
+  // } else if relative_y > engine.game_state.resolution.y - BORDER_OFFSET {
+  //   engine.camera.target.y -= 800 * time
+  // }
+  //
 
   @(static) selection_start: [2]i32
   @(static) selecting:= false
 
   @(static) txt := 0
+
+
+  size := i32(BOX_SIZE) / 2
+  mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+  handle := &terrain.table_terrains.items[0].handle
 
   if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) {
     selection_start = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
@@ -72,14 +79,60 @@ input_system_main :: proc() {
 
   if rl.IsMouseButtonReleased(rl.MouseButton.LEFT) {
     selecting = false
-  }
 
-  size := i32(BOX_SIZE) / 2
-  mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+    first_point: [2]i32 = { min(selection_start.x, mouse_pos.x), min(selection_start.y, mouse_pos.y) }
+    last_point: [2]i32 = { max(selection_start.x, mouse_pos.x), max(selection_start.y, mouse_pos.y) }
+
+    for y in first_point.y..<last_point.y {
+      for x in first_point.x..<last_point.x {
+        chunk_x := int((x / i32(handle.chunk_size.x)) / size)
+        chunk_y := int((y / i32(handle.chunk_size.y)) / size)
+        chunk_terrain_x := int(x / size) % handle.chunk_size.x
+        chunk_terrain_y := int(y / size) % handle.chunk_size.y
+
+        chunk: ^terrain.Chunk = nil
+
+        for &c in handle.chunks {
+          if c.position.x == chunk_x && c.position.y == chunk_y {
+            chunk = &c
+          }
+        }
+
+        if chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos != { 0, 0 } {
+          rl.EndMode2D()
+          chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
+          terrain.draw_chunk(handle, chunk)
+          rl.BeginMode2D(engine.camera)
+        }
+      }
+    }
+  }
 
   bbox := engine.database_get_component(0, &table_bounding_boxes[4])
   bbox.box.x = f32(mouse_pos.x)
   bbox.box.y = f32(mouse_pos.y)
+
+  if rl.IsMouseButtonDown(rl.MouseButton.RIGHT) {
+    chunk_x := int((mouse_pos.x / i32(handle.chunk_size.x)) / size)
+    chunk_y := int((mouse_pos.y / i32(handle.chunk_size.y)) / size)
+    chunk_terrain_x := int(mouse_pos.x / size) % handle.chunk_size.x
+    chunk_terrain_y := int(mouse_pos.y / size) % handle.chunk_size.y
+
+    chunk: ^terrain.Chunk = nil
+
+    for &c in handle.chunks {
+      if c.position.x == chunk_x && c.position.y == chunk_y {
+        chunk = &c
+      }
+    }
+
+    if chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos != { 0, 0 } {
+      rl.EndMode2D()
+      chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
+      terrain.draw_chunk(handle, chunk)
+      rl.BeginMode2D(engine.camera)
+    }
+  }
 
   if selecting {
     first_point: [2]i32 = { min(selection_start.x, mouse_pos.x), min(selection_start.y, mouse_pos.y) }
@@ -93,6 +146,9 @@ ui_text_box_draw(string(rl.TextFormat("%dx%d", abs(last_point.x - first_point.x)
   }
 }
 
+// Returns given position, regardless of zoom and camera offsets, to its currently hovered cell position.
+//
+// /!\ This doesn't return the cell x and y coords, but the actual position (aka multiples of cell dimensions), like (16, 32).
 to_cell_position :: proc(pos: [2]i32) -> [2]i32 {
   multiplier: f32 = 1 / engine.camera.zoom
   size := i32(BOX_SIZE) / 2
