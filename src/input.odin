@@ -72,16 +72,18 @@ input_system_main :: proc() {
   mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
   handle := &terrain.table_terrains.items[0].handle
 
-  if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) {
+  if rl.IsMouseButtonPressed(rl.MouseButton.RIGHT) {
     selection_start = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
     selecting = true
   }
 
-  if rl.IsMouseButtonReleased(rl.MouseButton.LEFT) {
+  if rl.IsMouseButtonReleased(rl.MouseButton.RIGHT) {
     selecting = false
 
     first_point: [2]i32 = { min(selection_start.x, mouse_pos.x), min(selection_start.y, mouse_pos.y) }
     last_point: [2]i32 = { max(selection_start.x, mouse_pos.x), max(selection_start.y, mouse_pos.y) }
+
+    chunks_to_redraw: [dynamic]^terrain.Chunk
 
     for y in first_point.y..<last_point.y {
       for x in first_point.x..<last_point.x {
@@ -95,43 +97,40 @@ input_system_main :: proc() {
         for &c in handle.chunks {
           if c.position.x == chunk_x && c.position.y == chunk_y {
             chunk = &c
-          }
-        }
 
-        if chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos != { 0, 0 } {
-          rl.EndMode2D()
-          chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
-          terrain.draw_chunk(handle, chunk)
-          rl.BeginMode2D(engine.camera)
+            chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
+            context.user_ptr = &c
+
+            _, found := slice.linear_search_proc(chunks_to_redraw[:], proc(p: ^terrain.Chunk) -> bool {
+              chunk: ^terrain.Chunk = cast(^terrain.Chunk)context.user_ptr
+
+              return p.position.x == chunk.position.x && p.position.y == chunk.position.y
+            })
+
+            if !found {
+              append(&chunks_to_redraw, &c)
+            }
+          }
         }
       }
     }
+
+    rl.EndMode2D()
+    for &chunk in chunks_to_redraw {
+      terrain.draw_chunk(handle, chunk)
+    }
+    rl.BeginMode2D(engine.camera)
   }
 
   bbox := engine.database_get_component(0, &table_bounding_boxes[4])
   bbox.box.x = f32(mouse_pos.x)
   bbox.box.y = f32(mouse_pos.y)
 
-  if rl.IsMouseButtonDown(rl.MouseButton.RIGHT) {
-    chunk_x := int((mouse_pos.x / i32(handle.chunk_size.x)) / size)
-    chunk_y := int((mouse_pos.y / i32(handle.chunk_size.y)) / size)
-    chunk_terrain_x := int(mouse_pos.x / size) % handle.chunk_size.x
-    chunk_terrain_y := int(mouse_pos.y / size) % handle.chunk_size.y
+  if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
+    delta := rl.GetMouseDelta()
 
-    chunk: ^terrain.Chunk = nil
-
-    for &c in handle.chunks {
-      if c.position.x == chunk_x && c.position.y == chunk_y {
-        chunk = &c
-      }
-    }
-
-    if chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos != { 0, 0 } {
-      rl.EndMode2D()
-      chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
-      terrain.draw_chunk(handle, chunk)
-      rl.BeginMode2D(engine.camera)
-    }
+    engine.camera.target.x -= delta.x * 1 / engine.camera.zoom
+    engine.camera.target.y -= delta.y * 1 / engine.camera.zoom
   }
 
   if selecting {
@@ -194,6 +193,7 @@ input_system_player_movement :: proc() {
 //
 // PRIVATE
 //
+
 
 
 // CONSTANTS

@@ -120,6 +120,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 
 // Base altitude generation using default_noise_handle.
 // Values are exagerated to force some altitude changes.
+@(private="file")
 generate_base_altitude_value :: proc(handle: ^Handle, x, y: int) -> f32 {
   base_altitude_value := perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.004, persistence = 0.4)
 
@@ -127,12 +128,14 @@ generate_base_altitude_value :: proc(handle: ^Handle, x, y: int) -> f32 {
 }
 
 // Detail value generation using default_noise_handle.
+@(private="file")
 generate_detail_value :: proc(handle: ^Handle, x, y: int) -> f32 {
   return perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.015, persistence = 0.5)
 }
 
 // Biome value generation using biome_noise_handle.
 // Not very detailed and used for some additional details such as forest patches.
+@(private="file")
 generate_biome_value :: proc(handle: ^Handle, x, y: int) -> f32 {
   return perlin_noise.octave_perlin(&handle.biome_noise_handle, x, y, noise_scale = 0.015, persistence = 0.3)
 }
@@ -257,6 +260,7 @@ TerrainCellType :: enum {
 }
 
 // All available biome types.
+@(private="file")
 BiomeType :: enum {
   PLAINS,
   FOREST,
@@ -272,6 +276,7 @@ LayerDescriptor :: struct {
 }
 
 // Internal descriptor for biomes
+@(private="file")
 BiomeDescriptor :: struct {
   type: BiomeType,
   interval: [2]f32,
