@@ -20,6 +20,11 @@ import rl "vendor:raylib"
 input_system_main :: proc() {
   time := rl.GetFrameTime()
 
+  size := i32(BOX_SIZE) / 2
+  mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+  handle := &terrain.table_terrains.items[0].handle
+
+
   // bbox := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
 
   // // Text box test stuff
@@ -46,6 +51,23 @@ input_system_main :: proc() {
   if rl.IsKeyDown(rl.KeyboardKey.UP)    do engine.camera.target.y -= 800 * time * 1 / engine.camera.zoom
   if rl.IsKeyDown(rl.KeyboardKey.DOWN)  do engine.camera.target.y += 800 * time * 1 / engine.camera.zoom
 
+  if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
+    delta := rl.GetMouseDelta()
+
+    engine.camera.target.x -= delta.x * 1 / engine.camera.zoom
+    engine.camera.target.y -= delta.y * 1 / engine.camera.zoom
+  }
+
+  if engine.camera.target.x < 0 do engine.camera.target.x = 0
+  if engine.camera.target.y < 0 do engine.camera.target.y = 0
+
+  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * 10.0 - f32(engine.game_state.resolution.x) * 1 / engine.camera.zoom
+  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * 10.0 - f32(engine.game_state.resolution.y) * 1 / engine.camera.zoom
+
+  if engine.camera.target.x > max_x do engine.camera.target.x = max_x
+  if engine.camera.target.y > max_y do engine.camera.target.y = max_y
+
+
   // relative_x := engine.game_state.resolution.x - i32(rl.GetMouseX())
   // relative_y := engine.game_state.resolution.y - i32(rl.GetMouseY())
 
@@ -67,10 +89,6 @@ input_system_main :: proc() {
 
   @(static) txt := 0
 
-
-  size := i32(BOX_SIZE) / 2
-  mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
-  handle := &terrain.table_terrains.items[0].handle
 
   if rl.IsMouseButtonPressed(rl.MouseButton.RIGHT) {
     selection_start = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
@@ -125,13 +143,6 @@ input_system_main :: proc() {
   bbox := engine.database_get_component(0, &table_bounding_boxes[4])
   bbox.box.x = f32(mouse_pos.x)
   bbox.box.y = f32(mouse_pos.y)
-
-  if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
-    delta := rl.GetMouseDelta()
-
-    engine.camera.target.x -= delta.x * 1 / engine.camera.zoom
-    engine.camera.target.y -= delta.y * 1 / engine.camera.zoom
-  }
 
   if selecting {
     first_point: [2]i32 = { min(selection_start.x, mouse_pos.x), min(selection_start.y, mouse_pos.y) }

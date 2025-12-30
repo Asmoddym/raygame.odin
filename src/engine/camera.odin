@@ -28,7 +28,7 @@ camera_init :: proc() {
 
 // Set the camera offset from the screen resolution
 camera_set_offset_based_on_resolution :: proc() {
-  camera.offset = rl.Vector2 { f32(game_state.resolution.x) / 2, f32(game_state.resolution.y) / 2 }
+  // camera.offset = rl.Vector2 { f32(game_state.resolution.x) / 2, f32(game_state.resolution.y) / 2 }
 }
 
 // Set the zoom based on a little resolution calculation
