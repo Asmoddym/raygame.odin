@@ -19,7 +19,7 @@ import rl "vendor:raylib"
 Chunk :: struct {
   render_texture: rl.RenderTexture,
   terrain: [dynamic][dynamic]TerrainCell,
-  position: [2]int,
+  position: [2]i32,
 }
 
 // Terrain handle to store specific configuration.
@@ -30,6 +30,7 @@ Handle :: struct {
   tileset: rl.Texture,
   tile_size: i32,
   displayed_tile_size: i32,
+  chunk_pixel_size: [2]i32,
 
   default_noise_handle: perlin_noise.Handle,
   biome_noise_handle: perlin_noise.Handle,
@@ -60,6 +61,10 @@ initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.T
     tileset,
     tile_size,
     displayed_tile_size,
+    {
+      i32(chunk_width) * displayed_tile_size,
+      i32(chunk_height) * displayed_tile_size,
+    },
     perlin_noise.initialize_handle(),
     perlin_noise.initialize_handle(),
   }
@@ -70,7 +75,7 @@ generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
   append(&handle.chunks, Chunk {
     rl.LoadRenderTexture(i32(handle.chunk_size.x) * handle.displayed_tile_size, i32(handle.chunk_size.y) * handle.displayed_tile_size),
     generate_chunk_terrain(handle, x, y),
-    { x, y },
+    { i32(x), i32(y) },
   })
 
   last_chunk := &handle.chunks[len(handle.chunks) - 1]

@@ -53,3 +53,16 @@ window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
 }
 
+// Get a [2][2]f32 value representing the drawn rectangle in the frame, taking zoom into account.
+get_drawn_frame_rec :: proc() -> [2][2]f32 {
+  return {
+    {
+      camera.target.x - camera.offset.x / camera.zoom,
+      camera.target.y - camera.offset.y / camera.zoom,
+    },
+    {
+      (camera.target.x + (f32(game_state.resolution.x) / camera.zoom)) - camera.offset.x / camera.zoom,
+      (camera.target.y + (f32(game_state.resolution.y) / camera.zoom)) - camera.offset.y / camera.zoom,
+    },
+  }
+}

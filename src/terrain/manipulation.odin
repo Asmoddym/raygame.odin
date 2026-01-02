@@ -99,8 +99,8 @@ process_selection :: proc(terrain: ^Component_Terrain) {
 
   for y in first_point.y..<last_point.y {
     for x in first_point.x..<last_point.x {
-      chunk_x := int((x / i32(handle.chunk_size.x)) / CELL_SIZE)
-      chunk_y := int((y / i32(handle.chunk_size.y)) / CELL_SIZE)
+      chunk_x := (x / i32(handle.chunk_size.x)) / CELL_SIZE
+      chunk_y := (y / i32(handle.chunk_size.y)) / CELL_SIZE
       chunk_terrain_x := int(x / CELL_SIZE) % handle.chunk_size.x
       chunk_terrain_y := int(y / CELL_SIZE) % handle.chunk_size.y
 

@@ -124,9 +124,13 @@ application_debug_render_information :: proc() {
     rl.DrawText(strings.unsafe_string_to_cstring(str), 10, 10, 20, rl.LIME)
   }
 
-  screen_state := game_state.fullscreen ? "Fullscreen" : (game_state.borderless_window ? "Borderless" : "windowed")
+  draw_rec := get_drawn_frame_rec()
 
-  text := rl.TextFormat("Res: %dx%d (%s)\nCam: %f,%f (zoom: %f)", game_state.resolution.x, game_state.resolution.y, screen_state , camera.target.x, camera.target.y, camera.zoom)
+  text := rl.TextFormat("res: %dx%d\nframe: [%f,%f => %f,%f] (zoom: %f)", game_state.resolution.x, game_state.resolution.y,
+    draw_rec[0].x, draw_rec[0].y,
+    draw_rec[1].x, draw_rec[1].y,
+    camera.zoom,
+  )
 
   rl.DrawText(text, 10, game_state.resolution.y - 48, 20, rl.WHITE)
 }

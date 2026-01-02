@@ -35,4 +35,5 @@ camera_set_offset_based_on_resolution :: proc() {
 // Set the zoom based on a little resolution calculation
 camera_set_zoom_based_on_resolution :: proc() {
   camera.zoom = 0.8
+  // camera.zoom = 1
 }

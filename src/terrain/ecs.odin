@@ -1,5 +1,6 @@
 package terrain
 
+import "core:fmt"
 import "../engine"
 import "../lib/perlin_noise"
 import rl "vendor:raylib"
@@ -56,22 +57,32 @@ system_manipulation :: proc() {
 // Main draw system.
 system_draw :: proc() {
   if len(table_terrains.items) == 0 do return
-
-  handle := &table_terrains.items[0].handle
+    drawn_rec := engine.get_drawn_frame_rec()
+    handle    := &table_terrains.items[0].handle
 
   for &c in handle.chunks {
+    pos: [2]f32 = {
+      f32(c.position.x * handle.chunk_pixel_size.x),
+      f32(c.position.y * handle.chunk_pixel_size.y),
+    }
+
+    if pos.x < drawn_rec[0].x - f32(handle.chunk_pixel_size.x) || pos.x > drawn_rec[1].x {
+      continue
+    }
+
+    if pos.y < drawn_rec[0].y - f32(handle.chunk_pixel_size.y) || pos.y > drawn_rec[1].y {
+      continue
+    }
+
     // Using this method to invert the texture as that's the way Raylib works
     rl.DrawTextureRec(
       c.render_texture.texture,
-      rl.Rectangle {
-        0, 0,
+      rl.Rectangle { 0, 0,
         f32(handle.chunk_size.x * int(handle.displayed_tile_size)),
-        -f32(handle.chunk_size.y * int(handle.displayed_tile_size)) },
-        rl.Vector2 {
-          f32(c.position.x * handle.chunk_size.x) * f32(handle.displayed_tile_size),
-          f32(c.position.y * handle.chunk_size.y) * f32(handle.displayed_tile_size),
-        },
-        rl.WHITE,
+        -f32(handle.chunk_size.y * int(handle.displayed_tile_size)),
+      },
+      rl.Vector2 { pos.x, pos.y },
+      rl.WHITE,
     )
   }
 }
