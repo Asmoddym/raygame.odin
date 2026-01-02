@@ -1,5 +1,6 @@
 package terrain
 
+import "core:fmt"
 import "core:slice"
 import rl "vendor:raylib"
 import "../ui"
@@ -59,12 +60,19 @@ process_selection :: proc(terrain: ^Component_Terrain) {
 
   chunks_to_redraw: [dynamic]^Chunk
 
+
+  for i := first_point.x / handle.chunk_size.x ; i < last_point.x / handle.chunk_size.x ; i += 1 {
+    fmt.println("coucou", i)
+
+  }
+
+
   for y in first_point.y..<last_point.y {
     for x in first_point.x..<last_point.x {
-      chunk_x := (x / i32(handle.chunk_size.x)) / CELL_SIZE
-      chunk_y := (y / i32(handle.chunk_size.y)) / CELL_SIZE
-      chunk_terrain_x := int(x / CELL_SIZE) % handle.chunk_size.x
-      chunk_terrain_y := int(y / CELL_SIZE) % handle.chunk_size.y
+      chunk_x := (x / handle.chunk_size.x) / CELL_SIZE
+      chunk_y := (y / handle.chunk_size.y) / CELL_SIZE
+      chunk_terrain_x := (x / CELL_SIZE) % handle.chunk_size.x
+      chunk_terrain_y := (y / CELL_SIZE) % handle.chunk_size.y
 
       chunk: ^Chunk = nil
 
@@ -105,8 +113,8 @@ process_selection :: proc(terrain: ^Component_Terrain) {
 ensure_zoom_capped :: proc(terrain: ^Component_Terrain) {
   new_zoom := engine.camera.zoom + terrain.manipulation_state.zoom_delta * ZOOM_SPEED
 
-  max_x := f32(terrain.handle.chunk_size.x * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
-  max_y := f32(terrain.handle.chunk_size.y * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
+  max_x := f32(terrain.handle.chunk_size.x * terrain.handle.displayed_tile_size) * f32(max_chunks_per_line)
+  max_y := f32(terrain.handle.chunk_size.y * terrain.handle.displayed_tile_size) * f32(max_chunks_per_line)
 
   x_check := f32(engine.game_state.resolution.x) * 1 / (new_zoom + ZOOM_SPEED) < max_x
   y_check := f32(engine.game_state.resolution.y) * 1 / (new_zoom + ZOOM_SPEED) < max_y
@@ -132,8 +140,8 @@ ensure_camera_capped :: proc(handle: ^Handle) {
   x := engine.camera.target.x - relative_offset_x
   y := engine.camera.target.y - relative_offset_y
 
-  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x / 2) - relative_offset_x
-  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y / 2) - relative_offset_y
+  max_x := f32(handle.chunk_size.x * handle.displayed_tile_size) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x / 2) - relative_offset_x
+  max_y := f32(handle.chunk_size.y * handle.displayed_tile_size) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y / 2) - relative_offset_y
 
   if x < -threshold_x do engine.camera.target.x = relative_offset_x - threshold_x
   if y < -threshold_y do engine.camera.target.y = relative_offset_y - threshold_y

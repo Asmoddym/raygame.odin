@@ -25,7 +25,7 @@ Chunk :: struct {
 // Terrain handle to store specific configuration.
 // All generated chunks are stored in the chunks slice.
 Handle :: struct {
-  chunk_size: [2]int,
+  chunk_size: [2]i32,
   chunks: [dynamic]Chunk,
   tileset: rl.Texture,
   tile_size: i32,
@@ -43,8 +43,8 @@ TerrainCell :: struct {
   biome_value: f32,
   base_altitude_value: f32,
   detail_value: f32,
-  tileset_pos: [2]int,
-  position: [2]int,
+  tileset_pos: [2]i32,
+  position: [2]i32,
 }
 
 
@@ -54,7 +54,7 @@ TerrainCell :: struct {
 
 // Handle initializer.
 // Takes the chunk dimensions and the tileset to be used for this terrain as well as the continent dimensions (check Handle definition for more info)
-initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.Texture, tile_size: i32 = 16, displayed_tile_size: i32 = 16) -> Handle {
+initialize_handle :: proc(#any_int chunk_width, chunk_height: i32, tileset: rl.Texture, tile_size: i32 = 16, displayed_tile_size: i32 = 16) -> Handle {
   return Handle {
     { chunk_width, chunk_height },
     {},
@@ -62,8 +62,8 @@ initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.T
     tile_size,
     displayed_tile_size,
     {
-      i32(chunk_width) * displayed_tile_size,
-      i32(chunk_height) * displayed_tile_size,
+      chunk_width * displayed_tile_size,
+      chunk_height * displayed_tile_size,
     },
     perlin_noise.initialize_handle(),
     perlin_noise.initialize_handle(),
@@ -71,11 +71,11 @@ initialize_handle :: proc(#any_int chunk_width, chunk_height: int, tileset: rl.T
 }
 
 // Generate the chunk at the given x and y coords.
-generate_chunk :: proc(handle: ^Handle, #any_int x, y: int) {
+generate_chunk :: proc(handle: ^Handle, #any_int x, y: i32) {
   append(&handle.chunks, Chunk {
-    rl.LoadRenderTexture(i32(handle.chunk_size.x) * handle.displayed_tile_size, i32(handle.chunk_size.y) * handle.displayed_tile_size),
+    rl.LoadRenderTexture(handle.chunk_size.x * handle.displayed_tile_size, handle.chunk_size.y * handle.displayed_tile_size),
     generate_chunk_terrain(handle, x, y),
-    { i32(x), i32(y) },
+    { x, y },
   })
 
   last_chunk := &handle.chunks[len(handle.chunks) - 1]
@@ -99,8 +99,8 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
       }
 
       dest := rl.Rectangle {
-        f32(i32(cell.position.x) * handle.displayed_tile_size),
-        f32(i32(cell.position.y) * handle.displayed_tile_size),
+        f32(cell.position.x * handle.displayed_tile_size),
+        f32(cell.position.y * handle.displayed_tile_size),
         f32(handle.displayed_tile_size),
         f32(handle.displayed_tile_size),
       }
@@ -126,7 +126,7 @@ draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 // Base altitude generation using default_noise_handle.
 // Values are exagerated to force some altitude changes.
 @(private="file")
-generate_base_altitude_value :: proc(handle: ^Handle, x, y: int) -> f32 {
+generate_base_altitude_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
   base_altitude_value := perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.004, persistence = 0.4)
 
   return math.remap_clamped(base_altitude_value, 0, 1, -2, 2) + 0.1
@@ -134,25 +134,25 @@ generate_base_altitude_value :: proc(handle: ^Handle, x, y: int) -> f32 {
 
 // Detail value generation using default_noise_handle.
 @(private="file")
-generate_detail_value :: proc(handle: ^Handle, x, y: int) -> f32 {
+generate_detail_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
   return perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.015, persistence = 0.5)
 }
 
 // Biome value generation using biome_noise_handle.
 // Not very detailed and used for some additional details such as forest patches.
 @(private="file")
-generate_biome_value :: proc(handle: ^Handle, x, y: int) -> f32 {
+generate_biome_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
   return perlin_noise.octave_perlin(&handle.biome_noise_handle, x, y, noise_scale = 0.015, persistence = 0.3)
 }
 
 // Terrain generation for a given chunk x and y.
 // Takes the handle too to be able to calculate the distance from the continent
 @(private="file")
-generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynamic][dynamic]TerrainCell {
+generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: i32) -> [dynamic][dynamic]TerrainCell {
   terrain := make([dynamic][dynamic]TerrainCell, handle.chunk_size.y)
 
   for y in 0..<handle.chunk_size.y {
-    relative_x, relative_y: int
+    relative_x, relative_y: i32
 
     terrain[y] = make([dynamic]TerrainCell, handle.chunk_size.x)
 
@@ -180,8 +180,8 @@ generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: int) -> [dynam
 // Single cell creation.
 // Will iterate through the biomes and apply a tileset position to the cell.
 @(private="file")
-create_cell :: proc(y, x: int, altitude, biome_value, base_altitude_value, detail_value: f32) -> TerrainCell {
-  tileset_pos: [2]int= { -1, -1 }
+create_cell :: proc(y, x: i32, altitude, biome_value, base_altitude_value, detail_value: f32) -> TerrainCell {
+  tileset_pos: [2]i32 = { -1, -1 }
 
   altitude_overlap_interval: [2]f32 = { altitude - layer_threshold, altitude + layer_threshold }
   biome_overlap_interval: [2]f32 = { biome_value - biome_threshold, biome_value + biome_threshold }
@@ -210,7 +210,7 @@ create_cell :: proc(y, x: int, altitude, biome_value, base_altitude_value, detai
 
     if altitude >= overall_descriptor_overlap.x && altitude <= overall_descriptor_overlap.y {
       distance := 100 - math.remap_clamped(altitude, overall_descriptor_overlap.x, overall_descriptor_overlap.y, 0, 100)
-      chances := int(rand.int31()) % 100
+      chances := i32(rand.int31()) % 100
 
       if chances >= 10 {
         tileset_pos = current_layer.tileset_position
@@ -277,7 +277,7 @@ BiomeType :: enum {
 LayerDescriptor :: struct {
   type: TerrainCellType,
   interval: [2]f32,
-  tileset_position: [2]int,
+  tileset_position: [2]i32,
 }
 
 // Internal descriptor for biomes

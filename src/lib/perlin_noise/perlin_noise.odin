@@ -7,7 +7,7 @@ import rand "core:math/rand"
 
 // Main perlin noise generation with default octaves and persistence.
 // It uses z too, but as I don't need it for now, I set it to 0.
-octave_perlin :: proc(handle: ^Handle, raw_x, raw_y: int, noise_scale, persistence: f32) -> f32 {
+octave_perlin :: proc(handle: ^Handle, raw_x, raw_y: i32, noise_scale, persistence: f32) -> f32 {
   x := f32(raw_x) * noise_scale
   y := f32(raw_y) * noise_scale
 
@@ -28,7 +28,7 @@ octave_perlin :: proc(handle: ^Handle, raw_x, raw_y: int, noise_scale, persisten
 }
 
 // Default perlin noise generation
-perlin :: proc(handle: ^Handle, raw_x, raw_y: int, noise_scale: f32) -> f32 {
+perlin :: proc(handle: ^Handle, raw_x, raw_y: i32, noise_scale: f32) -> f32 {
   x := f32(raw_x) * noise_scale
   y := f32(raw_y) * noise_scale
 
@@ -38,13 +38,13 @@ perlin :: proc(handle: ^Handle, raw_x, raw_y: int, noise_scale: f32) -> f32 {
 // Regenerate random permutation
 repermutate :: proc(handle: ^Handle) {
   for i in 0..<512 {
-    handle.permutation[i] = int(rand.int31()) % 255
+    handle.permutation[i] = i32(rand.int31()) % 255
   }
 }
 
 
 Handle :: struct {
-  permutation: [512]int,
+  permutation: [512]i32,
 }
 
 initialize_handle :: proc() -> Handle {
@@ -71,13 +71,13 @@ gradient :: proc(h: f32) -> [2]f32 {
   return { math.cos(h), math.sin(h) }
 }
 
-// Linear interpolation.
+// Linear i32erpolation.
 @(private="file")
 lerp :: proc(a, b, x: f32) -> f32 {
   return a + x * (b - a)
 }
 
-// Smoothstep interpolation.
+// Smoothstep i32erpolation.
 @(private="file")
 fade :: proc(t: f32) -> f32 {
   return t * t * t * (t * (t * 6 - 15) + 10)
@@ -85,7 +85,7 @@ fade :: proc(t: f32) -> f32 {
 
 @(private="file")
 // Simple inc method
-inc :: proc(num: int) -> int {
+inc :: proc(num: i32) -> i32 {
   num := num
 
   num += 1
@@ -95,7 +95,7 @@ inc :: proc(num: int) -> int {
 
 // Source: http://riven8192.blogspot.com/2010/08/calculate-perlinnoise-twice-as-fast.html
 @(private="file")
-grad :: proc(hash: int, x, y, z: f32) -> f32 {
+grad :: proc(hash: i32, x, y, z: f32) -> f32 {
   switch(hash & 0xF) {
   case 0x0: return  x + y
   case 0x1: return -x + y
@@ -120,19 +120,19 @@ grad :: proc(hash: int, x, y, z: f32) -> f32 {
 
 // Compute Perlin noise for coordinates (x, y).
 @(private="file")
-compute_point :: proc(p: ^[512]int, x, y, z: f32) -> f32 {
-  xi: int = int(x) & 255                 // Calculate the "unit cube" that the point asked will be located in
-  yi: int = int(y) & 255                 // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
-  zi: int = int(z) & 255                 // plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
-  xf: f32 = x-f32(int(x))
-  yf: f32 = y-f32(int(y))
-  zf: f32 = z-f32(int(z))
+compute_point :: proc(p: ^[512]i32, x, y, z: f32) -> f32 {
+  xi: i32 = i32(x) & 255                 // Calculate the "unit cube" that the point asked will be located in
+  yi: i32 = i32(y) & 255                 // The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
+  zi: i32 = i32(z) & 255                 // plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
+  xf: f32 = x-f32(i32(x))
+  yf: f32 = y-f32(i32(y))
+  zf: f32 = z-f32(i32(z))
 
   u: f32 = fade(xf)
   v: f32 = fade(yf)
   w: f32 = fade(zf)
 
-  aaa, aba, aab, abb, baa, bba, bab, bbb: int
+  aaa, aba, aab, abb, baa, bba, bab, bbb: i32
 
   aaa = p[p[p[    xi ] +     yi ] +     zi ]
   aba = p[p[p[    xi ] + inc(yi)] +     zi ]
