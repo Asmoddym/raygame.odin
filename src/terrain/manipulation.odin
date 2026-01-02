@@ -58,14 +58,14 @@ process_selection :: proc(terrain: ^Component_Terrain) {
   first_point: [2]i32 = { min(selection[0].x, selection[1].x), min(selection[0].y, selection[1].y) }
   last_point: [2]i32 = { max(selection[0].x, selection[1].x), max(selection[0].y, selection[1].y) }
 
-  chunks_to_redraw: [dynamic]^Chunk
-
-
-  for i := first_point.x / handle.chunk_size.x ; i < last_point.x / handle.chunk_size.x ; i += 1 {
-    fmt.println("coucou", i)
-
-  }
-
+  first_point.x = min(first_point.x, handle.chunk_size.x * max_chunks_per_line * CELL_SIZE)
+  first_point.y = min(first_point.y, handle.chunk_size.y * max_chunks_per_line * CELL_SIZE)
+  first_point.x = max(first_point.x, 0)
+  first_point.y = max(first_point.y, 0)
+  last_point.x = min(last_point.x, handle.chunk_size.x * max_chunks_per_line * CELL_SIZE)
+  last_point.y = min(last_point.y, handle.chunk_size.y * max_chunks_per_line * CELL_SIZE)
+  last_point.x = max(last_point.x, 0)
+  last_point.y = max(last_point.y, 0)
 
   for y in first_point.y..<last_point.y {
     for x in first_point.x..<last_point.x {
@@ -74,32 +74,15 @@ process_selection :: proc(terrain: ^Component_Terrain) {
       chunk_terrain_x := (x / CELL_SIZE) % handle.chunk_size.x
       chunk_terrain_y := (y / CELL_SIZE) % handle.chunk_size.y
 
-      chunk: ^Chunk = nil
-
-      for &c in handle.chunks {
-        if c.position.x == chunk_x && c.position.y == chunk_y {
-          chunk = &c
-
-          chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
-          context.user_ptr = &c.position
-
-          _, found := slice.linear_search_proc(chunks_to_redraw[:], proc(p: ^Chunk) -> bool {
-            chunk_pos: = cast(^[2]i32)context.user_ptr
-
-            return p.position.x == chunk_pos.x && p.position.y == chunk_pos.y
-          })
-
-          if !found {
-            append(&chunks_to_redraw, &c)
-          }
-        }
-      }
+      handle.chunks[chunk_y * i32(max_chunks_per_line) + chunk_x].terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
     }
   }
 
   rl.EndMode2D()
-  for &chunk in chunks_to_redraw {
-    draw_chunk(handle, chunk)
+  for chunk_x in (first_point.x / handle.chunk_size.x) / CELL_SIZE..=(last_point.x / handle.chunk_size.x) / CELL_SIZE {
+    for chunk_y in (first_point.y / handle.chunk_size.y) / CELL_SIZE..=(last_point.y / handle.chunk_size.y) / CELL_SIZE {
+      draw_chunk(handle, &handle.chunks[chunk_y * i32(max_chunks_per_line) + chunk_x])
+    }
   }
   rl.BeginMode2D(engine.camera)
 }
