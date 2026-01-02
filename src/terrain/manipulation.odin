@@ -12,14 +12,20 @@ ManipulationState :: struct {
   selection_finished: bool,
 
   camera_changed: bool,
+
+  zoom_delta: f32,
 }
 
-// manipulation_state: ManipulationState = {  false, false }
-
 process_manipulation_state :: proc(terrain: ^Component_Terrain) {
+
   if terrain.manipulation_state.camera_changed {
     ensure_camera_capped(&terrain.handle)
     terrain.manipulation_state.camera_changed = false
+  }
+
+  if terrain.manipulation_state.zoom_delta != 0 {
+    ensure_zoom_capped(terrain)
+    terrain.manipulation_state.zoom_delta = 0
   }
 
   if terrain.manipulation_state.selection_finished {
@@ -35,24 +41,51 @@ process_manipulation_state :: proc(terrain: ^Component_Terrain) {
 }
 
 
+// TODO: only use wheel_move in delta and make so that zoom > 1 is zoomed more
+ensure_zoom_capped :: proc(terrain: ^Component_Terrain) {
+  new_zoom := engine.camera.zoom + terrain.manipulation_state.zoom_delta
+
+  max_x := f32(terrain.handle.chunk_size.x * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
+  max_y := f32(terrain.handle.chunk_size.y * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
+
+  x_check := f32(engine.game_state.resolution.x) * 1 / (new_zoom + ZOOM_SPEED) < max_x
+  y_check := f32(engine.game_state.resolution.y) * 1 / (new_zoom + ZOOM_SPEED) < max_y
+
+  if x_check && y_check {
+    engine.camera.zoom = new_zoom
+    engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
+    engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
+  }
+
+  ensure_camera_capped(&terrain.handle)
+}
+
 
 //
 // PRIVATE
 //
 
 
-
 // Ensure camera is in frame
 @(private="file")
 ensure_camera_capped :: proc(handle: ^Handle) {
-  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x)
-  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y)
+  relative_offset_x := relative_to_zoom(engine.camera.offset.x)
+  relative_offset_y := relative_to_zoom(engine.camera.offset.y)
 
-  if engine.camera.target.x < 0 do engine.camera.target.x = 0
-  if engine.camera.target.y < 0 do engine.camera.target.y = 0
+  threshold_x: f32 = f32(engine.game_state.resolution.x) / 2
+  threshold_y: f32 = f32(engine.game_state.resolution.y) / 2
 
-  if engine.camera.target.x > max_x do engine.camera.target.x = max_x
-  if engine.camera.target.y > max_y do engine.camera.target.y = max_y
+  x := engine.camera.target.x - relative_offset_x
+  y := engine.camera.target.y - relative_offset_y
+
+  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x / 2) - relative_offset_x
+  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y / 2) - relative_offset_y
+
+  if x < -threshold_x do engine.camera.target.x = relative_offset_x - threshold_x
+  if y < -threshold_y do engine.camera.target.y = relative_offset_y - threshold_y
+
+  if x > max_x + threshold_x do engine.camera.target.x = max_x + relative_offset_x + threshold_x
+  if y > max_y + threshold_y do engine.camera.target.y = max_y + relative_offset_y + threshold_y
 }
 
 process_selection :: proc(terrain: ^Component_Terrain) {
@@ -106,7 +139,7 @@ draw_selection :: proc(terrain: ^Component_Terrain) {
   last_point: [2]i32 = { max(terrain.manipulation_state.selection[0].x, terrain.manipulation_state.selection[1].x), max(terrain.manipulation_state.selection[0].y, terrain.manipulation_state.selection[1].y) }
 
   text := string(rl.TextFormat("%dx%d", abs(last_point.x - first_point.x) / CELL_SIZE, abs(last_point.y - first_point.y) / CELL_SIZE))
-  ui.text_box_draw_fast(text, first_point.x, first_point.y, i32(relative_to_zoom(18)))
+  ui.text_box_draw_fast(text, last_point.x, last_point.y, i32(relative_to_zoom(18)))
 
   rl.DrawRectangle(first_point.x, first_point.y, last_point.x - first_point.x, last_point.y - first_point.y, rl.Color { 255, 0, 0, 100 })
 }

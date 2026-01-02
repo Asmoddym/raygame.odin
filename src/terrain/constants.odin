@@ -9,4 +9,4 @@ max_chunks_per_line := 10
 ZOOM_SPEED: f32 = 0.05
 
 // Zoom interval
-ZOOM_INTERVAL: [2]f32 = { 0.3, 3 }
+ZOOM_INTERVAL: [2]f32 = { 0.1, 3 }

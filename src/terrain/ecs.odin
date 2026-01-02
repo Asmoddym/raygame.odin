@@ -25,7 +25,7 @@ init :: proc() {
   tileset         := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
   component       := engine.database_add_component(engine.database_create_entity(), &table_terrains)
   component.handle = initialize_handle(50, 50, tileset)
-  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, "", false, false, false }
+  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, "", false, false, false, 0 }
 
   perlin_noise.repermutate(&component.handle.biome_noise_handle)
   perlin_noise.repermutate(&component.handle.default_noise_handle)
@@ -80,13 +80,8 @@ system_draw :: proc() {
 system_mouse_inputs :: proc(terrain: ^Component_Terrain) {
   wheel_move := rl.GetMouseWheelMove()
 
-  if wheel_move != 0 && (engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y) {
-    engine.camera.zoom += wheel_move * ZOOM_SPEED
-
-    engine.camera.zoom = min(ZOOM_INTERVAL.y, engine.camera.zoom)
-    engine.camera.zoom = max(ZOOM_INTERVAL.x, engine.camera.zoom)
-
-    terrain.manipulation_state.camera_changed = true
+  if wheel_move != 0 { //&& (engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y) {
+    terrain.manipulation_state.zoom_delta += wheel_move * ZOOM_SPEED
   }
 
   if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
