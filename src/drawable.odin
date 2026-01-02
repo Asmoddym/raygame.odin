@@ -63,12 +63,12 @@ drawable_animated_sprite_init :: proc(self: ^$Component_AnimatedSprite, cfg: map
 
 // Draw simple sprites
 drawable_system_draw :: proc() {
-  for layer in 0..<5 {
-    sprite_table := &table_sprites[layer]
-    animated_sprite_table := &table_animated_sprites[layer]
+  for layer_id in 0..<5 {
+    sprite_table := &table_sprites[layer_id]
+    animated_sprite_table := &table_animated_sprites[layer_id]
 
     for sprite in sprite_table.items {
-      box := engine.database_get_component(sprite.entity_id, &bounding_box.tables[layer]).box
+      box := engine.database_get_component(sprite.entity_id, &bounding_box.layers[layer_id]).box
       source := rl.Rectangle { 0, 0, f32(sprite.texture.width), f32(sprite.texture.height) }
       dest := box
 
@@ -77,7 +77,7 @@ drawable_system_draw :: proc() {
 
     // Draw animated sprites
     for sprite in animated_sprite_table.items {
-      box := engine.database_get_component(sprite.entity_id, &bounding_box.tables[layer]).box
+      box := engine.database_get_component(sprite.entity_id, &bounding_box.layers[layer_id]).box
       spritesheet := sprite.states[sprite.state]
 
       source := rl.Rectangle {

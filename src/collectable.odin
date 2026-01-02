@@ -33,7 +33,7 @@ table_collectables: engine.Table(Component_Collectable)
 
 
 collectable_system_main :: proc() {
-  player_box := engine.database_get_component(globals.player_id, &bounding_box.tables[globals.PLAYER_LAYER])
+  player_box := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID])
   player_rect := player_box.box
 
   for &collectable in table_collectables.items {
@@ -102,8 +102,8 @@ destroy_collectable :: proc(collectable: ^Component_Collectable) {
   if collectable.metadata.pickup_text_box_id != 0 do ui.text_box_delete(collectable.metadata.pickup_text_box_id)
   if collectable.metadata.interaction_text_box_id != 0 do ui.text_box_delete(collectable.metadata.interaction_text_box_id)
 
-  engine.database_destroy_component(entity_id, &bounding_box.tables[collectable.metadata.bounding_box.layer])
-  engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer])
+  engine.database_destroy_component(entity_id, &bounding_box.layers[collectable.metadata.bounding_box.layer_id])
+  engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer_id])
   engine.database_destroy_component(entity_id, &table_collectables)
   engine.database_destroy_component(entity_id, &table_backpacks)
 }

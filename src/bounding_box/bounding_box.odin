@@ -16,10 +16,10 @@ Component_BoundingBox :: struct {
   box: rl.Rectangle,
   collidable: bool,
   movable: bool,
-  layer: int,
+  layer_id: int,
 }
 
-tables: [5]engine.Table(Component_BoundingBox)
+layers: [5]engine.Table(Component_BoundingBox)
 
 
 
@@ -32,11 +32,11 @@ tables: [5]engine.Table(Component_BoundingBox)
 // Main collision system using bounding_box components
 // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
 system_collision_resolver :: proc() {
-  for layer in 0..<5 {
+  for layer_id in 0..<5 {
     x_points: [dynamic]EdgeData
     x_active_intervals: [dynamic]int
 
-    table := &tables[layer]
+    table := &layers[layer_id]
 
     for bounding_box in table.items {
       if !bounding_box.collidable do continue
@@ -55,7 +55,7 @@ system_collision_resolver :: proc() {
         entity_id := x.id
 
         for other_entity_id in x_active_intervals {
-          resolve_collision(entity_id, other_entity_id, layer)
+          resolve_collision(entity_id, other_entity_id, layer_id)
         }
 
         append(&x_active_intervals, x.id)
@@ -72,14 +72,14 @@ system_draw :: proc() {
 
   if !show_bounds do return
 
-  for layer in 0..<5 {
-    color := rl.Color { 0, 255 / u8(layer + 1), 50 * u8(layer + 1), 255 }
+  for layer_id in 0..<5 {
+    color := rl.Color { 0, 255 / u8(layer_id + 1), 50 * u8(layer_id + 1), 255 }
 
-    for &bounding_box in tables[layer].items {
+    for &bounding_box in layers[layer_id].items {
       box := &bounding_box.box
 
       if !bounding_box.collidable {
-        if show_bounds do rl.DrawRectangleLinesEx(box^, 1, rl.Color { 130, 130, 130, 255 / u8(layer + 1) })
+        if show_bounds do rl.DrawRectangleLinesEx(box^, 1, rl.Color { 130, 130, 130, 255 / u8(layer_id + 1) })
 
           continue
       }
@@ -123,9 +123,9 @@ show_bounds := true
 
 // Collision resolver
 @(private="file")
-resolve_collision :: proc(entity_id: int, other_entity_id: int, layer: int) {
-  bounding_box := engine.database_get_component(entity_id, &tables[layer])
-  other_bounding_box := engine.database_get_component(other_entity_id, &tables[layer])
+resolve_collision :: proc(entity_id: int, other_entity_id: int, layer_id: int) {
+  bounding_box := engine.database_get_component(entity_id, &layers[layer_id])
+  other_bounding_box := engine.database_get_component(other_entity_id, &layers[layer_id])
 
   box := &bounding_box.box
   other_box := &other_bounding_box.box

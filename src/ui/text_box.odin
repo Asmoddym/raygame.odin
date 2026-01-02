@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:slice"
 import "../bounding_box"
 import "../engine"
+import "../engine/error"
 import "../globals"
 import "core:strings"
 import "core:time"
@@ -79,10 +80,10 @@ text_box_delete :: proc(id: int) {
   context.user_index = id
   index, found := slice.linear_search_proc(text_boxes[:], proc(md: TextBoxMetadata) -> bool { return md.id == context.user_index })
 
-  if !found do return
+  if !found do error.raise("textbox", id, "not found")
 
-  // text_box := text_boxes[index]
-  // fmt.println("Deleted textbox", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
+  text_box := text_boxes[index]
+  fmt.println("Deleted textbox", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
 
   if text_boxes[index].owner_id != nil do text_boxes[index].owner_id^ = 0
 
@@ -151,7 +152,7 @@ system_text_box_update :: proc() {
 
 // Misc system to keep the camera position to the center of the screen
 system_update_camera_position :: proc() {
-  box := engine.database_get_component(globals.player_id, &bounding_box.tables[globals.PLAYER_LAYER]).box
+  box := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID]).box
 
   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }

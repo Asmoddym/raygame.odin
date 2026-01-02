@@ -16,8 +16,8 @@ import rl "vendor:raylib"
 
 // Handle player movement with animated sprite state
 input_system_player_movement :: proc() {
-  bbox            := engine.database_get_component(globals.player_id, &bounding_box.tables[globals.PLAYER_LAYER])
-  animated_sprite := engine.database_get_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER])
+  bbox            := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID])
+  animated_sprite := engine.database_get_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER_ID])
 
   animated_sprite.state = int(enums.Direction.NONE)
 

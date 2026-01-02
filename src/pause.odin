@@ -23,8 +23,8 @@ pause_system_main :: proc() {
   if rl.IsKeyPressed(rl.KeyboardKey.UP) do selection -= 1
   if rl.IsKeyPressed(rl.KeyboardKey.DOWN) do selection += 1
 
-  if selection < 0 do selection = 2
-  if selection > 2 do selection = 0
+  if selection < 0 do selection = len(texts) - 1
+  if selection > len(texts) - 1 do selection = 0
 
   if rl.IsKeyPressed(.ENTER) do on_clicks[selection]()
 
