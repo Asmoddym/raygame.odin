@@ -73,12 +73,12 @@ process_selection :: proc(terrain: ^Component_Terrain) {
           chunk = &c
 
           chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
-          context.user_ptr = &c
+          context.user_ptr = &c.position
 
           _, found := slice.linear_search_proc(chunks_to_redraw[:], proc(p: ^Chunk) -> bool {
-            chunk: ^Chunk = cast(^Chunk)context.user_ptr
+            chunk_pos: = cast(^[2]i32)context.user_ptr
 
-            return p.position.x == chunk.position.x && p.position.y == chunk.position.y
+            return p.position.x == chunk_pos.x && p.position.y == chunk_pos.y
           })
 
           if !found {
