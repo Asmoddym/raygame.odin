@@ -16,8 +16,8 @@ ManipulationState :: struct {
   zoom_delta: f32,
 }
 
+// Different states processing with camera handling.
 process_manipulation_state :: proc(terrain: ^Component_Terrain) {
-
   if terrain.manipulation_state.camera_changed {
     ensure_camera_capped(&terrain.handle)
     terrain.manipulation_state.camera_changed = false
@@ -41,53 +41,15 @@ process_manipulation_state :: proc(terrain: ^Component_Terrain) {
 }
 
 
-// TODO: only use wheel_move in delta and make so that zoom > 1 is zoomed more
-ensure_zoom_capped :: proc(terrain: ^Component_Terrain) {
-  new_zoom := engine.camera.zoom + terrain.manipulation_state.zoom_delta
-
-  max_x := f32(terrain.handle.chunk_size.x * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
-  max_y := f32(terrain.handle.chunk_size.y * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
-
-  x_check := f32(engine.game_state.resolution.x) * 1 / (new_zoom + ZOOM_SPEED) < max_x
-  y_check := f32(engine.game_state.resolution.y) * 1 / (new_zoom + ZOOM_SPEED) < max_y
-
-  if x_check && y_check {
-    engine.camera.zoom = new_zoom
-    engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
-    engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
-  }
-
-  ensure_camera_capped(&terrain.handle)
-}
-
 
 //
 // PRIVATE
 //
 
 
-// Ensure camera is in frame
+
+// Process the selection with selection is complete
 @(private="file")
-ensure_camera_capped :: proc(handle: ^Handle) {
-  relative_offset_x := relative_to_zoom(engine.camera.offset.x)
-  relative_offset_y := relative_to_zoom(engine.camera.offset.y)
-
-  threshold_x: f32 = f32(engine.game_state.resolution.x) / 2
-  threshold_y: f32 = f32(engine.game_state.resolution.y) / 2
-
-  x := engine.camera.target.x - relative_offset_x
-  y := engine.camera.target.y - relative_offset_y
-
-  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x / 2) - relative_offset_x
-  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y / 2) - relative_offset_y
-
-  if x < -threshold_x do engine.camera.target.x = relative_offset_x - threshold_x
-  if y < -threshold_y do engine.camera.target.y = relative_offset_y - threshold_y
-
-  if x > max_x + threshold_x do engine.camera.target.x = max_x + relative_offset_x + threshold_x
-  if y > max_y + threshold_y do engine.camera.target.y = max_y + relative_offset_y + threshold_y
-}
-
 process_selection :: proc(terrain: ^Component_Terrain) {
   handle    := &terrain.handle
   selection := terrain.manipulation_state.selection
@@ -134,6 +96,58 @@ process_selection :: proc(terrain: ^Component_Terrain) {
   rl.BeginMode2D(engine.camera)
 }
 
+
+// CAMERA
+
+
+// Ensure zoom is capped.
+@(private="file")
+ensure_zoom_capped :: proc(terrain: ^Component_Terrain) {
+  new_zoom := engine.camera.zoom + terrain.manipulation_state.zoom_delta * ZOOM_SPEED
+
+  max_x := f32(terrain.handle.chunk_size.x * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
+  max_y := f32(terrain.handle.chunk_size.y * int(terrain.handle.displayed_tile_size)) * f32(max_chunks_per_line)
+
+  x_check := f32(engine.game_state.resolution.x) * 1 / (new_zoom + ZOOM_SPEED) < max_x
+  y_check := f32(engine.game_state.resolution.y) * 1 / (new_zoom + ZOOM_SPEED) < max_y
+
+  if x_check && y_check {
+    engine.camera.zoom = new_zoom
+    engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
+    engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
+  }
+
+  ensure_camera_capped(&terrain.handle)
+}
+
+// Ensure camera is in frame
+@(private="file")
+ensure_camera_capped :: proc(handle: ^Handle) {
+  relative_offset_x := relative_to_zoom(engine.camera.offset.x)
+  relative_offset_y := relative_to_zoom(engine.camera.offset.y)
+
+  threshold_x: f32 = f32(engine.game_state.resolution.x) / 2
+  threshold_y: f32 = f32(engine.game_state.resolution.y) / 2
+
+  x := engine.camera.target.x - relative_offset_x
+  y := engine.camera.target.y - relative_offset_y
+
+  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x / 2) - relative_offset_x
+  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y / 2) - relative_offset_y
+
+  if x < -threshold_x do engine.camera.target.x = relative_offset_x - threshold_x
+  if y < -threshold_y do engine.camera.target.y = relative_offset_y - threshold_y
+
+  if x > max_x + threshold_x do engine.camera.target.x = max_x + relative_offset_x + threshold_x
+  if y > max_y + threshold_y do engine.camera.target.y = max_y + relative_offset_y + threshold_y
+}
+
+
+// MOUSE / SELECTION DRAWING
+
+
+// Draw selection when in select mode.
+@(private="file")
 draw_selection :: proc(terrain: ^Component_Terrain) {
   first_point: [2]i32 = { min(terrain.manipulation_state.selection[0].x, terrain.manipulation_state.selection[1].x), min(terrain.manipulation_state.selection[0].y, terrain.manipulation_state.selection[1].y) }
   last_point: [2]i32 = { max(terrain.manipulation_state.selection[0].x, terrain.manipulation_state.selection[1].x), max(terrain.manipulation_state.selection[0].y, terrain.manipulation_state.selection[1].y) }
@@ -144,6 +158,8 @@ draw_selection :: proc(terrain: ^Component_Terrain) {
   rl.DrawRectangle(first_point.x, first_point.y, last_point.x - first_point.x, last_point.y - first_point.y, rl.Color { 255, 0, 0, 100 })
 }
 
+// Draw hovered cell when not in select mode.
+@(private="file")
 draw_hover :: proc(terrain: ^Component_Terrain) {
   mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
 

@@ -66,11 +66,11 @@ system_draw :: proc() {
       f32(c.position.y * handle.chunk_pixel_size.y),
     }
 
-    if pos.x < drawn_rec[0].x - f32(handle.chunk_pixel_size.x) || pos.x > drawn_rec[1].x {
-      continue
-    }
+    // If the chunks are not on draw range, we don't want them drawn
+    chunk_presence_in_frame_x_check := pos.x >= drawn_rec[0].x - f32(handle.chunk_pixel_size.x) && pos.x <= drawn_rec[1].x
+    chunk_presence_in_frame_y_check := pos.y >= drawn_rec[0].y - f32(handle.chunk_pixel_size.y) && pos.y <= drawn_rec[1].y
 
-    if pos.y < drawn_rec[0].y - f32(handle.chunk_pixel_size.y) || pos.y > drawn_rec[1].y {
+    if !(chunk_presence_in_frame_x_check && chunk_presence_in_frame_y_check) {
       continue
     }
 
@@ -78,8 +78,8 @@ system_draw :: proc() {
     rl.DrawTextureRec(
       c.render_texture.texture,
       rl.Rectangle { 0, 0,
-        f32(handle.chunk_size.x * int(handle.displayed_tile_size)),
-        -f32(handle.chunk_size.y * int(handle.displayed_tile_size)),
+        f32(handle.chunk_pixel_size.x),
+        f32(-handle.chunk_pixel_size.y),
       },
       rl.Vector2 { pos.x, pos.y },
       rl.WHITE,
@@ -91,8 +91,8 @@ system_draw :: proc() {
 system_mouse_inputs :: proc(terrain: ^Component_Terrain) {
   wheel_move := rl.GetMouseWheelMove()
 
-  if wheel_move != 0 { //&& (engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y) {
-    terrain.manipulation_state.zoom_delta += wheel_move * ZOOM_SPEED
+  if wheel_move != 0 {
+    terrain.manipulation_state.zoom_delta += wheel_move
   }
 
   if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
@@ -118,24 +118,6 @@ system_mouse_inputs :: proc(terrain: ^Component_Terrain) {
     terrain.manipulation_state.selecting = false
     terrain.manipulation_state.selection_finished = true
   }
-
-  // cap_camera(handle)
-
-  // relative_x := engine.game_state.resolution.x - i32(rl.GetMouseX())
-  // relative_y := engine.game_state.resolution.y - i32(rl.GetMouseY())
-
-  // if relative_x < BORDER_OFFSET {
-  //   engine.camera.target.x += 800 * time
-  // } else if relative_x > engine.game_state.resolution.x - BORDER_OFFSET {
-  //   engine.camera.target.x -= 800 * time
-  // }
-  //
-  // if relative_y < BORDER_OFFSET {
-  //   engine.camera.target.y += 800 * time
-  // } else if relative_y > engine.game_state.resolution.y - BORDER_OFFSET {
-  //   engine.camera.target.y -= 800 * time
-  // }
-  //
 }
 
 // Handle keyboard inputs
