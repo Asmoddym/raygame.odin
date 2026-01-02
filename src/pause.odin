@@ -2,6 +2,7 @@ package macro
 
 import "engine"
 import "enums"
+import "ui"
 import rl "vendor:raylib"
 
 
@@ -27,7 +28,7 @@ pause_system_main :: proc() {
 
   if rl.IsKeyPressed(.ENTER) do on_clicks[selection]()
 
-  ui_button_draw_xy_centered_list(
+  ui.button_draw_xy_centered_list(
     texts,
     font_size = 40,
     on_click = on_clicks,

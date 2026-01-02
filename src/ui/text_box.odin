@@ -1,73 +1,13 @@
-package macro
+package ui
 
 import "core:fmt"
 import "core:slice"
-import "engine"
-import "globals"
+import "../bounding_box"
+import "../engine"
+import "../globals"
 import "core:strings"
 import "core:time"
 import rl "vendor:raylib"
-
-
-// BUTTON
-
-
-// Draw a list of buttons centered on y and x from engine.game_state.resolution
-ui_button_draw_xy_centered_list :: proc(texts: []string, font_size: i32, on_click: []proc(), selected: int, resolution: [2]i32 = { 0, 0 }, color: rl.Color = rl.WHITE) {
-  resolution := resolution
-  if resolution.x == 0 do resolution = engine.game_state.resolution
-
-  padding := i32(font_size / 3)
-  text_height_with_padding := font_size + 2 * padding
-
-
-  // Add each text with padding and spacing
-  block_height := i32(len(texts)) * text_height_with_padding + (i32(len(texts) - 1) * BUTTON_SPACING)
-
-  // The calculation is made from the text, not the box. We have to remove the padding for the first iteration
-  beginning_y := resolution.y / 2 - block_height / 2 + i32(padding)
-
-  for idx in 0..<len(texts) {
-    text := texts[idx]
-    measured_text := rl.MeasureText(strings.unsafe_string_to_cstring(text), font_size)
-    position := rl.Vector2 {
-      f32(resolution.x / 2 - measured_text / 2),
-      f32(beginning_y),
-    }
-
-    ui_button_draw(text, position, font_size, on_click[idx], selected == idx, color)
-    beginning_y += text_height_with_padding + BUTTON_SPACING
-  }
-}
-
-// Draw a button with a given size and position
-ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_click: proc(), selected: bool, color: rl.Color = rl.WHITE) {
-  padding := i32(font_size / 3)
-  thickness: f32 = 2
-
-  color := color
-  ctext := strings.unsafe_string_to_cstring(text)
-  measured_text := rl.MeasureText(ctext, font_size)
-
-  width: f32 = f32(measured_text + 2 * padding)
-  height: f32 = f32(font_size + 2 * padding)
-  box := rl.Rectangle { f32(position.x - f32(padding)), f32(position.y - f32(padding)), width, height }
-
-  if selected {
-    thickness = 6
-  } else {
-    color.r /= 2
-    color.g /= 2
-    color.b /= 2
-  }
-
-  rl.DrawText(ctext, i32(position.x), i32(position.y), font_size, color)
-  rl.DrawRectangleLinesEx(box, thickness, color)
-}
-
-
-// TEXT BOX
-
 
 // Init a text box, generating and storing the metadata to the component pointer
 //
@@ -76,9 +16,9 @@ ui_button_draw :: proc(text: string, position: rl.Vector2, font_size: i32, on_cl
 //
 // keep_alive_until_false can point to a bool which will be check on update system to force the box NOT to be deleted.
 // when the value is true, the box will stay instanciated.
-ui_text_box_draw :: proc(text: string,
+text_box_draw :: proc(text: string,
                          font_size: i32,
-                         attached_to_bounding_box: ^Component_BoundingBox,
+                         attached_to_bounding_box: ^bounding_box.Component_BoundingBox,
                          duration: f64 = -1,
                          owner_id: ^int = nil,
                          keep_alive_until_false: ^bool = nil,
@@ -95,7 +35,7 @@ ui_text_box_draw :: proc(text: string,
   text_box.instanciated_at = time.now()
   text_box.attached_to_bounding_box = &attached_to_bounding_box.box
 
-  ui_text_box_generate_metadata(&text_box, text, font_size, color)
+  text_box_generate_metadata(&text_box, text, font_size, color)
 
   text_box.animation_ended = false
   text_box.animated = false
@@ -108,31 +48,40 @@ ui_text_box_draw :: proc(text: string,
   if owner_id != nil do owner_id^ = counter
 }
 
+// Draw a simple text box without storing anything. Works nice for little texts.
+text_box_draw_fast :: proc(text: string, x, y: i32, font_size: i32, color: rl.Color = rl.WHITE) {
+  text_box: TextBoxMetadata
+
+  text_box_generate_metadata(&text_box, text, font_size, color)
+  text_box_draw_from_metadata(&text_box, { x, y })
+
+  fmt.println("Drew fast textbox", "(", text, ")")
+}
+
 // Init an animated text box, generating and storing the metadata to the component pointer.
 //
-// Params are the same as ui_text_box_draw, check for more info.
-ui_animated_text_box_draw :: proc(text: string,
+// Params are the same as text_box_draw, check for more info.
+animated_text_box_draw :: proc(text: string,
                                   font_size: i32,
-                                  attached_to_bounding_box: ^Component_BoundingBox,
+                                  attached_to_bounding_box: ^bounding_box.Component_BoundingBox,
                                   duration: f64 = -1,
                                   owner_id: ^int = nil,
                                   keep_alive_until_false: ^bool = nil,
                                   color: rl.Color = rl.WHITE) {
-  ui_text_box_draw(text, font_size, attached_to_bounding_box, duration, owner_id, keep_alive_until_false, color)
+  text_box_draw(text, font_size, attached_to_bounding_box, duration, owner_id, keep_alive_until_false, color)
 
   text_boxes[len(text_boxes) - 1].animated = true
 }
 
 // Delete a text_box from its ID.
 // If owner_id is not nil, will be reset to 0.
-ui_text_box_delete :: proc(id: int) {
+text_box_delete :: proc(id: int) {
   context.user_index = id
   index, found := slice.linear_search_proc(text_boxes[:], proc(md: TextBoxMetadata) -> bool { return md.id == context.user_index })
 
   if !found do return
 
-  text_box := text_boxes[index]
-
+  // text_box := text_boxes[index]
   // fmt.println("Deleted textbox", id, "(", text_box.text, "), owner_id:", text_box.owner_id)
 
   if text_boxes[index].owner_id != nil do text_boxes[index].owner_id^ = 0
@@ -149,20 +98,20 @@ ui_text_box_delete :: proc(id: int) {
 
 
 // Draw text boxes
-ui_system_text_box_draw :: proc() {
+system_text_box_draw :: proc() {
   for &item in text_boxes {
     box := item.attached_to_bounding_box
 
     if box != nil {
       position := [2]i32 { i32(box.x + box.width), i32(box.y) - item.box_height }
 
-      ui_text_box_draw_from_metadata(&item, position)
+      text_box_draw_from_metadata(&item, position)
     }
   }
 }
 
 // Update animated text boxes and remove text boxes whose duration is expired
-ui_system_text_box_update :: proc() {
+system_text_box_update :: proc() {
   to_delete: [dynamic]int
 
   for idx in 0..<len(text_boxes) {
@@ -196,13 +145,13 @@ ui_system_text_box_update :: proc() {
   }
 
   for id in to_delete {
-    ui_text_box_delete(id)
+    text_box_delete(id)
   }
 }
 
 // Misc system to keep the camera position to the center of the screen
-ui_system_update_camera_position :: proc() {
-  box := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER]).box
+system_update_camera_position :: proc() {
+  box := engine.database_get_component(globals.player_id, &bounding_box.tables[globals.PLAYER_LAYER]).box
 
   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
 }
@@ -214,9 +163,6 @@ ui_system_update_camera_position :: proc() {
 //
 
 
-
-@(private="file")
-BUTTON_SPACING: i32 = 15
 
 @(private="file")
 TEXT_PADDING: i32 = 10
@@ -262,7 +208,7 @@ text_boxes: [dynamic]TextBoxMetadata
 
 
 @(private="file")
-ui_text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]i32) {
+text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]i32) {
   bytes: [256]byte
   builder := strings.builder_from_bytes(bytes[:])
 
@@ -281,7 +227,7 @@ ui_text_box_draw_from_metadata :: proc(metadata: ^TextBoxMetadata, position: [2]
 }
 
 @(private="file")
-ui_text_box_generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, font_size: i32, color: rl.Color) {
+text_box_generate_metadata :: proc(metadata: ^TextBoxMetadata, text: string, font_size: i32, color: rl.Color) {
   bytes: [256]byte
   builder := strings.builder_from_bytes(bytes[:])
   current_width: i32 = 0

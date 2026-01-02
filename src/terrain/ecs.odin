@@ -10,6 +10,7 @@ import rl "vendor:raylib"
 Component_Terrain :: struct {
   using base: engine.Component(engine.Metadata),
   handle: Handle,
+  manipulation_state: ManipulationState,
 }
 
 table_terrains: engine.Table(Component_Terrain)
@@ -24,6 +25,7 @@ init :: proc() {
   tileset         := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
   component       := engine.database_add_component(engine.database_create_entity(), &table_terrains)
   component.handle = initialize_handle(50, 50, tileset)
+  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, "", false, false, false }
 
   perlin_noise.repermutate(&component.handle.biome_noise_handle)
   perlin_noise.repermutate(&component.handle.default_noise_handle)
@@ -38,6 +40,18 @@ init :: proc() {
 
 // SYSTEMS
 
+
+// Main manipulation system (scroll, zoom, selection).
+system_manipulation :: proc() {
+  if len(table_terrains.items) == 0 do return
+
+  c := &table_terrains.items[0]
+
+  system_mouse_inputs(c)
+  system_keyboard_inputs(c)
+
+  process_manipulation_state(c)
+}
 
 // Main draw system.
 system_draw :: proc() {
@@ -63,10 +77,7 @@ system_draw :: proc() {
 }
 
 // Handle mouse inputs
-system_mouse_inputs :: proc() {
-  if len(table_terrains.items) == 0 do return
-
-  handle := &table_terrains.items[0].handle
+system_mouse_inputs :: proc(terrain: ^Component_Terrain) {
   wheel_move := rl.GetMouseWheelMove()
 
   if wheel_move != 0 && (engine.camera.zoom >= ZOOM_INTERVAL.x && engine.camera.zoom <= ZOOM_INTERVAL.y) {
@@ -74,6 +85,8 @@ system_mouse_inputs :: proc() {
 
     engine.camera.zoom = min(ZOOM_INTERVAL.y, engine.camera.zoom)
     engine.camera.zoom = max(ZOOM_INTERVAL.x, engine.camera.zoom)
+
+    terrain.manipulation_state.camera_changed = true
   }
 
   if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
@@ -81,9 +94,26 @@ system_mouse_inputs :: proc() {
 
     engine.camera.target.x -= relative_to_zoom(delta.x)
     engine.camera.target.y -= relative_to_zoom(delta.y)
+
+    terrain.manipulation_state.camera_changed = true
   }
 
-  cap_camera(handle)
+  if rl.IsMouseButtonPressed(rl.MouseButton.RIGHT) {
+    terrain.manipulation_state.selecting = true
+    terrain.manipulation_state.selection_finished = false
+    terrain.manipulation_state.selection[0] = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+  }
+
+  if terrain.manipulation_state.selecting {
+    terrain.manipulation_state.selection[1] = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+  }
+
+  if rl.IsMouseButtonReleased(rl.MouseButton.RIGHT) {
+    terrain.manipulation_state.selecting = false
+    terrain.manipulation_state.selection_finished = true
+  }
+
+  // cap_camera(handle)
 
   // relative_x := engine.game_state.resolution.x - i32(rl.GetMouseX())
   // relative_y := engine.game_state.resolution.y - i32(rl.GetMouseY())
@@ -103,12 +133,8 @@ system_mouse_inputs :: proc() {
 }
 
 // Handle keyboard inputs
-system_keyboard_inputs :: proc() {
-  if len(table_terrains.items) == 0 do return
-
-  handle := &table_terrains.items[0].handle
-  time := rl.GetFrameTime()
-
+system_keyboard_inputs :: proc(terrain: ^Component_Terrain) {
+  time  := rl.GetFrameTime()
   value := relative_to_zoom(800 * time)
 
   if rl.IsKeyDown(rl.KeyboardKey.LEFT)  do engine.camera.target.x -= value
@@ -116,103 +142,5 @@ system_keyboard_inputs :: proc() {
   if rl.IsKeyDown(rl.KeyboardKey.UP)    do engine.camera.target.y -= value
   if rl.IsKeyDown(rl.KeyboardKey.DOWN)  do engine.camera.target.y += value
 
-  cap_camera(handle)
+  terrain.manipulation_state.camera_changed = true
 }
-
-
-//
-// PRIVATE
-//
-
-
-cap_camera :: proc(handle: ^Handle) {
-  max_x := f32(handle.chunk_size.x * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x)
-  max_y := f32(handle.chunk_size.y * int(handle.displayed_tile_size)) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y)
-
-  if engine.camera.target.x < 0 do engine.camera.target.x = 0
-  if engine.camera.target.y < 0 do engine.camera.target.y = 0
-
-  if engine.camera.target.x > max_x do engine.camera.target.x = max_x
-  if engine.camera.target.y > max_y do engine.camera.target.y = max_y
-}
-
-
-
-// input_system_old :: proc() {
-//   time := rl.GetFrameTime()
-//
-//   size := i32(BOX_SIZE) / 2
-//   mouse_pos := to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
-//   handle := &terrain.table_terrains.items[0].handle
-//
-//   @(static) selection_start: [2]i32
-//   @(static) selecting:= false
-//
-//   @(static) txt := 0
-//
-//
-//   if rl.IsMouseButtonPressed(rl.MouseButton.RIGHT) {
-//     selection_start = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
-//     selecting = true
-//   }
-//
-//   if rl.IsMouseButtonReleased(rl.MouseButton.RIGHT) {
-//     selecting = false
-//
-//     first_point: [2]i32 = { min(selection_start.x, mouse_pos.x), min(selection_start.y, mouse_pos.y) }
-//     last_point: [2]i32 = { max(selection_start.x, mouse_pos.x), max(selection_start.y, mouse_pos.y) }
-//
-//     chunks_to_redraw: [dynamic]^terrain.Chunk
-//
-//     for y in first_point.y..<last_point.y {
-//       for x in first_point.x..<last_point.x {
-//         chunk_x := int((x / i32(handle.chunk_size.x)) / size)
-//         chunk_y := int((y / i32(handle.chunk_size.y)) / size)
-//         chunk_terrain_x := int(x / size) % handle.chunk_size.x
-//         chunk_terrain_y := int(y / size) % handle.chunk_size.y
-//
-//         chunk: ^terrain.Chunk = nil
-//
-//         for &c in handle.chunks {
-//           if c.position.x == chunk_x && c.position.y == chunk_y {
-//             chunk = &c
-//
-//             chunk.terrain[chunk_terrain_y][chunk_terrain_x].tileset_pos = { 0, 0 }
-//             context.user_ptr = &c
-//
-//             _, found := slice.linear_search_proc(chunks_to_redraw[:], proc(p: ^terrain.Chunk) -> bool {
-//               chunk: ^terrain.Chunk = cast(^terrain.Chunk)context.user_ptr
-//
-//               return p.position.x == chunk.position.x && p.position.y == chunk.position.y
-//             })
-//
-//             if !found {
-//               append(&chunks_to_redraw, &c)
-//             }
-//           }
-//         }
-//       }
-//     }
-//
-//     rl.EndMode2D()
-//     for &chunk in chunks_to_redraw {
-//       terrain.draw_chunk(handle, chunk)
-//     }
-//     rl.BeginMode2D(engine.camera)
-//   }
-//
-//   bbox := engine.database_get_component(0, &table_bounding_boxes[4])
-//   bbox.box.x = f32(mouse_pos.x)
-//   bbox.box.y = f32(mouse_pos.y)
-//
-//   if selecting {
-//     first_point: [2]i32 = { min(selection_start.x, mouse_pos.x), min(selection_start.y, mouse_pos.y) }
-//     last_point: [2]i32 = { max(selection_start.x, mouse_pos.x), max(selection_start.y, mouse_pos.y) }
-//
-//     ui_text_box_draw(string(rl.TextFormat("%dx%d", abs(last_point.x - first_point.x) / size, abs(last_point.y - first_point.y) / 16)), i32(18.0 * (1 / engine.camera.zoom)), bbox, 1)
-//
-//     rl.DrawRectangle(first_point.x, first_point.y, last_point.x - first_point.x, last_point.y - first_point.y, rl.Color { 255, 0, 0, 100 })
-//   } else {
-//     rl.DrawRectangle(mouse_pos.x, mouse_pos.y, size, size, rl.Color { 255, 0, 0, 100 })
-//   }
-// }

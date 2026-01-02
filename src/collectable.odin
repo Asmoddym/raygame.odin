@@ -2,6 +2,8 @@ package macro
 
 import "engine"
 import "globals"
+import "bounding_box"
+import "ui"
 import rl "vendor:raylib"
 
 Component_CollectableMetadata :: struct {
@@ -9,7 +11,7 @@ Component_CollectableMetadata :: struct {
   interaction_text_box_id: int,
   keep_interaction_alive: bool,
 
-  bounding_box: ^Component_BoundingBox,
+  bounding_box: ^bounding_box.Component_BoundingBox,
 }
 
 // Collectable component.
@@ -31,7 +33,7 @@ table_collectables: engine.Table(Component_Collectable)
 
 
 collectable_system_main :: proc() {
-  player_box := engine.database_get_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
+  player_box := engine.database_get_component(globals.player_id, &bounding_box.tables[globals.PLAYER_LAYER])
   player_rect := player_box.box
 
   for &collectable in table_collectables.items {
@@ -41,7 +43,7 @@ collectable_system_main :: proc() {
 
     if rl.CheckCollisionRecs(bounding_box.box, player_rect) {
       if collectable.metadata.pickup_text_box_id == 0 {
-        ui_text_box_draw(
+        ui.text_box_draw(
           "(E) pickup",
           font_size = 20,
           attached_to_bounding_box = player_box,
@@ -50,7 +52,7 @@ collectable_system_main :: proc() {
 
         // These two conditions are nested to prevent the interaction text recreation if you just stay on the item
         if collectable.metadata.interaction_text_box_id == 0 {
-          ui_animated_text_box_draw(
+          ui.animated_text_box_draw(
             collectable.interaction_text,
             font_size = 20,
             duration = 2000,
@@ -77,7 +79,7 @@ collectable_system_main :: proc() {
       } } else {
       collectable.metadata.keep_interaction_alive = false
       if collectable.metadata.pickup_text_box_id != 0 {
-        ui_text_box_delete(collectable.metadata.pickup_text_box_id)
+        ui.text_box_delete(collectable.metadata.pickup_text_box_id)
         collectable.metadata.pickup_text_box_id = 0
       }
     }
@@ -97,10 +99,10 @@ collectable_system_main :: proc() {
 destroy_collectable :: proc(collectable: ^Component_Collectable) {
   entity_id := collectable.entity_id
 
-  if collectable.metadata.pickup_text_box_id != 0 do ui_text_box_delete(collectable.metadata.pickup_text_box_id)
-  if collectable.metadata.interaction_text_box_id != 0 do ui_text_box_delete(collectable.metadata.interaction_text_box_id)
+  if collectable.metadata.pickup_text_box_id != 0 do ui.text_box_delete(collectable.metadata.pickup_text_box_id)
+  if collectable.metadata.interaction_text_box_id != 0 do ui.text_box_delete(collectable.metadata.interaction_text_box_id)
 
-  engine.database_destroy_component(entity_id, &table_bounding_boxes[collectable.metadata.bounding_box.layer])
+  engine.database_destroy_component(entity_id, &bounding_box.tables[collectable.metadata.bounding_box.layer])
   engine.database_destroy_component(entity_id, &table_animated_sprites[collectable.metadata.bounding_box.layer])
   engine.database_destroy_component(entity_id, &table_collectables)
   engine.database_destroy_component(entity_id, &table_backpacks)

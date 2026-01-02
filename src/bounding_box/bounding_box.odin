@@ -1,7 +1,7 @@
-package macro
+package bounding_box
 
-import "engine"
-import "enums"
+import "../engine"
+import "../enums"
 import "core:slice"
 import "core:math"
 import rl "vendor:raylib"
@@ -19,7 +19,7 @@ Component_BoundingBox :: struct {
   layer: int,
 }
 
-table_bounding_boxes: [5]engine.Table(Component_BoundingBox)
+tables: [5]engine.Table(Component_BoundingBox)
 
 
 
@@ -31,14 +31,14 @@ table_bounding_boxes: [5]engine.Table(Component_BoundingBox)
 
 // Main collision system using bounding_box components
 // Sort & sweep implementation from https://leanrada.com/notes/sweep-and-prune/
-bounding_box_system_collision_resolver :: proc() {
+system_collision_resolver :: proc() {
   for layer in 0..<5 {
     x_points: [dynamic]EdgeData
     x_active_intervals: [dynamic]int
 
-    bounding_box_table := &table_bounding_boxes[layer]
+    table := &tables[layer]
 
-    for bounding_box in bounding_box_table.items {
+    for bounding_box in table.items {
       if !bounding_box.collidable do continue
 
       box := bounding_box.box
@@ -67,7 +67,7 @@ bounding_box_system_collision_resolver :: proc() {
 }
 
 // Draw bounds if activated
-bounding_box_system_draw :: proc() {
+system_draw :: proc() {
   if rl.IsKeyPressed(.B) do show_bounds = !show_bounds
 
   if !show_bounds do return
@@ -75,7 +75,7 @@ bounding_box_system_draw :: proc() {
   for layer in 0..<5 {
     color := rl.Color { 0, 255 / u8(layer + 1), 50 * u8(layer + 1), 255 }
 
-    for &bounding_box in table_bounding_boxes[layer].items {
+    for &bounding_box in tables[layer].items {
       box := &bounding_box.box
 
       if !bounding_box.collidable {
@@ -124,8 +124,8 @@ show_bounds := true
 // Collision resolver
 @(private="file")
 resolve_collision :: proc(entity_id: int, other_entity_id: int, layer: int) {
-  bounding_box := engine.database_get_component(entity_id, &table_bounding_boxes[layer])
-  other_bounding_box := engine.database_get_component(other_entity_id, &table_bounding_boxes[layer])
+  bounding_box := engine.database_get_component(entity_id, &tables[layer])
+  other_bounding_box := engine.database_get_component(other_entity_id, &tables[layer])
 
   box := &bounding_box.box
   other_box := &other_bounding_box.box

@@ -4,7 +4,9 @@ package macro
 
 import "engine"
 import "enums"
+import "bounding_box"
 import "globals"
+import "ui"
 import rl "vendor:raylib"
 import "terrain"
 
@@ -12,13 +14,13 @@ BOX_SIZE: f32 = 32
 
 init_npc :: proc() {
   npc := engine.database_create_entity()
-  bounding_box := engine.database_add_component(npc, &table_bounding_boxes[1])
+  bounding_box := engine.database_add_component(npc, &bounding_box.tables[1])
   bounding_box.box = rl.Rectangle { 100, 100, BOX_SIZE, BOX_SIZE }
   bounding_box.movable = false
   bounding_box.collidable = true
   bounding_box.layer = 1
 
-  ui_animated_sprite_init(engine.database_add_component(npc, &table_animated_sprites[1]), {
+  drawable_animated_sprite_init(engine.database_add_component(npc, &table_animated_sprites[1]), {
     int(enums.Direction.NONE) = "idle.png",
     int(enums.Direction.UP) = "up.png",
     int(enums.Direction.DOWN) = "down.png",
@@ -38,7 +40,7 @@ init_npc :: proc() {
 
 init_player :: proc() {
   globals.player_id = engine.database_create_entity()
-  bounding_box := engine.database_add_component(globals.player_id, &table_bounding_boxes[globals.PLAYER_LAYER])
+  bounding_box := engine.database_add_component(globals.player_id, &bounding_box.tables[globals.PLAYER_LAYER])
   bounding_box.box = rl.Rectangle { 300, 300, BOX_SIZE, BOX_SIZE }
   bounding_box.movable = true
   bounding_box.collidable = true
@@ -46,7 +48,7 @@ init_player :: proc() {
   player_animated_sprite := engine.database_add_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER])
   engine.database_add_component(globals.player_id, &table_backpacks).max_items = 5
 
-  ui_animated_sprite_init(player_animated_sprite, {
+  drawable_animated_sprite_init(player_animated_sprite, {
     int(enums.Direction.NONE) = "idle.png",
     int(enums.Direction.UP) = "up.png",
     int(enums.Direction.DOWN) = "down.png",
@@ -58,7 +60,7 @@ init_player :: proc() {
 init_terrain :: proc() {
   tree_trunk_1 := engine.database_create_entity()
   engine.database_add_component(tree_trunk_1, &table_sprites[globals.PLAYER_LAYER]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
-  tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &table_bounding_boxes[globals.PLAYER_LAYER])
+  tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &bounding_box.tables[globals.PLAYER_LAYER])
   tree_trunk_1_bb.box = rl.Rectangle { 500, 500, BOX_SIZE, BOX_SIZE }
   tree_trunk_1_bb.movable = true
   tree_trunk_1_bb.collidable = true
@@ -66,7 +68,7 @@ init_terrain :: proc() {
 
   tree_trunk_2 := engine.database_create_entity()
   engine.database_add_component(tree_trunk_2, &table_sprites[globals.PLAYER_LAYER + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_2.png")
-  tree_trunk_2_bb := engine.database_add_component(tree_trunk_2, &table_bounding_boxes[globals.PLAYER_LAYER + 1])
+  tree_trunk_2_bb := engine.database_add_component(tree_trunk_2, &bounding_box.tables[globals.PLAYER_LAYER + 1])
   tree_trunk_2_bb.box = rl.Rectangle { 500, 500 - BOX_SIZE, BOX_SIZE, BOX_SIZE }
   tree_trunk_2_bb.movable = false
   tree_trunk_2_bb.collidable = false
@@ -74,7 +76,7 @@ init_terrain :: proc() {
 
   tree_leaves := engine.database_create_entity()
   engine.database_add_component(tree_leaves, &table_sprites[globals.PLAYER_LAYER + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_leaves.png")
-  tree_leaves_bb := engine.database_add_component(tree_leaves, &table_bounding_boxes[globals.PLAYER_LAYER + 1])
+  tree_leaves_bb := engine.database_add_component(tree_leaves, &bounding_box.tables[globals.PLAYER_LAYER + 1])
   tree_leaves_bb.box = rl.Rectangle { 500 - (BOX_SIZE * 1) / 2, 500 - BOX_SIZE * 2 - BOX_SIZE, BOX_SIZE * 2, BOX_SIZE * 2}
   tree_leaves_bb.movable = false
   tree_leaves_bb.collidable = false
@@ -84,7 +86,7 @@ init_terrain :: proc() {
   // Additional
   root := engine.database_create_entity()
   engine.database_add_component(root, &table_sprites[globals.PLAYER_LAYER]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
-  root_bb := engine.database_add_component(root, &table_bounding_boxes[globals.PLAYER_LAYER])
+  root_bb := engine.database_add_component(root, &bounding_box.tables[globals.PLAYER_LAYER])
   root_bb.box = rl.Rectangle { 650, 500, BOX_SIZE, BOX_SIZE }
   root_bb.movable = false
   root_bb.collidable = true
@@ -103,17 +105,16 @@ main :: proc() {
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
 
   engine.system_register(terrain.system_draw,                    { int(enums.SceneID.MAIN) })
-  engine.system_register(terrain.system_mouse_inputs,            { int(enums.SceneID.MAIN) })
-  engine.system_register(terrain.system_keyboard_inputs,         { int(enums.SceneID.MAIN) })
+  engine.system_register(terrain.system_manipulation,            { int(enums.SceneID.MAIN) })
 
-  // engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(ui.system_update_camera_position,       { int(enums.SceneID.MAIN) })
+  engine.system_register(drawable_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
   // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
-  engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
-  engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_drawable_draw,                { int(enums.SceneID.MAIN) })
-  engine.system_register(bounding_box_system_draw,               { int(enums.SceneID.MAIN) })
-  engine.system_register(ui_system_text_box_draw,                { int(enums.SceneID.MAIN) })
+  engine.system_register(ui.system_text_box_update,              { int(enums.SceneID.MAIN) })
+  engine.system_register(bounding_box.system_collision_resolver, { int(enums.SceneID.MAIN) })
+  engine.system_register(drawable_system_draw,                { int(enums.SceneID.MAIN) })
+  engine.system_register(bounding_box.system_draw,               { int(enums.SceneID.MAIN) })
+  engine.system_register(ui.system_text_box_draw,                { int(enums.SceneID.MAIN) })
 
   // engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
 
@@ -122,12 +123,13 @@ main :: proc() {
 
   // engine.system_register(collectable_system_main)
 
-  bbox := engine.database_add_component(engine.database_create_entity(), &table_bounding_boxes[4])
-  bbox.box = rl.Rectangle { 0, 0, 16, 16 }
-  bbox.movable = false
-  bbox.collidable = false
-  bbox.layer = 4
-
+  // Mouse
+  // bbox := engine.database_add_component(engine.database_create_entity(), &bounding_box.tables[4])
+  // bbox.box = rl.Rectangle { 0, 0, 16, 16 }
+  // bbox.movable = false
+  // bbox.collidable = false
+  // bbox.layer = 4
+  //
   // init_npc()
   // init_player()
   terrain.init()
