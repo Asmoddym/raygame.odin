@@ -103,10 +103,11 @@ main :: proc() {
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
 
   engine.system_register(terrain.system_draw,                    { int(enums.SceneID.MAIN) })
+  engine.system_register(terrain.system_mouse_inputs,            { int(enums.SceneID.MAIN) })
+  engine.system_register(terrain.system_keyboard_inputs,         { int(enums.SceneID.MAIN) })
 
   // engine.system_register(ui_system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(ui_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_main,                      { int(enums.SceneID.MAIN) })
   // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   engine.system_register(ui_system_text_box_update,              { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box_system_collision_resolver, { int(enums.SceneID.MAIN) })
