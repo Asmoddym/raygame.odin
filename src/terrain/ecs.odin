@@ -38,6 +38,20 @@ init :: proc() {
   }
 }
 
+// Unload textures and free memory.
+unload :: proc() {
+  for &c in table_terrains.items {
+    for &chunk in c.handle.chunks {
+      rl.UnloadRenderTexture(chunk.render_texture)
+      for &line in chunk.terrain {
+        delete(line)
+      }
+      delete(chunk.terrain)
+    }
+    delete(c.handle.chunks)
+  }
+}
+
 
 // SYSTEMS
 

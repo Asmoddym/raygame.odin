@@ -135,5 +135,6 @@ main :: proc() {
   terrain.init()
 
   engine.run()
+  terrain.unload()
   engine.unload()
 }
