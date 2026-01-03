@@ -59,12 +59,12 @@ process_selection :: proc(terrain: ^Component_Terrain) {
   last_point: [2]i32 = { max(selection[0].x, selection[1].x), max(selection[0].y, selection[1].y) }
 
   first_point.x = min(first_point.x, handle.chunk_size.x * max_chunks_per_line * CELL_SIZE)
-  first_point.y = min(first_point.y, handle.chunk_size.y * max_chunks_per_line * CELL_SIZE)
   first_point.x = max(first_point.x, 0)
+  first_point.y = min(first_point.y, handle.chunk_size.y * max_chunks_per_line * CELL_SIZE)
   first_point.y = max(first_point.y, 0)
   last_point.x = min(last_point.x, handle.chunk_size.x * max_chunks_per_line * CELL_SIZE)
-  last_point.y = min(last_point.y, handle.chunk_size.y * max_chunks_per_line * CELL_SIZE)
   last_point.x = max(last_point.x, 0)
+  last_point.y = min(last_point.y, handle.chunk_size.y * max_chunks_per_line * CELL_SIZE)
   last_point.y = max(last_point.y, 0)
 
   for y in first_point.y..<last_point.y {
@@ -79,9 +79,11 @@ process_selection :: proc(terrain: ^Component_Terrain) {
   }
 
   rl.EndMode2D()
-  for chunk_x in (first_point.x / handle.chunk_size.x) / CELL_SIZE..=(last_point.x / handle.chunk_size.x) / CELL_SIZE {
-    for chunk_y in (first_point.y / handle.chunk_size.y) / CELL_SIZE..=(last_point.y / handle.chunk_size.y) / CELL_SIZE {
-      draw_chunk(handle, &handle.chunks[chunk_y * i32(max_chunks_per_line) + chunk_x])
+  for chunk_y in (first_point.y / handle.chunk_size.y) / CELL_SIZE..=(last_point.y / handle.chunk_size.y) / CELL_SIZE {
+    for chunk_x in (first_point.x / handle.chunk_size.x) / CELL_SIZE..=(last_point.x / handle.chunk_size.x) / CELL_SIZE {
+      idx: int = int(chunk_y * i32(max_chunks_per_line) + chunk_x)
+
+      if idx < len(handle.chunks) do draw_chunk(handle, &handle.chunks[idx])
     }
   }
   rl.BeginMode2D(engine.camera)
