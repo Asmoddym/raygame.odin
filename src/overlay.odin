@@ -2,7 +2,6 @@ package macro
 
 import "enums"
 import "engine"
-import "globals"
 import rl "vendor:raylib"
 
 
@@ -12,11 +11,13 @@ overlay_system_draw :: proc() {
 }
 
 // Draw inventory subsystem
+// TODO: Avoid having to always recreate the whole render texture
 overlay_subsystem_draw_inventory :: proc() {
   overlay := &engine.game_state.current_scene.overlays[int(enums.OverlayID.INVENTORY)]
 
-  backpack := engine.database_get_component(globals.player_id, &table_backpacks)
-  tiles := backpack.max_items
+  // backpack := engine.database_get_component(globals.player_id, &table_backpacks)
+  // tiles := backpack.max_items
+  tiles := 5
 
   padding := int(f64(overlay.resolution.x) * PADDING_RATIO)
   tile_width: i32 = overlay.resolution.y - 2 * i32(padding)
@@ -29,24 +30,28 @@ overlay_subsystem_draw_inventory :: proc() {
   // 1 and -2 are here to see the lines
   rl.DrawRectangleLines(1, 1, overlay.resolution.x - 1, overlay.resolution.y - 2, rl.WHITE)
 
-  for i in 0..<tiles {
-    offset := init_offset + i32(i * (int(tile_width) + padding))
-
-    rl.DrawRectangleLines(offset, i32(padding), tile_width, tile_width, rl.WHITE)
-
-    if i < len(backpack.items) {
-      texture := items_get_icon(backpack.items[i])
-      rl.DrawTexturePro(texture, { 0, 0, f32(texture.width), f32(texture.height) }, { f32(offset), f32(padding), f32(tile_width), f32(tile_width) }, { 0, 0 }, 0, rl.WHITE)
-    }
-  }
-
-  rl.EndTextureMode()
-
   position: [2]f32 = {
     f32(engine.game_state.resolution.x / 2 - overlay.resolution.x / 2),
     // - f32(overlay.resolution.y) * 0.1 is here to set a little dynamic margin at the bottom
     f32(engine.game_state.resolution.y - overlay.resolution.y) - f32(overlay.resolution.y) * 0.1,
   }
+
+  for i in 0..<tiles {
+    offset := init_offset + i32(i * (int(tile_width) + padding))
+
+    rl.DrawRectangleLines(offset, i32(padding), tile_width, tile_width, rl.WHITE)
+
+    min_x := i32(position.x) + offset
+    max_x := min_x + tile_width
+    min_y := i32(position.y)
+    max_y := min_y + tile_width
+
+    if rl.GetMouseX() >= min_x && rl.GetMouseX() <= max_x && rl.GetMouseY() >= min_y && rl.GetMouseY() <= max_y {
+      rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.WHITE)
+    }
+  }
+
+  rl.EndTextureMode()
 
   rl.DrawTexturePro(overlay.render_texture.texture,
     rl.Rectangle { 0, 0, f32(overlay.resolution.x), -f32(overlay.resolution.y) },

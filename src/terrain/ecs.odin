@@ -26,7 +26,7 @@ init :: proc() {
   tileset         := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
   component       := engine.database_add_component(engine.database_create_entity(), &table_terrains)
   component.handle = initialize_handle(50, 50, tileset)
-  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, "", false, false, false, 0 }
+  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, "", false, false, 0, { 0, 0 } }
 
   perlin_noise.repermutate(&component.handle.biome_noise_handle)
   perlin_noise.repermutate(&component.handle.default_noise_handle)
@@ -71,8 +71,14 @@ system_manipulation :: proc() {
 // Main draw system.
 system_draw :: proc() {
   if len(table_terrains.items) == 0 do return
-    drawn_rec := engine.get_drawn_frame_rec()
     handle    := &table_terrains.items[0].handle
+    drawn_rec := [2]rl.Vector2 {
+      rl.GetWorldToScreen2D(engine.camera.target, engine.camera),
+      rl.GetScreenToWorld2D({
+        f32(engine.game_state.resolution.x),
+        f32(engine.game_state.resolution.y),
+      }, engine.camera),
+    }
 
   for &c in handle.chunks {
     pos: [2]f32 = {
@@ -112,10 +118,8 @@ system_mouse_inputs :: proc(terrain: ^Component_Terrain) {
   if rl.IsMouseButtonDown(rl.MouseButton.LEFT) {
     delta := rl.GetMouseDelta()
 
-    engine.camera.target.x -= relative_to_zoom(delta.x)
-    engine.camera.target.y -= relative_to_zoom(delta.y)
-
-    terrain.manipulation_state.camera_changed = true
+    terrain.manipulation_state.target_delta.x -= relative_to_zoom(delta.x)
+    terrain.manipulation_state.target_delta.y -= relative_to_zoom(delta.y)
   }
 
   if rl.IsMouseButtonPressed(rl.MouseButton.RIGHT) {
@@ -139,10 +143,16 @@ system_keyboard_inputs :: proc(terrain: ^Component_Terrain) {
   time  := rl.GetFrameTime()
   value := relative_to_zoom(800 * time)
 
-  if rl.IsKeyDown(rl.KeyboardKey.LEFT)  do engine.camera.target.x -= value
-  if rl.IsKeyDown(rl.KeyboardKey.RIGHT) do engine.camera.target.x += value
-  if rl.IsKeyDown(rl.KeyboardKey.UP)    do engine.camera.target.y -= value
-  if rl.IsKeyDown(rl.KeyboardKey.DOWN)  do engine.camera.target.y += value
-
-  terrain.manipulation_state.camera_changed = true
+  if rl.IsKeyDown(rl.KeyboardKey.LEFT)  {
+    terrain.manipulation_state.target_delta.x -= value
+  }
+  if rl.IsKeyDown(rl.KeyboardKey.RIGHT) {
+    terrain.manipulation_state.target_delta.x += value
+  }
+  if rl.IsKeyDown(rl.KeyboardKey.UP)    {
+    terrain.manipulation_state.target_delta.y -= value
+  }
+  if rl.IsKeyDown(rl.KeyboardKey.DOWN)  {
+    terrain.manipulation_state.target_delta.y += value
+  }
 }

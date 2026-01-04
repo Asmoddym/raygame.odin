@@ -2,6 +2,7 @@
 
 package macro
 
+import "core:fmt"
 import "core:log"
 import "engine"
 import "enums"
@@ -119,22 +120,13 @@ main :: proc() {
   engine.system_register(bounding_box.system_draw,               { int(enums.SceneID.MAIN) })
   engine.system_register(ui.system_text_box_draw,                { int(enums.SceneID.MAIN) })
 
-  // engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+  engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
 
   engine.system_register(pause_system_main)
   engine.system_register(pause_system_toggle)
 
   // engine.system_register(collectable_system_main)
 
-  // Mouse
-  // bbox := engine.database_add_component(engine.database_create_entity(), &bounding_box.layers[4])
-  // bbox.box = rl.Rectangle { 0, 0, 16, 16 }
-  // bbox.movable = false
-  // bbox.collidable = false
-  // bbox.layer_id = 4
-  //
-  // init_npc()
-  // init_player()
   terrain.init()
 
   engine.run()

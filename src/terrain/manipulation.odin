@@ -12,16 +12,15 @@ ManipulationState :: struct {
   selecting: bool,
   selection_finished: bool,
 
-  camera_changed: bool,
-
   zoom_delta: f32,
+  target_delta: [2]f32,
 }
 
 // Different states processing with camera handling.
 process_manipulation_state :: proc(terrain: ^Component_Terrain) {
-  if terrain.manipulation_state.camera_changed {
-    ensure_camera_capped(&terrain.handle)
-    terrain.manipulation_state.camera_changed = false
+  if terrain.manipulation_state.target_delta != { 0, 0 } {
+    ensure_camera_capped(terrain)
+    terrain.manipulation_state.target_delta = { 0, 0 }
   }
 
   if terrain.manipulation_state.zoom_delta != 0 {
@@ -94,45 +93,37 @@ process_selection :: proc(terrain: ^Component_Terrain) {
 
 
 // Ensure zoom is capped.
+// TODO: Use an offset to center the zoom
 @(private="file")
 ensure_zoom_capped :: proc(terrain: ^Component_Terrain) {
-  new_zoom := engine.camera.zoom + terrain.manipulation_state.zoom_delta * ZOOM_SPEED
+  engine.camera.zoom += terrain.manipulation_state.zoom_delta * ZOOM_SPEED
+  engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
+  engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
 
-  max_x := f32(terrain.handle.chunk_size.x * terrain.handle.displayed_tile_size) * f32(max_chunks_per_line)
-  max_y := f32(terrain.handle.chunk_size.y * terrain.handle.displayed_tile_size) * f32(max_chunks_per_line)
+  last_point := rl.GetWorldToScreen2D({ f32(terrain.handle.chunk_pixel_size.x * max_chunks_per_line), f32(terrain.handle.chunk_pixel_size.y * max_chunks_per_line) }, engine.camera)
 
-  x_check := f32(engine.game_state.resolution.x) * 1 / (new_zoom + ZOOM_SPEED) < max_x
-  y_check := f32(engine.game_state.resolution.y) * 1 / (new_zoom + ZOOM_SPEED) < max_y
-
-  if x_check && y_check {
-    engine.camera.zoom = new_zoom
-    engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
-    engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
-
-    ensure_camera_capped(&terrain.handle)
+  if last_point.x < f32(engine.game_state.resolution.x) || last_point.y < f32(engine.game_state.resolution.y) {
+    engine.camera.zoom = f32(engine.game_state.resolution.x) / f32(terrain.handle.chunk_pixel_size.x * max_chunks_per_line)
   }
+
+  ensure_camera_capped(terrain)
 }
 
 // Ensure camera is in frame
 @(private="file")
-ensure_camera_capped :: proc(handle: ^Handle) {
-  relative_offset_x := relative_to_zoom(engine.camera.offset.x)
-  relative_offset_y := relative_to_zoom(engine.camera.offset.y)
+ensure_camera_capped :: proc(terrain: ^Component_Terrain) {
+  last_point := rl.Vector2 {
+    f32(terrain.handle.chunk_pixel_size.x * max_chunks_per_line) - f32(engine.game_state.resolution.x) / engine.camera.zoom,
+    f32(terrain.handle.chunk_pixel_size.y * max_chunks_per_line) - f32(engine.game_state.resolution.y) / engine.camera.zoom,
+  }
 
-  threshold_x: f32 = f32(engine.game_state.resolution.x) / 2
-  threshold_y: f32 = f32(engine.game_state.resolution.y) / 2
+  engine.camera.target.x += terrain.manipulation_state.target_delta.x
+  engine.camera.target.x = max(0, engine.camera.target.x)
+  engine.camera.target.x = min(last_point.x, engine.camera.target.x)
 
-  x := engine.camera.target.x - relative_offset_x
-  y := engine.camera.target.y - relative_offset_y
-
-  max_x := f32(handle.chunk_size.x * handle.displayed_tile_size) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.x / 2) - relative_offset_x
-  max_y := f32(handle.chunk_size.y * handle.displayed_tile_size) * f32(max_chunks_per_line) - relative_to_zoom(engine.game_state.resolution.y / 2) - relative_offset_y
-
-  if x < -threshold_x do engine.camera.target.x = relative_offset_x - threshold_x
-  if y < -threshold_y do engine.camera.target.y = relative_offset_y - threshold_y
-
-  if x > max_x + threshold_x do engine.camera.target.x = max_x + relative_offset_x + threshold_x
-  if y > max_y + threshold_y do engine.camera.target.y = max_y + relative_offset_y + threshold_y
+  engine.camera.target.y += terrain.manipulation_state.target_delta.y
+  engine.camera.target.y = max(0, engine.camera.target.y)
+  engine.camera.target.y = min(last_point.y, engine.camera.target.y)
 }
 
 
