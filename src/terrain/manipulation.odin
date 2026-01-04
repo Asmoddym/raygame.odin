@@ -108,9 +108,9 @@ ensure_zoom_capped :: proc(terrain: ^Component_Terrain) {
     engine.camera.zoom = new_zoom
     engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
     engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
-  }
 
-  ensure_camera_capped(&terrain.handle)
+    ensure_camera_capped(&terrain.handle)
+  }
 }
 
 // Ensure camera is in frame
