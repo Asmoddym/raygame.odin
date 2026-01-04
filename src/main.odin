@@ -113,7 +113,7 @@ main :: proc() {
 
   // engine.system_register(ui.system_update_camera_position,       { int(enums.SceneID.MAIN) })
   engine.system_register(drawable_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
-  // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
+  engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   engine.system_register(ui.system_text_box_update,              { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box.system_collision_resolver, { int(enums.SceneID.MAIN) })
   engine.system_register(drawable_system_draw,                { int(enums.SceneID.MAIN) })
@@ -125,8 +125,11 @@ main :: proc() {
   engine.system_register(pause_system_main)
   engine.system_register(pause_system_toggle)
 
-  // engine.system_register(collectable_system_main)
+  engine.system_register(collectable_system_main)
 
+  init_player()
+  init_npc()
+  init_terrain()
   terrain.init()
 
   engine.run()

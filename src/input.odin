@@ -21,22 +21,22 @@ input_system_player_movement :: proc() {
 
   animated_sprite.state = int(enums.Direction.NONE)
 
-  if rl.IsKeyDown(rl.KeyboardKey.LEFT) {
+  if rl.IsKeyDown(rl.KeyboardKey.J) {
     bbox.box.x -= 3
     animated_sprite.state = int(enums.Direction.LEFT)
   }
 
-  if rl.IsKeyDown(rl.KeyboardKey.RIGHT) {
+  if rl.IsKeyDown(rl.KeyboardKey.L) {
     bbox.box.x += 3
     animated_sprite.state = int(enums.Direction.RIGHT)
   }
 
-  if rl.IsKeyDown(rl.KeyboardKey.UP) {
+  if rl.IsKeyDown(rl.KeyboardKey.I) {
     bbox.box.y -= 3
     animated_sprite.state = int(enums.Direction.UP)
   }
 
-  if rl.IsKeyDown(rl.KeyboardKey.DOWN) {
+  if rl.IsKeyDown(rl.KeyboardKey.K) {
     bbox.box.y += 3
     animated_sprite.state = int(enums.Direction.DOWN)
   }
