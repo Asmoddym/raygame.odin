@@ -47,7 +47,7 @@ window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
   }
 
   camera_set_offset_based_on_resolution()
-  camera_set_zoom_based_on_resolution()
+  camera_reset_zoom()
   scene_overlay_update_resolutions()
 
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })

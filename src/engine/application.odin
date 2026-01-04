@@ -124,9 +124,9 @@ application_debug_render_information :: proc() {
     rl.DrawText(strings.unsafe_string_to_cstring(str), 10, 10, 20, rl.LIME)
   }
 
-  text := rl.TextFormat("res: %dx%d\ntarget: %f, %f (zoom: %f)", game_state.resolution.x, game_state.resolution.y, camera.target.x, camera.target.y, camera.zoom)
+  text := rl.TextFormat("res: %dx%d\ntarget: %f, %f (zoom: %f)\noffset: %f, %f", game_state.resolution.x, game_state.resolution.y, camera.target.x, camera.target.y, camera.zoom, camera.offset.x, camera.offset.y)
 
-  rl.DrawText(text, 10, game_state.resolution.y - 48, 20, rl.WHITE)
+  rl.DrawText(text, 10, game_state.resolution.y - 70, 20, rl.WHITE)
 }
 
 

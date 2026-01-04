@@ -17,10 +17,9 @@ camera: rl.Camera2D
 
 // Initialize the camera from the screen resolution
 camera_init :: proc() {
-  camera_set_zoom_based_on_resolution()
+  camera_reset_zoom()
 
-  // camera.target = rl.Vector2 { f32(game_state.resolution.x) / 2 * 1 / camera.zoom, f32(game_state.resolution.y) / 2 * 1 / camera.zoom }
-  camera.target = { 0, 0 }
+  camera.target = rl.Vector2 { f32(game_state.resolution.x) / 2 / camera.zoom, f32(game_state.resolution.y) / 2 / camera.zoom }
   camera.rotation = 0.0
 
   rl.SetMousePosition(game_state.resolution.x / 2, game_state.resolution.y / 2)
@@ -30,11 +29,10 @@ camera_init :: proc() {
 
 // Set the camera offset from the screen resolution
 camera_set_offset_based_on_resolution :: proc() {
-  // camera.offset = rl.Vector2 { f32(game_state.resolution.x) / 2, f32(game_state.resolution.y) / 2 }
-  camera.offset = { 0, 0 }
+  camera.offset = rl.Vector2 { f32(game_state.resolution.x) / 2, f32(game_state.resolution.y) / 2 }
 }
 
 // Set the zoom based on a little resolution calculation
-camera_set_zoom_based_on_resolution :: proc() {
+camera_reset_zoom :: proc() {
   camera.zoom = 0.8
 }

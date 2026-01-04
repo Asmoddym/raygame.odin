@@ -1,5 +1,6 @@
 package terrain
 
+import "core:math"
 import "core:fmt"
 import "../engine"
 import "../lib/perlin_noise"
@@ -71,14 +72,15 @@ system_manipulation :: proc() {
 // Main draw system.
 system_draw :: proc() {
   if len(table_terrains.items) == 0 do return
-    handle    := &table_terrains.items[0].handle
-    drawn_rec := [2]rl.Vector2 {
-      rl.GetWorldToScreen2D(engine.camera.target, engine.camera),
-      rl.GetScreenToWorld2D({
-        f32(engine.game_state.resolution.x),
-        f32(engine.game_state.resolution.y),
-      }, engine.camera),
-    }
+
+  handle    := &table_terrains.items[0].handle
+  drawn_rec := [2]rl.Vector2 {
+    rl.GetScreenToWorld2D({ 0, 0 }, engine.camera),
+    rl.GetScreenToWorld2D({ f32(engine.game_state.resolution.x), f32(engine.game_state.resolution.y) }, engine.camera),
+  }
+
+  drawn_rec[0] = { math.ceil(drawn_rec[0].x), math.round(drawn_rec[0].y) }
+  drawn_rec[1] = { math.ceil(drawn_rec[1].x), math.round(drawn_rec[1].y) }
 
   for &c in handle.chunks {
     pos: [2]f32 = {
