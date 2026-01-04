@@ -8,7 +8,6 @@ import "../engine"
 
 ManipulationState :: struct {
   selection: [2][2]i32,
-  selection_text: string,
   selecting: bool,
   selection_finished: bool,
 
@@ -18,7 +17,7 @@ ManipulationState :: struct {
 
 // Different states processing with camera handling.
 process_manipulation_state :: proc(terrain: ^Component_Terrain) {
-  if terrain.manipulation_state.target_delta != { 0, 0 } {
+  if terrain.manipulation_state.target_delta.x != 0 || terrain.manipulation_state.target_delta.y != 0 {
     ensure_camera_capped(terrain)
     terrain.manipulation_state.target_delta = { 0, 0 }
   }

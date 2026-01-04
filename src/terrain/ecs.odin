@@ -27,7 +27,7 @@ init :: proc() {
   tileset         := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
   component       := engine.database_add_component(engine.database_create_entity(), &table_terrains)
   component.handle = initialize_handle(50, 50, tileset)
-  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, "", false, false, 0, { 0, 0 } }
+  component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, false, false, 0, { 0, 0 } }
 
   perlin_noise.repermutate(&component.handle.biome_noise_handle)
   perlin_noise.repermutate(&component.handle.default_noise_handle)
