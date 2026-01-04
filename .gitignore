@@ -9,3 +9,4 @@ ols.json
 raygame
 raygame-debug
 raygame*.dSYM*/
+*.pdb

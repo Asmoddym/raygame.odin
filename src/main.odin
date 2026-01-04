@@ -2,6 +2,7 @@
 
 package macro
 
+import "core:log"
 import "engine"
 import "enums"
 import "bounding_box"
@@ -95,6 +96,8 @@ init_terrain :: proc() {
 
 
 main :: proc() {
+  context.logger = log.create_console_logger(.Debug, {.Level, .Time, .Short_File_Path, .Line, .Procedure, .Terminal_Color})
+
   engine.init()
 
   engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
