@@ -18,6 +18,7 @@ BASE_RESOLUTION: [2]i32 = { 1600, 900 }
 window_init :: proc() {
   rl.InitWindow(BASE_RESOLUTION.x, BASE_RESOLUTION.y, "coucou")
 
+  rl.SetConfigFlags({.VSYNC_HINT, .WINDOW_RESIZABLE, .MSAA_4X_HINT})
   rl.SetTargetFPS(rl.GetMonitorRefreshRate(rl.GetCurrentMonitor()))
 
   game_state.resolution = BASE_RESOLUTION
