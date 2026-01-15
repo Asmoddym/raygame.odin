@@ -1,12 +1,18 @@
 package terrain
 
-CELL_SIZE: i32 = 16
-
-// Max chunks for the map
-max_chunks_per_line: i32 = 10
-
 // Zoom speed
 ZOOM_SPEED: f32 = 0.05
 
 // Zoom interval
 ZOOM_INTERVAL: [2]f32 = { 0.1, 3 }
+
+
+TILE_SIZE: i32 = 16
+F32_TILE_SIZE: f32 = f32(TILE_SIZE)
+
+CHUNK_SIZE: i32 = 50
+F32_CHUNK_SIZE: f32 = f32(CHUNK_SIZE)
+
+CHUNK_PIXEL_SIZE := TILE_SIZE * CHUNK_SIZE
+
+F32_CHUNK_PIXEL_SIZE := F32_CHUNK_SIZE * F32_TILE_SIZE
