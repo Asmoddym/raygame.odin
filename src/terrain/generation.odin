@@ -7,6 +7,7 @@
 
 package terrain
 
+import "core:fmt"
 import "base:builtin"
 import rand "core:math/rand"
 import math "core:math"
@@ -18,7 +19,7 @@ import rl "vendor:raylib"
 // terrain contains handle.chunk_size.y rows, each containing handle.chunk_size.x cells
 Chunk :: struct {
   render_texture: rl.RenderTexture,
-  terrain: [dynamic][dynamic]TerrainCell,
+  // terrain: [dynamic][dynamic]TerrainCell,
   position: [2]i32,
 }
 
@@ -26,11 +27,12 @@ Chunk :: struct {
 // All generated chunks are stored in the chunks slice.
 Handle :: struct {
   chunk_size: [2]i32,
-  chunks: [dynamic]Chunk,
+  tiles: [dynamic]TerrainCell,
   tileset: rl.Texture,
   tile_size: i32,
-  displayed_tile_size: i32,
+
   chunk_pixel_size: [2]i32,
+  display_chunks: [dynamic]Chunk,
 
   default_noise_handle: perlin_noise.Handle,
   biome_noise_handle: perlin_noise.Handle,
@@ -48,70 +50,87 @@ TerrainCell :: struct {
 }
 
 
-
 // PROCS
 
 
 // Handle initializer.
 // Takes the chunk dimensions and the tileset to be used for this terrain as well as the continent dimensions (check Handle definition for more info)
-initialize_handle :: proc(#any_int chunk_width, chunk_height: i32, tileset: rl.Texture, tile_size: i32 = 16, displayed_tile_size: i32 = 16) -> Handle {
-  return Handle {
-    { chunk_width, chunk_height },
-    {},
-    tileset,
-    tile_size,
-    displayed_tile_size,
-    {
-      chunk_width * displayed_tile_size,
-      chunk_height * displayed_tile_size,
-    },
-    perlin_noise.initialize_handle(),
-    perlin_noise.initialize_handle(),
-  }
+initialize_handle :: proc(#any_int chunk_width, chunk_height: i32, tileset: rl.Texture, tile_size: i32 = 16) -> ^Handle {
+  handle: ^Handle = new(Handle)
+
+  handle.chunk_size = { chunk_width, chunk_height }
+  handle.tiles = make([dynamic]TerrainCell, (chunk_width * max_chunks_per_line) * (chunk_height * max_chunks_per_line))
+    handle.tileset = tileset
+    handle.tile_size = tile_size
+    handle.chunk_pixel_size = {
+      chunk_width * tile_size,
+      chunk_height * tile_size,
+    }
+    handle.default_noise_handle = perlin_noise.initialize_handle()
+    handle.biome_noise_handle = perlin_noise.initialize_handle()
+
+  return handle
 }
+
+// // Generate the chunk at the given x and y coords.
+// generate_chunk :: proc(handle: ^Handle, #any_int x, y: i32) {
+//   append(&handle.chunks, Chunk {
+//     rl.LoadRenderTexture(handle.chunk_size.x * handle.displayed_tile_size, handle.chunk_size.y * handle.displayed_tile_size),
+//     generate_chunk_terrain(handle, x, y),
+//     { x, y },
+//   })
+//
+//   last_chunk := &handle.chunks[len(handle.chunks) - 1]
+//
+//   draw_chunk(handle, last_chunk)
+// }
 
 // Generate the chunk at the given x and y coords.
-generate_chunk :: proc(handle: ^Handle, #any_int x, y: i32) {
-  append(&handle.chunks, Chunk {
-    rl.LoadRenderTexture(handle.chunk_size.x * handle.displayed_tile_size, handle.chunk_size.y * handle.displayed_tile_size),
-    generate_chunk_terrain(handle, x, y),
-    { x, y },
-  })
+generate_terrain_cell :: proc(handle: ^Handle, #any_int x, y: i32) -> TerrainCell {
+  detail_value, base_altitude_value, altitude: f32
+  altitude = 0
 
-  last_chunk := &handle.chunks[len(handle.chunks) - 1]
+  biome_value := generate_biome_value(handle, x, y)
+  base_altitude_value = generate_base_altitude_value(handle, x, y)
+  detail_value = generate_detail_value(handle, x, y)
 
-  draw_chunk(handle, last_chunk)
+  altitude += 2.0 * detail_value - 1
+  altitude += base_altitude_value
+
+  return create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
 }
+
+
 
 // Draw a generated chunk.
 // tile_size is inversed in the source definition to display it in the right order.
-draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
-  rl.BeginTextureMode(chunk.render_texture)
-  rl.ClearBackground(rl.BLACK)
-
-  for &line in chunk.terrain {
-    for &cell in line {
-      source := rl.Rectangle {
-        f32(cell.tileset_pos.x) * f32(handle.tile_size),
-        f32(cell.tileset_pos.y) * f32(handle.tile_size),
-        f32(handle.tile_size),
-        f32(handle.tile_size),
-      }
-
-      dest := rl.Rectangle {
-        f32(cell.position.x * handle.displayed_tile_size),
-        f32(cell.position.y * handle.displayed_tile_size),
-        f32(handle.displayed_tile_size),
-        f32(handle.displayed_tile_size),
-      }
-
-      rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
-    }
-  }
-
-  rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
-  rl.EndTextureMode()
-}
+// draw_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
+//   rl.BeginTextureMode(chunk.render_texture)
+//   rl.ClearBackground(rl.BLACK)
+//
+//   for &line in chunk.terrain {
+//     for &cell in line {
+//       source := rl.Rectangle {
+//         f32(cell.tileset_pos.x) * f32(handle.tile_size),
+//         f32(cell.tileset_pos.y) * f32(handle.tile_size),
+//         f32(handle.tile_size),
+//         f32(handle.tile_size),
+//       }
+//
+//       dest := rl.Rectangle {
+//         f32(cell.position.x * handle.displayed_tile_size),
+//         f32(cell.position.y * handle.displayed_tile_size),
+//         f32(handle.displayed_tile_size),
+//         f32(handle.displayed_tile_size),
+//       }
+//
+//       rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+//     }
+//   }
+//
+//   rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
+//   rl.EndTextureMode()
+// }
 
 
 //
@@ -145,37 +164,101 @@ generate_biome_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
   return perlin_noise.octave_perlin(&handle.biome_noise_handle, x, y, noise_scale = 0.015, persistence = 0.3)
 }
 
-// Terrain generation for a given chunk x and y.
-// Takes the handle too to be able to calculate the distance from the continent
-@(private="file")
-generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: i32) -> [dynamic][dynamic]TerrainCell {
-  terrain := make([dynamic][dynamic]TerrainCell, handle.chunk_size.y)
-
-  for y in 0..<handle.chunk_size.y {
-    relative_x, relative_y: i32
-
-    terrain[y] = make([dynamic]TerrainCell, handle.chunk_size.x)
-
-    for x in 0..<handle.chunk_size.x {
-      detail_value, base_altitude_value, altitude: f32
-      altitude = 0
-
-      relative_y = y + handle.chunk_size.y * chunk_y
-      relative_x = x + handle.chunk_size.x * chunk_x
-
-      biome_value := generate_biome_value(handle, relative_x, relative_y)
-      base_altitude_value = generate_base_altitude_value(handle, relative_x, relative_y)
-      detail_value = generate_detail_value(handle, relative_x, relative_y)
-
-      altitude += 2.0 * detail_value - 1
-      altitude += base_altitude_value
-
-      terrain[y][x] = create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
-    }
+generate_display_chunk :: proc(handle: ^Handle, chunk_x, chunk_y: i32) -> Chunk {
+  chunk := Chunk {
+    rl.LoadRenderTexture(handle.chunk_size.x * handle.tile_size, handle.chunk_size.y * handle.tile_size),
+    { chunk_x, chunk_y },
   }
 
-  return terrain
+  draw_display_chunk(handle, &chunk)
+
+  return chunk
 }
+
+draw_display_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
+  rl.BeginTextureMode(chunk.render_texture)
+  rl.ClearBackground(rl.BLACK)
+
+  for y in 0..<handle.chunk_size.y {
+    for x in 0..<handle.chunk_size.x {
+      cell := &handle.tiles[(chunk.position.y + y) * (max_chunks_per_line * handle.chunk_size.y) + (chunk.position.x + x)]
+
+      source := rl.Rectangle {
+        f32(cell.tileset_pos.x) * f32(handle.tile_size),
+        f32(cell.tileset_pos.y) * f32(handle.tile_size),
+        f32(handle.tile_size),
+        f32(handle.tile_size),
+      }
+
+      dest := rl.Rectangle {
+        f32(x * handle.tile_size),
+        f32(y * handle.tile_size),
+        f32(handle.tile_size),
+        f32(handle.tile_size),
+      }
+
+      rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+    }
+  }
+  rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
+  rl.EndTextureMode()
+
+  // for &line in chunk.terrain {
+  //   for &cell in line {
+  //     source := rl.Rectangle {
+  //       f32(cell.tileset_pos.x) * f32(handle.tile_size),
+  //       f32(cell.tileset_pos.y) * f32(handle.tile_size),
+  //       f32(handle.tile_size),
+  //       f32(handle.tile_size),
+  //     }
+  //
+  //     dest := rl.Rectangle {
+  //       f32(cell.position.x * handle.displayed_tile_size),
+  //       f32(cell.position.y * handle.displayed_tile_size),
+  //       f32(handle.displayed_tile_size),
+  //       f32(handle.displayed_tile_size),
+  //     }
+  //
+  //     rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
+  //   }
+  // }
+  //
+  // rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
+  // rl.EndTextureMode()
+
+}
+
+// // Terrain generation for a given chunk x and y.
+// // Takes the handle too to be able to calculate the distance from the continent
+// @(private="file")
+// generate_chunk_terrain :: proc(handle: ^Handle, chunk_x, chunk_y: i32) -> [dynamic][dynamic]TerrainCell {
+//   terrain := make([dynamic][dynamic]TerrainCell, handle.chunk_size.y)
+//
+//   for y in 0..<handle.chunk_size.y {
+//     relative_x, relative_y: i32
+//
+//     terrain[y] = make([dynamic]TerrainCell, handle.chunk_size.x)
+//
+//     for x in 0..<handle.chunk_size.x {
+//       detail_value, base_altitude_value, altitude: f32
+//       altitude = 0
+//
+//       relative_y = y + handle.chunk_size.y * chunk_y
+//       relative_x = x + handle.chunk_size.x * chunk_x
+//
+//       biome_value := generate_biome_value(handle, relative_x, relative_y)
+//       base_altitude_value = generate_base_altitude_value(handle, relative_x, relative_y)
+//       detail_value = generate_detail_value(handle, relative_x, relative_y)
+//
+//       altitude += 2.0 * detail_value - 1
+//       altitude += base_altitude_value
+//
+//       terrain[y][x] = create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
+//     }
+//   }
+//
+//   return terrain
+// }
 
 // Single cell creation.
 // Will iterate through the biomes and apply a tileset position to the cell.
@@ -197,13 +280,19 @@ create_cell :: proc(y, x: i32, altitude, biome_value, base_altitude_value, detai
     }
   }
 
-  for idx in 0..<len(biome.layers) {
-    current_layer := &biome.layers[idx]
-    previous_layer := idx - 1 >= 0 ? &biome.layers[idx - 1] : current_layer
-    next_layer := idx + 1 < len(biome.layers) ? &biome.layers[idx + 1] : current_layer
+  selected_layer_idx := -1
+
+  for current_layer_idx in 0..<len(biome.layers) {
+    next_layer_idx     := current_layer_idx + 1 < len(biome.layers) ? current_layer_idx + 1 : current_layer_idx
+    previous_layer_idx := current_layer_idx - 1 >= 0 ? current_layer_idx - 1 : current_layer_idx
+
+    current_layer      := &biome.layers[current_layer_idx]
+    previous_layer     := &biome.layers[previous_layer_idx]
+    next_layer         := &biome.layers[next_layer_idx]
 
     if altitude_overlap_interval.x >= current_layer.interval.x && altitude_overlap_interval.y < current_layer.interval.y {
-      tileset_pos = current_layer.tileset_position
+       selected_layer_idx = current_layer_idx
+       //tileset_pos = current_layer.tileset_position
     }
 
     overall_descriptor_overlap: [2]f32 = { previous_layer.interval.y - layer_threshold, next_layer.interval.x + layer_threshold }
@@ -213,21 +302,27 @@ create_cell :: proc(y, x: i32, altitude, biome_value, base_altitude_value, detai
       chances := i32(rand.int31()) % 100
 
       if chances >= 10 {
-        tileset_pos = current_layer.tileset_position
+         selected_layer_idx = current_layer_idx
+         //tileset_pos = current_layer.tileset_position
         break
       }
 
       if distance < 15 {
-        tileset_pos = next_layer.tileset_position
+         selected_layer_idx = next_layer_idx
+         //tileset_pos = next_layer.tileset_position
       } else if distance >= 15 && distance < 85 {
-        tileset_pos = current_layer.tileset_position
+         selected_layer_idx = current_layer_idx
+         //tileset_pos = current_layer.tileset_position
       } else {
-        tileset_pos = previous_layer.tileset_position
+         selected_layer_idx = previous_layer_idx
+         //tileset_pos = previous_layer.tileset_position
       }
 
       break
     }
   }
+
+   tileset_pos = biome.layers[selected_layer_idx].tileset_position
 
   return TerrainCell {
     altitude,
