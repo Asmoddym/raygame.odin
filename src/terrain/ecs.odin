@@ -1,7 +1,6 @@
 package terrain
 
 import "core:math"
-import "core:fmt"
 import "../engine"
 import "../lib/perlin_noise"
 import rl "vendor:raylib"
@@ -11,7 +10,7 @@ import rl "vendor:raylib"
 // Might be used with a different scale for minimap?
 Component_Terrain :: struct {
   using base: engine.Component(engine.Metadata),
-  handle: Handle,
+  handle: ^Handle,
   manipulation_state: ManipulationState,
 }
 
@@ -26,30 +25,14 @@ table_terrains: engine.Table(Component_Terrain)
 init :: proc() {
   tileset         := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
   component       := engine.database_add_component(engine.database_create_entity(), &table_terrains)
-  component.handle = initialize_handle(50, 50, tileset)
+  component.handle = generate_terrain(10, tileset)
   component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, false, false, 0, { 0, 0 } }
-
-  perlin_noise.repermutate(&component.handle.biome_noise_handle)
-  perlin_noise.repermutate(&component.handle.default_noise_handle)
-
-  for y in 0..<max_chunks_per_line {
-    for x in 0..<max_chunks_per_line {
-      generate_chunk(&component.handle, x, y)
-    }
-  }
 }
 
 // Unload textures and free memory.
 unload :: proc() {
   for &c in table_terrains.items {
-    for &chunk in c.handle.chunks {
-      rl.UnloadRenderTexture(chunk.render_texture)
-      for &line in chunk.terrain {
-        delete(line)
-      }
-      delete(chunk.terrain)
-    }
-    delete(c.handle.chunks)
+    delete_terrain(c.handle)
   }
 }
 
@@ -73,7 +56,7 @@ system_manipulation :: proc() {
 system_draw :: proc() {
   if len(table_terrains.items) == 0 do return
 
-  handle    := &table_terrains.items[0].handle
+  handle    := table_terrains.items[0].handle
   drawn_rec := [2]rl.Vector2 {
     rl.GetScreenToWorld2D({ 0, 0 }, engine.camera),
     rl.GetScreenToWorld2D({ f32(engine.game_state.resolution.x), f32(engine.game_state.resolution.y) }, engine.camera),
@@ -82,15 +65,15 @@ system_draw :: proc() {
   drawn_rec[0] = { math.ceil(drawn_rec[0].x), math.round(drawn_rec[0].y) }
   drawn_rec[1] = { math.ceil(drawn_rec[1].x), math.round(drawn_rec[1].y) }
 
-  for &c in handle.chunks {
+  for &c in handle.display_chunks {
     pos: [2]f32 = {
-      f32(c.position.x * handle.chunk_pixel_size.x),
-      f32(c.position.y * handle.chunk_pixel_size.y),
+      f32(c.position.x * CHUNK_PIXEL_SIZE),
+      f32(c.position.y * CHUNK_PIXEL_SIZE),
     }
 
     // If the chunks are not on draw range, we don't want them drawn
-    chunk_presence_in_frame_x_check := pos.x >= drawn_rec[0].x - f32(handle.chunk_pixel_size.x) && pos.x <= drawn_rec[1].x
-    chunk_presence_in_frame_y_check := pos.y >= drawn_rec[0].y - f32(handle.chunk_pixel_size.y) && pos.y <= drawn_rec[1].y
+    chunk_presence_in_frame_x_check := pos.x >= drawn_rec[0].x - F32_CHUNK_PIXEL_SIZE && pos.x <= drawn_rec[1].x
+    chunk_presence_in_frame_y_check := pos.y >= drawn_rec[0].y - F32_CHUNK_PIXEL_SIZE && pos.y <= drawn_rec[1].y
 
     if !(chunk_presence_in_frame_x_check && chunk_presence_in_frame_y_check) {
       continue
@@ -100,8 +83,8 @@ system_draw :: proc() {
     rl.DrawTextureRec(
       c.render_texture.texture,
       rl.Rectangle { 0, 0,
-        f32(handle.chunk_pixel_size.x),
-        f32(-handle.chunk_pixel_size.y),
+        F32_CHUNK_PIXEL_SIZE,
+        -F32_CHUNK_PIXEL_SIZE,
       },
       rl.Vector2 { pos.x, pos.y },
       rl.WHITE,
@@ -127,11 +110,11 @@ system_mouse_inputs :: proc(terrain: ^Component_Terrain) {
   if rl.IsMouseButtonPressed(rl.MouseButton.RIGHT) {
     terrain.manipulation_state.selecting = true
     terrain.manipulation_state.selection_finished = false
-    terrain.manipulation_state.selection[0] = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+    terrain.manipulation_state.selection[0] = to_cell_coords({ rl.GetMouseX(), rl.GetMouseY() })
   }
 
   if terrain.manipulation_state.selecting {
-    terrain.manipulation_state.selection[1] = to_cell_position({ rl.GetMouseX(), rl.GetMouseY() })
+    terrain.manipulation_state.selection[1] = to_cell_coords({ rl.GetMouseX(), rl.GetMouseY() })
   }
 
   if rl.IsMouseButtonReleased(rl.MouseButton.RIGHT) {

@@ -12,90 +12,6 @@ import "ui"
 import rl "vendor:raylib"
 import "terrain"
 
-BOX_SIZE: f32 = 32
-
-init_npc :: proc() {
-  npc := engine.database_create_entity()
-  bounding_box := engine.database_add_component(npc, &bounding_box.layers[1])
-  bounding_box.box = rl.Rectangle { 100, 100, BOX_SIZE, BOX_SIZE }
-  bounding_box.movable = false
-  bounding_box.collidable = true
-  bounding_box.layer_id = 1
-
-  drawable_animated_sprite_init(engine.database_add_component(npc, &table_animated_sprites[1]), {
-    int(enums.Direction.NONE) = "idle.png",
-    int(enums.Direction.UP) = "up.png",
-    int(enums.Direction.DOWN) = "down.png",
-    int(enums.Direction.LEFT) = "left.png",
-    int(enums.Direction.RIGHT) = "right.png",
-  }, enums.Direction.NONE)
-
-  collectable := engine.database_add_component(npc, &table_collectables)
-  collectable.interaction_text = "seed je suis gentil"
-  collectable.metadata.pickup_text_box_id = 0
-  collectable.metadata.interaction_text_box_id = 0
-  collectable.metadata.bounding_box = bounding_box
-  collectable.metadata.keep_interaction_alive = false
-
-  engine.database_add_component(npc, &table_backpacks).items = { .FLOWER }
-}
-
-init_player :: proc() {
-  globals.player_id = engine.database_create_entity()
-  bounding_box := engine.database_add_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID])
-  bounding_box.box = rl.Rectangle { 300, 300, BOX_SIZE, BOX_SIZE }
-  bounding_box.movable = true
-  bounding_box.collidable = true
-  bounding_box.layer_id = globals.PLAYER_LAYER_ID
-  player_animated_sprite := engine.database_add_component(globals.player_id, &table_animated_sprites[globals.PLAYER_LAYER_ID])
-  engine.database_add_component(globals.player_id, &table_backpacks).max_items = 5
-
-  drawable_animated_sprite_init(player_animated_sprite, {
-    int(enums.Direction.NONE) = "idle.png",
-    int(enums.Direction.UP) = "up.png",
-    int(enums.Direction.DOWN) = "down.png",
-    int(enums.Direction.LEFT) = "left.png",
-    int(enums.Direction.RIGHT) = "right.png",
-  }, enums.Direction.NONE)
-}
-
-init_terrain :: proc() {
-  tree_trunk_1 := engine.database_create_entity()
-  engine.database_add_component(tree_trunk_1, &table_sprites[globals.PLAYER_LAYER_ID]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
-  tree_trunk_1_bb := engine.database_add_component(tree_trunk_1, &bounding_box.layers[globals.PLAYER_LAYER_ID])
-  tree_trunk_1_bb.box = rl.Rectangle { 500, 500, BOX_SIZE, BOX_SIZE }
-  tree_trunk_1_bb.movable = true
-  tree_trunk_1_bb.collidable = true
-  tree_trunk_1_bb.layer_id = globals.PLAYER_LAYER_ID
-
-  tree_trunk_2 := engine.database_create_entity()
-  engine.database_add_component(tree_trunk_2, &table_sprites[globals.PLAYER_LAYER_ID + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_2.png")
-  tree_trunk_2_bb := engine.database_add_component(tree_trunk_2, &bounding_box.layers[globals.PLAYER_LAYER_ID + 1])
-  tree_trunk_2_bb.box = rl.Rectangle { 500, 500 - BOX_SIZE, BOX_SIZE, BOX_SIZE }
-  tree_trunk_2_bb.movable = false
-  tree_trunk_2_bb.collidable = false
-  tree_trunk_2_bb.layer_id = globals.PLAYER_LAYER_ID + 1
-
-  tree_leaves := engine.database_create_entity()
-  engine.database_add_component(tree_leaves, &table_sprites[globals.PLAYER_LAYER_ID + 1]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_leaves.png")
-  tree_leaves_bb := engine.database_add_component(tree_leaves, &bounding_box.layers[globals.PLAYER_LAYER_ID + 1])
-  tree_leaves_bb.box = rl.Rectangle { 500 - (BOX_SIZE * 1) / 2, 500 - BOX_SIZE * 2 - BOX_SIZE, BOX_SIZE * 2, BOX_SIZE * 2}
-  tree_leaves_bb.movable = false
-  tree_leaves_bb.collidable = false
-  tree_leaves_bb.layer_id = globals.PLAYER_LAYER_ID + 1
-
-
-  // Additional
-  root := engine.database_create_entity()
-  engine.database_add_component(root, &table_sprites[globals.PLAYER_LAYER_ID]).texture = engine.assets_find_or_create(rl.Texture2D, "tree_trunk_1.png")
-  root_bb := engine.database_add_component(root, &bounding_box.layers[globals.PLAYER_LAYER_ID])
-  root_bb.box = rl.Rectangle { 650, 500, BOX_SIZE, BOX_SIZE }
-  root_bb.movable = false
-  root_bb.collidable = true
-  root_bb.layer_id = globals.PLAYER_LAYER_ID
-}
-
-
 main :: proc() {
   context.logger = log.create_console_logger(.Debug, {.Level, .Time, .Short_File_Path, .Line, .Procedure, .Terminal_Color})
 
@@ -111,28 +27,25 @@ main :: proc() {
   engine.system_register(terrain.system_draw,                    { int(enums.SceneID.MAIN) })
   engine.system_register(terrain.system_manipulation,            { int(enums.SceneID.MAIN) })
 
-  // engine.system_register(ui.system_update_camera_position,       { int(enums.SceneID.MAIN) })
-  engine.system_register(drawable_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
-  engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   engine.system_register(ui.system_text_box_update,              { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box.system_collision_resolver, { int(enums.SceneID.MAIN) })
-  engine.system_register(drawable_system_draw,                { int(enums.SceneID.MAIN) })
+  engine.system_register(drawable_system_draw,                   { int(enums.SceneID.MAIN) })
   engine.system_register(bounding_box.system_draw,               { int(enums.SceneID.MAIN) })
   engine.system_register(ui.system_text_box_draw,                { int(enums.SceneID.MAIN) })
 
+  // engine.system_register(ui.system_update_camera_position,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(drawable_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
+  // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+  // engine.system_register(collectable_system_main)
 
   engine.system_register(pause_system_main)
   engine.system_register(pause_system_toggle)
 
-  engine.system_register(collectable_system_main)
-
-  init_player()
-  init_npc()
-  init_terrain()
   terrain.init()
 
   engine.run()
+
   terrain.unload()
   engine.unload()
 }
