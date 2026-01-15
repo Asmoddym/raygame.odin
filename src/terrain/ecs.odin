@@ -1,8 +1,6 @@
 package terrain
 
-import "core:os"
 import "core:math"
-import "core:fmt"
 import "../engine"
 import "../lib/perlin_noise"
 import rl "vendor:raylib"
@@ -27,39 +25,14 @@ table_terrains: engine.Table(Component_Terrain)
 init :: proc() {
   tileset         := engine.assets_find_or_create(rl.Texture2D, "tileset/Tileset_Compressed_B_NoAnimation.png")
   component       := engine.database_add_component(engine.database_create_entity(), &table_terrains)
-  component.handle = initialize_handle(10, tileset)
+  component.handle = generate_terrain(10, tileset)
   component.manipulation_state = { {{ 0, 0 }, { 0, 0 }}, false, false, 0, { 0, 0 } }
-
-  perlin_noise.repermutate(&component.handle.biome_noise_handle)
-  perlin_noise.repermutate(&component.handle.default_noise_handle)
-
-  for y in 0..<component.handle.size * CHUNK_SIZE {
-    for x in 0..<component.handle.size * CHUNK_SIZE {
-      idx := y * (component.handle.size * CHUNK_SIZE) + x
-
-      component.handle.tiles[idx] = generate_terrain_cell(component.handle, x, y)
-    }
-  }
-
-  for chunk_y in 0..<component.handle.size {
-    for chunk_x in 0..<component.handle.size {
-      idx := chunk_y * component.handle.size + chunk_x
-
-      component.handle.display_chunks[idx] = generate_display_chunk(component.handle, chunk_x, chunk_y)
-    }
-  }
 }
 
 // Unload textures and free memory.
 unload :: proc() {
   for &c in table_terrains.items {
-    delete(c.handle.tiles)
-
-    for &chunk in c.handle.display_chunks {
-      rl.UnloadRenderTexture(chunk.render_texture)
-    }
-
-    delete(c.handle.display_chunks)
+    delete_terrain(c.handle)
   }
 }
 

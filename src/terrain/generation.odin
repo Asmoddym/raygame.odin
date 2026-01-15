@@ -7,7 +7,6 @@
 
 package terrain
 
-import "core:fmt"
 import "base:builtin"
 import rand "core:math/rand"
 import math "core:math"
@@ -19,19 +18,19 @@ import rl "vendor:raylib"
 // terrain contains handle.chunk_size.y rows, each containing handle.chunk_size.x cells
 Chunk :: struct {
   render_texture: rl.RenderTexture,
-  // terrain: [dynamic][dynamic]TerrainCell,
   position: [2]i32,
 }
 
 // Terrain handle to store specific configuration.
 // All generated chunks are stored in the chunks slice.
 Handle :: struct {
+  tileset: rl.Texture,
+
   tiles: [dynamic]TerrainCell,
   display_chunks: [dynamic]Chunk,
 
-  tileset: rl.Texture,
-
-  size: i32,
+  chunks_per_side: i32,
+  cell_count_per_side: i32,
 
   default_noise_handle: perlin_noise.Handle,
   biome_noise_handle: perlin_noise.Handle,
@@ -52,51 +51,44 @@ TerrainCell :: struct {
 // PROCS
 
 
-// Handle initializer.
-// Takes the chunk dimensions and the tileset to be used for this terrain as well as the continent dimensions (check Handle definition for more info)
-initialize_handle :: proc(size: i32, tileset: rl.Texture) -> ^Handle {
-  handle: ^Handle     = new(Handle)
-  tile_count_per_row := (CHUNK_SIZE * size)
+// Terrain generator.
+// Takes the number of chunks and the tileset to be used for this terrain.
+// Returns a Handle pointer.
+generate_terrain :: proc(size: i32, tileset: rl.Texture) -> ^Handle {
+  handle: ^Handle             = new(Handle)
 
-  handle.tiles = make([dynamic]TerrainCell, tile_count_per_row * tile_count_per_row)
-  handle.display_chunks = make([dynamic]Chunk, size * size)
-  handle.size = size
-  handle.tileset = tileset
+  handle.cell_count_per_side  = size * CHUNK_SIZE
+  handle.tiles                = make([dynamic]TerrainCell, handle.cell_count_per_side * handle.cell_count_per_side)
+  handle.display_chunks       = make([dynamic]Chunk, size * size)
+  handle.chunks_per_side      = size
+  handle.tileset              = tileset
 
   handle.default_noise_handle = perlin_noise.initialize_handle()
-  handle.biome_noise_handle = perlin_noise.initialize_handle()
+  handle.biome_noise_handle   = perlin_noise.initialize_handle()
+
+  perlin_noise.repermutate(&handle.biome_noise_handle)
+  perlin_noise.repermutate(&handle.default_noise_handle)
+
+  for y in 0..<handle.cell_count_per_side {
+    for x in 0..<handle.cell_count_per_side {
+      idx := y * handle.cell_count_per_side + x
+
+      handle.tiles[idx] = generate_terrain_cell(handle, x, y)
+    }
+  }
+
+  for chunk_y in 0..<handle.chunks_per_side {
+    for chunk_x in 0..<handle.chunks_per_side {
+      idx := chunk_y * handle.chunks_per_side + chunk_x
+
+      handle.display_chunks[idx] = generate_display_chunk(handle, chunk_x, chunk_y)
+    }
+  }
 
   return handle
 }
 
-// Generate the terrain cell at the given x and y coords.
-generate_terrain_cell :: proc(handle: ^Handle, #any_int x, y: i32) -> TerrainCell {
-  detail_value, base_altitude_value, altitude: f32
-  altitude = 0
-
-  biome_value := generate_biome_value(handle, x, y)
-  base_altitude_value = generate_base_altitude_value(handle, x, y)
-  detail_value = generate_detail_value(handle, x, y)
-
-  altitude += 2.0 * detail_value - 1
-  altitude += base_altitude_value
-
-  return create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
-}
-
-// Generate a display chunk from the chunk coords
-generate_display_chunk :: proc(handle: ^Handle, chunk_x, chunk_y: i32) -> Chunk {
-  chunk := Chunk {
-    rl.LoadRenderTexture(CHUNK_PIXEL_SIZE, CHUNK_PIXEL_SIZE),
-    { chunk_x, chunk_y },
-  }
-
-  draw_display_chunk(handle, &chunk)
-
-  return chunk
-}
-
-// Draw / redraw a display chunk
+// Draw / redraw a display chunk.
 draw_display_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
   rl.BeginTextureMode(chunk.render_texture)
   rl.ClearBackground(rl.BLACK)
@@ -105,7 +97,7 @@ draw_display_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 
   for y in 0..<CHUNK_SIZE {
     for x in 0..<CHUNK_SIZE {
-      cell := &handle.tiles[(chunk_tile_position.y + y) * (handle.size * CHUNK_SIZE) + (chunk_tile_position.x + x)]
+      cell := &handle.tiles[(chunk_tile_position.y + y) * handle.cell_count_per_side + (chunk_tile_position.x + x)]
 
       source := rl.Rectangle {
         f32(cell.tileset_pos.x) * F32_TILE_SIZE,
@@ -120,12 +112,24 @@ draw_display_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
         F32_TILE_SIZE,
         F32_TILE_SIZE,
       }
-
       rl.DrawTexturePro(handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
     }
   }
   rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
   rl.EndTextureMode()
+}
+
+// Unloads stuff generated in generate_terrain.
+// FREES THE POINTER.
+delete_terrain :: proc(handle: ^Handle) {
+  delete(handle.tiles)
+
+  for &chunk in handle.display_chunks {
+    rl.UnloadRenderTexture(chunk.render_texture)
+  }
+
+  delete(handle.display_chunks)
+  free(handle)
 }
 
 
@@ -136,29 +140,23 @@ draw_display_chunk :: proc(handle: ^Handle, chunk: ^Chunk) {
 
 
 
-// PROCS
+// CELLS
 
 
-// Base altitude generation using default_noise_handle.
-// Values are exagerated to force some altitude changes.
+// Generate the terrain cell at the given x and y coords.
 @(private="file")
-generate_base_altitude_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
-  base_altitude_value := perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.004, persistence = 0.4)
+generate_terrain_cell :: proc(handle: ^Handle, #any_int x, y: i32) -> TerrainCell {
+  detail_value, base_altitude_value, altitude: f32
+  altitude = 0
 
-  return math.remap_clamped(base_altitude_value, 0, 1, -2, 2) + 0.1
-}
+  biome_value := generate_biome_value(handle, x, y)
+  base_altitude_value = generate_base_altitude_value(handle, x, y)
+  detail_value = generate_detail_value(handle, x, y)
 
-// Detail value generation using default_noise_handle.
-@(private="file")
-generate_detail_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
-  return perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.015, persistence = 0.5)
-}
+  altitude += 2.0 * detail_value - 1
+  altitude += base_altitude_value
 
-// Biome value generation using biome_noise_handle.
-// Not very detailed and used for some additional details such as forest patches.
-@(private="file")
-generate_biome_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
-  return perlin_noise.octave_perlin(&handle.biome_noise_handle, x, y, noise_scale = 0.015, persistence = 0.3)
+  return create_cell(y, x, altitude, biome_value, base_altitude_value, detail_value)
 }
 
 // Single cell creation.
@@ -228,6 +226,44 @@ create_cell :: proc(y, x: i32, altitude, biome_value, base_altitude_value, detai
     tileset_pos,
     { x, y },
   }
+}
+
+// Base altitude generation using default_noise_handle.
+// Values are exagerated to force some altitude changes.
+@(private="file")
+generate_base_altitude_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
+  base_altitude_value := perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.004, persistence = 0.4)
+
+  return math.remap_clamped(base_altitude_value, 0, 1, -2, 2) + 0.1
+}
+
+// Detail value generation using default_noise_handle.
+@(private="file")
+generate_detail_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
+  return perlin_noise.octave_perlin(&handle.default_noise_handle, x, y, noise_scale = 0.015, persistence = 0.5)
+}
+
+// Biome value generation using biome_noise_handle.
+// Not very detailed and used for some additional details such as forest patches.
+@(private="file")
+generate_biome_value :: proc(handle: ^Handle, x, y: i32) -> f32 {
+  return perlin_noise.octave_perlin(&handle.biome_noise_handle, x, y, noise_scale = 0.015, persistence = 0.3)
+}
+
+
+// DISPLAY CHUNKS
+
+// Generate a display chunk from the chunk coords.
+@(private="file")
+generate_display_chunk :: proc(handle: ^Handle, chunk_x, chunk_y: i32) -> Chunk {
+  chunk := Chunk {
+    rl.LoadRenderTexture(CHUNK_PIXEL_SIZE, CHUNK_PIXEL_SIZE),
+    { chunk_x, chunk_y },
+  }
+
+  draw_display_chunk(handle, &chunk)
+
+  return chunk
 }
 
 

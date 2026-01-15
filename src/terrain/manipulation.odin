@@ -1,7 +1,5 @@
 package terrain
 
-import "core:fmt"
-import "core:slice"
 import rl "vendor:raylib"
 import "../ui"
 import "../engine"
@@ -56,18 +54,18 @@ process_selection :: proc(terrain: ^Component_Terrain) {
   first_point: [2]i32 = { min(selection[0].x, selection[1].x), min(selection[0].y, selection[1].y) }
   last_point: [2]i32 = { max(selection[0].x, selection[1].x), max(selection[0].y, selection[1].y) }
 
-  first_point.x = min(first_point.x, CHUNK_SIZE * terrain.handle.size)
+  first_point.x = min(first_point.x, terrain.handle.cell_count_per_side)
   first_point.x = max(first_point.x, 0)
-  first_point.y = min(first_point.y, CHUNK_SIZE * terrain.handle.size)
+  first_point.y = min(first_point.y, terrain.handle.cell_count_per_side)
   first_point.y = max(first_point.y, 0)
-  last_point.x = min(last_point.x, CHUNK_SIZE * terrain.handle.size)
+  last_point.x = min(last_point.x, terrain.handle.cell_count_per_side)
   last_point.x = max(last_point.x, 0)
-  last_point.y = min(last_point.y, CHUNK_SIZE * terrain.handle.size)
+  last_point.y = min(last_point.y, terrain.handle.cell_count_per_side)
   last_point.y = max(last_point.y, 0)
 
   for y in first_point.y..<last_point.y {
     for x in first_point.x..<last_point.x {
-      idx := y * (terrain.handle.size * CHUNK_SIZE) + x
+      idx := y * terrain.handle.cell_count_per_side + x
 
       handle.tiles[idx].tileset_pos = { 0, 0 }
     }
@@ -76,7 +74,8 @@ process_selection :: proc(terrain: ^Component_Terrain) {
   rl.EndMode2D()
   for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
     for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
-      idx: int = int(chunk_y * terrain.handle.size + chunk_x)
+      idx: int = int(chunk_y * terrain.handle.chunks_per_side + chunk_x)
+      if idx >= len(handle.display_chunks) do continue
 
       draw_display_chunk(handle, &handle.display_chunks[idx])
     }
@@ -88,7 +87,7 @@ process_selection :: proc(terrain: ^Component_Terrain) {
 // CAMERA
 
 map_side_pixel_size :: proc(handle: ^Handle) -> f32 {
-  return F32_CHUNK_PIXEL_SIZE * f32(handle.size)
+  return F32_CHUNK_PIXEL_SIZE * f32(handle.chunks_per_side)
 }
 
 // Ensure zoom is capped.
@@ -121,8 +120,8 @@ ensure_camera_capped :: proc(terrain: ^Component_Terrain) {
   }
 
   last_point := rl.Vector2 {
-    (f32(CHUNK_PIXEL_SIZE * terrain.handle.size) + first_point.x) - f32(engine.game_state.resolution.x) / engine.camera.zoom,
-    (f32(CHUNK_PIXEL_SIZE * terrain.handle.size) + first_point.y) - f32(engine.game_state.resolution.y) / engine.camera.zoom,
+    (map_side_pixel_size(terrain.handle) + first_point.x) - f32(engine.game_state.resolution.x) / engine.camera.zoom,
+    (map_side_pixel_size(terrain.handle) + first_point.y) - f32(engine.game_state.resolution.y) / engine.camera.zoom,
   }
 
   engine.camera.target.x += terrain.manipulation_state.target_delta.x
