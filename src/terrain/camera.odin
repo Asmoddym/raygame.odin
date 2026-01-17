@@ -10,7 +10,6 @@ map_side_pixel_size :: proc() -> f32 {
 
 // Ensure zoom is capped.
 ensure_zoom_capped :: proc() {
-  engine.camera.zoom += _manipulation_state.zoom_delta * ZOOM_SPEED
   engine.camera.zoom = min(ZOOM_INTERVAL[1], engine.camera.zoom)
   engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
 
@@ -40,11 +39,11 @@ ensure_camera_capped :: proc() {
     (map_side_pixel_size() + first_point.y) - f32(engine.game_state.resolution.y) / engine.camera.zoom,
   }
 
-  engine.camera.target.x += relative_to_zoom(_manipulation_state.target_delta.x)
+  // engine.camera.target.x += relative_to_zoom(_manipulation_state.target_delta.x)
   engine.camera.target.x = max(first_point.x, engine.camera.target.x)
   engine.camera.target.x = min(last_point.x, engine.camera.target.x)
 
-  engine.camera.target.y += relative_to_zoom(_manipulation_state.target_delta.y)
+  // engine.camera.target.y += relative_to_zoom(_manipulation_state.target_delta.y)
   engine.camera.target.y = max(first_point.y, engine.camera.target.y)
   engine.camera.target.y = min(last_point.y, engine.camera.target.y)
 }

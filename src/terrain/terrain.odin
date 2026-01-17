@@ -8,7 +8,6 @@ package terrain
 import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
-import "../ui"
 import rl "vendor:raylib"
 
 
@@ -130,38 +129,8 @@ draw :: proc() {
       rl.WHITE,
     )
   }
-
-  if _manipulation_state.selecting {
-    draw_selection()
-  } else {
-    draw_hover()
-  }
 }
 
-// Draw selection when in select mode.
-@(private="file")
-draw_selection :: proc() {
-  first_point: [2]i32 = { min(_manipulation_state.selection[0].x, _manipulation_state.selection[1].x), min(_manipulation_state.selection[0].y, _manipulation_state.selection[1].y) }
-  last_point: [2]i32 = { max(_manipulation_state.selection[0].x, _manipulation_state.selection[1].x), max(_manipulation_state.selection[0].y, _manipulation_state.selection[1].y) }
-
-  first_point[0] *= TILE_SIZE
-  first_point[1] *= TILE_SIZE
-  last_point[0] *= TILE_SIZE
-  last_point[1] *= TILE_SIZE
-
-  text := string(rl.TextFormat("%dx%d", abs(last_point.x - first_point.x) / TILE_SIZE, abs(last_point.y - first_point.y) / TILE_SIZE))
-  ui.text_box_draw_fast(text, last_point.x, last_point.y, i32(relative_to_zoom(18)))
-
-  rl.DrawRectangle(first_point.x, first_point.y, last_point.x - first_point.x, last_point.y - first_point.y, rl.Color { 255, 0, 0, 100 })
-}
-
-// Draw hovered cell when not in select mode.
-@(private="file")
-draw_hover :: proc() {
-  mouse_pos := to_cell_coords(rl.GetScreenToWorld2D(rl.GetMousePosition(), engine.camera))
-
-  rl.DrawRectangle(mouse_pos.x * TILE_SIZE, mouse_pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE, rl.Color { 255, 0, 0, 100 })
-}
 
 
 // GLOBALS

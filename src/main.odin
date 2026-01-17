@@ -40,7 +40,8 @@ main :: proc() {
   engine.system_register(pause_system_main)
   engine.system_register(pause_system_toggle)
 
-  engine.system_register(terrain.process_inputs)
+  engine.system_register(terrain.process_navigation)
+  engine.system_register(terrain.process_selection)
 
   terrain.generate(5)
 
