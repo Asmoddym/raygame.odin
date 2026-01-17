@@ -41,12 +41,7 @@ overlay_subsystem_draw_inventory :: proc() {
 
     rl.DrawRectangleLines(offset, i32(padding), tile_width, tile_width, rl.WHITE)
 
-    min_x := i32(position.x) + offset
-    max_x := min_x + tile_width
-    min_y := i32(position.y)
-    max_y := min_y + tile_width
-
-    if rl.GetMouseX() >= min_x && rl.GetMouseX() <= max_x && rl.GetMouseY() >= min_y && rl.GetMouseY() <= max_y {
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), { position.x + f32(offset), position.y, f32(tile_width), f32(tile_width) }) {
       rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.WHITE)
     }
   }
