@@ -1,0 +1,171 @@
+package terrain
+
+// There can be some interesting stuff to get from https://www.youtube.com/watch?v=6BdYzfVOyBY
+// I followed it on my very first try to have continents but I removed it later in favor of my base_altitude method.
+//
+// Could be worth checking out to have some nice oceans though.
+
+import math "core:math"
+import perlin_noise "../lib/perlin_noise"
+import engine "../engine"
+import "../ui"
+import rl "vendor:raylib"
+
+
+// Terrain handle to store specific configuration.
+// All generated chunks are stored in the chunks slice.
+Handle :: struct {
+  tileset: rl.Texture,
+
+  tiles: [dynamic]TerrainCell,
+  display_chunks: [dynamic]Chunk,
+
+  chunks_per_side: i32,
+  cell_count_per_side: i32,
+
+  default_noise_handle: perlin_noise.Handle,
+  biome_noise_handle: perlin_noise.Handle,
+}
+
+// Terrain cell data (display-only for now) struct.
+// tileset_pos holds the x,y position in the tileset (X first).
+TerrainCell :: struct {
+  altitude: f32,
+  biome_value: f32,
+  base_altitude_value: f32,
+  detail_value: f32,
+  tileset_pos: [2]i32,
+  position: [2]i32,
+}
+
+// Chunk data struct to the x and y coords.
+// Holds the render_texture loaded with (handle.chunk_size * handle_tile_size) pixels for width and height.
+// terrain contains handle.chunk_size.y rows, each containing handle.chunk_size.x cells
+Chunk :: struct {
+  render_texture: rl.RenderTexture,
+  position: [2]i32,
+}
+
+
+// PROCS
+
+
+// Genrate a terrain.
+// Takes the number of chunks and the tileset to be used for this terrain.
+// Returns a Handle pointer.
+generate :: proc(size: i32) {
+  _handle.cell_count_per_side  = size * CHUNK_SIZE
+  _handle.tiles                = make([dynamic]TerrainCell, _handle.cell_count_per_side * _handle.cell_count_per_side)
+  _handle.display_chunks       = make([dynamic]Chunk, size * size)
+  _handle.chunks_per_side      = size
+  _handle.tileset              = engine.assets_find_or_create(rl.Texture2D, TILESET_PATH)
+
+  _handle.default_noise_handle = perlin_noise.initialize_handle()
+  _handle.biome_noise_handle   = perlin_noise.initialize_handle()
+
+  perlin_noise.repermutate(&_handle.biome_noise_handle)
+  perlin_noise.repermutate(&_handle.default_noise_handle)
+
+  for y in 0..<_handle.cell_count_per_side {
+    for x in 0..<_handle.cell_count_per_side {
+      idx := y * _handle.cell_count_per_side + x
+
+      _handle.tiles[idx] = generate_cell(x, y)
+    }
+  }
+
+  for chunk_y in 0..<_handle.chunks_per_side {
+    for chunk_x in 0..<_handle.chunks_per_side {
+      idx := chunk_y * _handle.chunks_per_side + chunk_x
+
+      _handle.display_chunks[idx] = generate_display_chunk(chunk_x, chunk_y)
+    }
+  }
+}
+
+// Unloads stuff generated in generate_terrain.
+// FREES THE POINTER.
+unload :: proc() {
+  delete(_handle.tiles)
+
+  for &chunk in _handle.display_chunks {
+    rl.UnloadRenderTexture(chunk.render_texture)
+  }
+
+  delete(_handle.display_chunks)
+}
+
+// Main draw system.
+draw :: proc() {
+  drawn_rec := [2]rl.Vector2 {
+    rl.GetScreenToWorld2D({ 0, 0 }, engine.camera),
+    rl.GetScreenToWorld2D({ f32(engine.game_state.resolution.x), f32(engine.game_state.resolution.y) }, engine.camera),
+  }
+
+  drawn_rec[0] = { math.ceil(drawn_rec[0].x), math.round(drawn_rec[0].y) }
+  drawn_rec[1] = { math.ceil(drawn_rec[1].x), math.round(drawn_rec[1].y) }
+
+  for &c in _handle.display_chunks {
+    pos: [2]f32 = {
+      f32(c.position.x * CHUNK_PIXEL_SIZE),
+      f32(c.position.y * CHUNK_PIXEL_SIZE),
+    }
+
+    // If the chunks are not on draw range, we don't want them drawn
+    chunk_presence_in_frame_x_check := pos.x >= drawn_rec[0].x - F32_CHUNK_PIXEL_SIZE && pos.x <= drawn_rec[1].x
+    chunk_presence_in_frame_y_check := pos.y >= drawn_rec[0].y - F32_CHUNK_PIXEL_SIZE && pos.y <= drawn_rec[1].y
+
+    if !(chunk_presence_in_frame_x_check && chunk_presence_in_frame_y_check) {
+      continue
+    }
+
+    // Using this method to invert the texture as that's the way Raylib works
+    rl.DrawTextureRec(
+      c.render_texture.texture,
+      rl.Rectangle { 0, 0,
+        F32_CHUNK_PIXEL_SIZE,
+        -F32_CHUNK_PIXEL_SIZE,
+      },
+      rl.Vector2 { pos.x, pos.y },
+      rl.WHITE,
+    )
+  }
+
+  if _manipulation_state.selecting {
+    draw_selection()
+  } else {
+    draw_hover()
+  }
+}
+
+// Draw selection when in select mode.
+@(private="file")
+draw_selection :: proc() {
+  first_point: [2]i32 = { min(_manipulation_state.selection[0].x, _manipulation_state.selection[1].x), min(_manipulation_state.selection[0].y, _manipulation_state.selection[1].y) }
+  last_point: [2]i32 = { max(_manipulation_state.selection[0].x, _manipulation_state.selection[1].x), max(_manipulation_state.selection[0].y, _manipulation_state.selection[1].y) }
+
+  first_point[0] *= TILE_SIZE
+  first_point[1] *= TILE_SIZE
+  last_point[0] *= TILE_SIZE
+  last_point[1] *= TILE_SIZE
+
+  text := string(rl.TextFormat("%dx%d", abs(last_point.x - first_point.x) / TILE_SIZE, abs(last_point.y - first_point.y) / TILE_SIZE))
+  ui.text_box_draw_fast(text, last_point.x, last_point.y, i32(relative_to_zoom(18)))
+
+  rl.DrawRectangle(first_point.x, first_point.y, last_point.x - first_point.x, last_point.y - first_point.y, rl.Color { 255, 0, 0, 100 })
+}
+
+// Draw hovered cell when not in select mode.
+@(private="file")
+draw_hover :: proc() {
+  mouse_pos := to_cell_coords(rl.GetScreenToWorld2D(rl.GetMousePosition(), engine.camera))
+
+  rl.DrawRectangle(mouse_pos.x * TILE_SIZE, mouse_pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE, rl.Color { 255, 0, 0, 100 })
+}
+
+
+// GLOBALS
+
+
+
+_handle: Handle
