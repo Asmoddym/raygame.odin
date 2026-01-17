@@ -5,18 +5,13 @@ import "enums"
 import "ui"
 import rl "vendor:raylib"
 
+// Pause system with its own input handling (for now at least)
+pause_system :: proc() {
+  @(static) selection := 0
 
-// Pause mode toggling system
-pause_system_toggle :: proc() {
   if rl.IsKeyPressed(.ESCAPE) {
     engine.scene_set_current(engine.game_state.current_scene.id == int(enums.SceneID.PAUSE) ? enums.SceneID.MAIN : enums.SceneID.PAUSE)
   }
-}
-
-// Pause system with its own input handling (for now at least)
-// TODO: Challenge that
-pause_system_main :: proc() {
-  @(static) selection := 0
 
   if engine.game_state.current_scene.id != 1 do return
 

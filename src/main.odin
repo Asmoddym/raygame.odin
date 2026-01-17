@@ -22,7 +22,6 @@ main :: proc() {
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.5, height_ratio = 0.1)
   // engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
 
-  engine.system_register(terrain.draw,                              { int(enums.SceneID.MAIN) })
   // engine.system_register(terrain.system_manipulation,               { int(enums.SceneID.MAIN) })
 
   // engine.system_register(ui.system_text_box_update,              { int(enums.SceneID.MAIN) })
@@ -34,14 +33,16 @@ main :: proc() {
   // engine.system_register(ui.system_update_camera_position,       { int(enums.SceneID.MAIN) })
   // engine.system_register(drawable_system_animated_sprite_update,       { int(enums.SceneID.MAIN) })
   // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
-  // engine.system_overlay_register(overlay_system_draw,            { int(enums.SceneID.MAIN) })
+
   // engine.system_register(collectable_system_main)
 
-  engine.system_register(pause_system_main)
-  engine.system_register(pause_system_toggle)
+  engine.system_register(pause_system)
 
-  engine.system_register(terrain.process_navigation)
-  engine.system_register(terrain.process_selection)
+  engine.system_overlay_register(overlay_system_draw,   { int(enums.SceneID.MAIN) })
+
+  engine.system_register(terrain.draw,                  { int(enums.SceneID.MAIN) })
+  engine.system_register(terrain.process_navigation,    { int(enums.SceneID.MAIN) })
+  engine.system_register(terrain.process_selection,     { int(enums.SceneID.MAIN) })
 
   terrain.generate(5)
 
