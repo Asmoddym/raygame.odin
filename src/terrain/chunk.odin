@@ -64,8 +64,6 @@ draw_mask_chunk :: proc(chunk: ^Chunk) {
 
   chunk_tile_position: [2]i32 = { chunk.position.x * CHUNK_SIZE, chunk.position.y * CHUNK_SIZE }
 
-  coords := to_cell_coords(rl.GetScreenToWorld2D(rl.GetMousePosition(), engine.camera))
-
   for y in 0..<CHUNK_SIZE {
     for x in 0..<CHUNK_SIZE {
       cell := &_handle.tiles[(chunk_tile_position.y + y) * _handle.cell_count_per_side + (chunk_tile_position.x + x)]
@@ -75,7 +73,7 @@ draw_mask_chunk :: proc(chunk: ^Chunk) {
         y * TILE_SIZE,
         TILE_SIZE,
         TILE_SIZE,
-        cell.discovered ? (rl.CheckCollisionPointRec({ f32(coords.x), f32(coords.y) }, rl.Rectangle { f32(cell.position.x - 3), f32(cell.position.y - 3), 7, 7 }) ? rl.WHITE : rl.GRAY) : rl.BLACK,
+        cell.discovered ? rl.GRAY : rl.BLACK,
       )
     }
   }

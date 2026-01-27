@@ -53,13 +53,12 @@ process_selection :: proc() {
     }
 
     rl.EndMode2D()
-    for chunk_y in (first_point.y / CHUNK_SIZE) - 1..=(last_point.y / CHUNK_SIZE) + 1 {
-      for chunk_x in (first_point.x / CHUNK_SIZE) - 1..=(last_point.x / CHUNK_SIZE) + 1{
-        if chunk_y < 0 || chunk_x < 0 do continue
-        if int(chunk_y) >= len(_handle.display_chunks) || int(chunk_x) >= len(_handle.display_chunks) do continue
+    for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
+      for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
         idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
+        if idx >= len(_handle.display_chunks) do continue
 
-          draw_mask_chunk(&_handle.display_chunks[idx])
+        draw_mask_chunk(&_handle.display_chunks[idx])
       }
     }
     rl.BeginMode2D(engine.camera)

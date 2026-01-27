@@ -147,6 +147,21 @@ draw :: proc() {
 
     rl.EndBlendMode()
   }
+
+  first_point, _ := get_current_hovered_zone_to_cell_coords()
+
+    // rl.BeginBlendMode(rl.BlendMode.ADD_COLORS)
+    rl.BeginBlendMode(rl.BlendMode.ALPHA)
+  rl.DrawRectangle(
+    first_point.x * TILE_SIZE,
+    first_point.y * TILE_SIZE,
+    7 * TILE_SIZE,
+    7 * TILE_SIZE,
+    rl.Color { 255, 0, 0, 255 },
+  )
+    rl.EndBlendMode()
+
+
 }
 
 
