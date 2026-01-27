@@ -52,7 +52,7 @@ process_selection :: proc() {
       }
     }
 
-    rl.EndMode2D()
+    // rl.EndMode2D()
     for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
       for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
         idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
@@ -61,7 +61,7 @@ process_selection :: proc() {
         draw_mask_chunk(&_handle.display_chunks[idx])
       }
     }
-    rl.BeginMode2D(engine.camera)
+    // rl.BeginMode2D(engine.camera)
   }
 }
 
@@ -93,7 +93,7 @@ process_selection :: proc() {
     }
   }
 
-  rl.EndMode2D()
+  // rl.EndMode2D()
   for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
     for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
       idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
@@ -102,7 +102,7 @@ process_selection :: proc() {
       draw_display_chunk(&_handle.display_chunks[idx])
     }
   }
-  rl.BeginMode2D(engine.camera)
+  // rl.BeginMode2D(engine.camera)
 }
 
 
