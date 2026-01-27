@@ -13,16 +13,7 @@ overlay_system_draw :: proc() {
 // Draw inventory subsystem
 // TODO: Avoid having to always recreate the whole render texture
 overlay_subsystem_draw_inventory :: proc() {
-  overlay := &engine.game_state.current_scene.overlays[int(enums.OverlayID.INVENTORY)]
-
-  // backpack := engine.database_get_component(globals.player_id, &table_backpacks)
-  // tiles := backpack.max_items
-  tiles := 5
-
-  padding := int(f64(overlay.resolution.x) * PADDING_RATIO)
-  tile_width: i32 = overlay.resolution.y - 2 * i32(padding)
-  total_width := (tile_width + i32(padding)) * i32(tiles) - i32(padding)
-  init_offset := overlay.resolution.x / 2 - total_width / 2
+  overlay     := &engine.game_state.current_scene.overlays[int(enums.OverlayID.INVENTORY)]
 
   rl.BeginTextureMode(overlay.render_texture)
   rl.ClearBackground(rl.BLACK)
@@ -31,22 +22,21 @@ overlay_subsystem_draw_inventory :: proc() {
   rl.DrawRectangleLines(1, 1, overlay.resolution.x - 1, overlay.resolution.y - 2, rl.WHITE)
 
   position: [2]f32 = {
-    f32(engine.game_state.resolution.x / 2 - overlay.resolution.x / 2),
-    // - f32(overlay.resolution.y) * 0.1 is here to set a little dynamic margin at the bottom
-    f32(engine.game_state.resolution.y - overlay.resolution.y) - f32(overlay.resolution.y) * 0.1,
+    f32(engine.game_state.resolution.x - overlay.resolution.x),
+    f32(engine.game_state.resolution.y - overlay.resolution.y),
   }
 
-  for i in 0..<tiles {
-    offset := init_offset + i32(i * (int(tile_width) + padding))
+  font_size := i32(engine.game_state.resolution.x / 80)
+  height := i32(rl.MeasureTextEx(rl.GetFontDefault(), "A", f32(font_size), 1).y)
 
-    rl.DrawRectangleLines(offset, i32(padding), tile_width, tile_width, rl.WHITE)
-
-    if rl.CheckCollisionPointRec(rl.GetMousePosition(), { position.x + f32(offset), position.y, f32(tile_width), f32(tile_width) }) {
-      rl.DrawRectangle(offset, i32(padding), tile_width, tile_width, rl.WHITE)
-    }
-  }
+  rl.DrawText(rl.TextFormat("Gold: %d", 0), 5, 5, font_size, rl.WHITE)
+  rl.DrawText(rl.TextFormat("Wood: %d", 0), 5, 5 + 2 * height, font_size, rl.WHITE)
+  rl.DrawText(rl.TextFormat("Stone: %d", 0), 5, 5 + 4 * height, font_size, rl.WHITE)
 
   rl.EndTextureMode()
+
+  position.x -= 10
+  position.y -= 10
 
   rl.DrawTexturePro(overlay.render_texture.texture,
     rl.Rectangle { 0, 0, f32(overlay.resolution.x), -f32(overlay.resolution.y) },
