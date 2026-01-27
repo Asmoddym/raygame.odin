@@ -1,5 +1,6 @@
 package terrain
 
+import "core:fmt"
 // There can be some interesting stuff to get from https://www.youtube.com/watch?v=6BdYzfVOyBY
 // I followed it on my very first try to have continents but I removed it later in favor of my base_altitude method.
 //
@@ -9,6 +10,7 @@ import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
 import rl "vendor:raylib"
+import rlgl "vendor:raylib/rlgl"
 
 
 // Terrain handle to store specific configuration.
@@ -35,6 +37,8 @@ TerrainCell :: struct {
   detail_value: f32,
   tileset_pos: [2]i32,
   position: [2]i32,
+
+  discovered: bool,
 }
 
 // Chunk data struct to the x and y coords.
@@ -42,6 +46,7 @@ TerrainCell :: struct {
 // terrain contains handle.chunk_size.y rows, each containing handle.chunk_size.x cells
 Chunk :: struct {
   render_texture: rl.RenderTexture,
+  mask: rl.RenderTexture,
   position: [2]i32,
 }
 
@@ -128,6 +133,19 @@ draw :: proc() {
       rl.Vector2 { pos.x, pos.y },
       rl.WHITE,
     )
+
+    rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
+    rl.DrawTextureRec(
+      c.mask.texture,
+      rl.Rectangle { 0, 0,
+        F32_CHUNK_PIXEL_SIZE,
+        -F32_CHUNK_PIXEL_SIZE,
+      },
+      rl.Vector2 { pos.x, pos.y },
+      rl.Color { 255, 255, 255, 255 },
+    )
+
+    rl.EndBlendMode()
   }
 }
 

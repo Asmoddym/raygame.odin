@@ -96,6 +96,7 @@ create_terrain_cell :: proc(y, x: i32, altitude, biome_value, base_altitude_valu
     detail_value,
     tileset_pos,
     { x, y },
+    false,
   }
 }
 

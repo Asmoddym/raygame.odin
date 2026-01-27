@@ -33,14 +33,38 @@ process_selection :: proc() {
     process_selection()
   }
 
-
   if selection.selecting {
     draw_selection()
   } else {
     draw_hover()
   }
-}
 
+  delta := rl.GetMouseDelta()
+
+  if delta.x != 0 || delta.y != 0 {
+    first_point, last_point := get_current_hovered_zone_to_cell_coords()
+
+    for y in first_point.y..<last_point.y {
+      for x in first_point.x..<last_point.x {
+        idx := y * _handle.cell_count_per_side + x
+
+        _handle.tiles[idx].discovered = true
+      }
+    }
+
+    rl.EndMode2D()
+    for chunk_y in (first_point.y / CHUNK_SIZE) - 1..=(last_point.y / CHUNK_SIZE) + 1 {
+      for chunk_x in (first_point.x / CHUNK_SIZE) - 1..=(last_point.x / CHUNK_SIZE) + 1{
+        if chunk_y < 0 || chunk_x < 0 do continue
+        if int(chunk_y) >= len(_handle.display_chunks) || int(chunk_x) >= len(_handle.display_chunks) do continue
+        idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
+
+          draw_mask_chunk(&_handle.display_chunks[idx])
+      }
+    }
+    rl.BeginMode2D(engine.camera)
+  }
+}
 
 
 // PRIVATE
