@@ -1,5 +1,6 @@
 package engine
 
+import "core:log"
 import rl "vendor:raylib"
 
 
@@ -46,9 +47,26 @@ scene_set_current :: proc(#any_int id: int) {
 
 
 // Create an overlay and store it in a scene, with its render texture and resolution.
-scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f64, height_ratio: f64) {
+// TODO: Make 2 separate scene_overlay_create procs to handle this better than just passing 3 arguments
+scene_overlay_create :: proc(#any_int scene_id: int, #any_int overlay_id: int, ratio: f64 = 0, width_ratio: f64 = 0, height_ratio: f64 = 0) {
   scene := &scene_registry[scene_id]
-  resolution := calculate_resolution(width_ratio, height_ratio)
+  resolution: [2]i32
+
+  width_ratio := width_ratio
+  height_ratio := height_ratio
+
+  if ratio != 0 {
+    // TODO: I could do this more cleanly by taking game_state.resolution ratio but it works, so...
+    resolution = {
+      i32(f64(game_state.resolution.x) * ratio),
+      i32(f64(game_state.resolution.x) * ratio),
+    }
+
+    width_ratio = f64(resolution.x) / f64(game_state.resolution.x)
+    height_ratio = f64(resolution.y) / f64(game_state.resolution.y)
+  } else {
+    resolution = calculate_resolution(width_ratio, height_ratio)
+  }
 
   scene.overlays[overlay_id] = Overlay {
     rl.LoadRenderTexture(resolution.x, resolution.y),

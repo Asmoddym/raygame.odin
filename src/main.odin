@@ -15,7 +15,7 @@ main :: proc() {
   engine.scene_set_current(enums.SceneID.MAIN)
 
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, width_ratio = 0.2, height_ratio = 0.4)
-  // engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CRAFT, width_ratio = 0.6, height_ratio = 0.6)
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP, ratio = 0.15)
 
   // engine.system_register(terrain.system_manipulation,               { int(enums.SceneID.MAIN) })
 

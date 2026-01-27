@@ -1,6 +1,5 @@
 package terrain
 
-import "core:fmt"
 // There can be some interesting stuff to get from https://www.youtube.com/watch?v=6BdYzfVOyBY
 // I followed it on my very first try to have continents but I removed it later in favor of my base_altitude method.
 //
@@ -10,7 +9,6 @@ import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
 import rl "vendor:raylib"
-import rlgl "vendor:raylib/rlgl"
 
 
 // Terrain handle to store specific configuration.
@@ -51,10 +49,20 @@ Chunk :: struct {
 }
 
 
+// SYSTEMS
+
+
+// Main draw system.
+draw :: proc() {
+  draw_visible_map(&engine.camera)
+  draw_hover()
+}
+
+
 // PROCS
 
 
-// Genrate a terrain.
+// Generate a terrain.
 // Takes the number of chunks and the tileset to be used for this terrain.
 // Returns a Handle pointer.
 generate :: proc(size: i32) {
@@ -99,11 +107,11 @@ unload :: proc() {
   delete(_handle.display_chunks)
 }
 
-// Main draw system.
-draw :: proc() {
+// Draw only the chunks of the map that are in the viewing range.
+draw_visible_map :: proc(camera: ^rl.Camera2D) {
   drawn_rec := [2]rl.Vector2 {
-    rl.GetScreenToWorld2D({ 0, 0 }, engine.camera),
-    rl.GetScreenToWorld2D({ f32(engine.game_state.resolution.x), f32(engine.game_state.resolution.y) }, engine.camera),
+    rl.GetScreenToWorld2D({ 0, 0 }, camera^),
+    rl.GetScreenToWorld2D({ f32(engine.game_state.resolution.x), f32(engine.game_state.resolution.y) }, camera^),
   }
 
   drawn_rec[0] = { math.ceil(drawn_rec[0].x), math.round(drawn_rec[0].y) }
@@ -123,35 +131,33 @@ draw :: proc() {
       continue
     }
 
-    // Using this method to invert the texture as that's the way Raylib works
-    rl.DrawTextureRec(
-      c.render_texture.texture,
-      rl.Rectangle { 0, 0,
-        F32_CHUNK_PIXEL_SIZE,
-        -F32_CHUNK_PIXEL_SIZE,
-      },
-      rl.Vector2 { pos.x, pos.y },
-      rl.WHITE,
-    )
-
-    rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
-    rl.DrawTextureRec(
-      c.mask.texture,
-      rl.Rectangle { 0, 0,
-        F32_CHUNK_PIXEL_SIZE,
-        -F32_CHUNK_PIXEL_SIZE,
-      },
-      rl.Vector2 { pos.x, pos.y },
-      rl.Color { 255, 255, 255, 255 },
-    )
-
-    rl.EndBlendMode()
+    draw_chunk(&c, pos)
   }
+}
 
+// Draw all the map regardless of the camera. Shouldn't be used to draw the main map as we don't need out-of-range chunks
+draw_whole_map:: proc() {
+  for &c in _handle.display_chunks {
+    pos: [2]f32 = {
+      f32(c.position.x * CHUNK_PIXEL_SIZE),
+      f32(c.position.y * CHUNK_PIXEL_SIZE),
+    }
+
+    draw_chunk(&c, pos)
+  }
+}
+
+
+
+// PRIVATE
+
+
+
+// Temporary. Draws the current hovered zone with a 3 block offset.
+@(private="file")
+draw_hover :: proc() {
   first_point, _ := get_current_hovered_zone_to_cell_coords()
 
-    // rl.BeginBlendMode(rl.BlendMode.ADD_COLORS)
-    rl.BeginBlendMode(rl.BlendMode.ALPHA)
   rl.DrawRectangle(
     first_point.x * TILE_SIZE,
     first_point.y * TILE_SIZE,
@@ -159,9 +165,33 @@ draw :: proc() {
     7 * TILE_SIZE,
     rl.Color { 255, 0, 0, 255 },
   )
-    rl.EndBlendMode()
+}
 
+// Draw a chunk with its mask.
+@(private="file")
+draw_chunk :: proc(c: ^Chunk, pos: [2]f32) {
+  // Using this method to invert the texture as that's the way Raylib works
+  rl.DrawTextureRec(
+    c.render_texture.texture,
+    rl.Rectangle { 0, 0,
+      F32_CHUNK_PIXEL_SIZE,
+      -F32_CHUNK_PIXEL_SIZE,
+    },
+    rl.Vector2 { pos.x, pos.y },
+    rl.WHITE,
+  )
 
+  rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
+  rl.DrawTextureRec(
+    c.mask.texture,
+    rl.Rectangle { 0, 0,
+      F32_CHUNK_PIXEL_SIZE,
+      -F32_CHUNK_PIXEL_SIZE,
+    },
+    rl.Vector2 { pos.x, pos.y },
+    rl.Color { 255, 255, 255, 255 },
+  )
+  rl.EndBlendMode()
 }
 
 

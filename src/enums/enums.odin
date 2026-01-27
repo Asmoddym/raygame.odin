@@ -19,7 +19,7 @@ SceneID :: enum {
 // Overlay IDs
 OverlayID :: enum {
   INVENTORY,
-  CRAFT,
+  MINIMAP,
 }
 
 // Items
