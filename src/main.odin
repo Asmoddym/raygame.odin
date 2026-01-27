@@ -1,13 +1,8 @@
 package macro
 
-import "core:fmt"
 import "core:log"
 import "engine"
 import "enums"
-import "bounding_box"
-import "globals"
-import "ui"
-import rl "vendor:raylib"
 import "terrain"
 
 main :: proc() {
