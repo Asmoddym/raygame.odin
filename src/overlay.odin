@@ -29,9 +29,9 @@ overlay_subsystem_draw_inventory :: proc() {
   font_size := i32(engine.game_state.resolution.x / 80)
   height := i32(rl.MeasureTextEx(rl.GetFontDefault(), "A", f32(font_size), 1).y)
 
-  rl.DrawText(rl.TextFormat("Gold: %d", 0), 5, 5, font_size, rl.WHITE)
-  rl.DrawText(rl.TextFormat("Wood: %d", 0), 5, 5 + 2 * height, font_size, rl.WHITE)
-  rl.DrawText(rl.TextFormat("Stone: %d", 0), 5, 5 + 4 * height, font_size, rl.WHITE)
+  rl.DrawText(rl.TextFormat("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
+  rl.DrawText(rl.TextFormat("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)
+  rl.DrawText(rl.TextFormat("Stone: %d", _game.resources.stone), 5, 5 + 4 * height, font_size, rl.WHITE)
 
   rl.EndTextureMode()
 
