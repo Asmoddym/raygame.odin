@@ -133,6 +133,26 @@ draw_visible_map :: proc(camera: ^rl.Camera2D) {
 
     draw_chunk(&c, pos)
   }
+
+  // Mask
+  rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
+  for &c in _handle.display_chunks {
+    pos: [2]f32 = {
+      f32(c.position.x * CHUNK_PIXEL_SIZE),
+      f32(c.position.y * CHUNK_PIXEL_SIZE),
+    }
+
+    // If the chunks are not on draw range, we don't want them drawn
+    chunk_presence_in_frame_x_check := pos.x >= drawn_rec[0].x - F32_CHUNK_PIXEL_SIZE && pos.x <= drawn_rec[1].x
+    chunk_presence_in_frame_y_check := pos.y >= drawn_rec[0].y - F32_CHUNK_PIXEL_SIZE && pos.y <= drawn_rec[1].y
+
+    if !(chunk_presence_in_frame_x_check && chunk_presence_in_frame_y_check) {
+      continue
+    }
+
+    draw_mask(&c, pos)
+  }
+  rl.EndBlendMode()
 }
 
 // Draw all the map regardless of the camera. Shouldn't be used to draw the main map as we don't need out-of-range chunks
@@ -145,6 +165,18 @@ draw_whole_map:: proc() {
 
     draw_chunk(&c, pos)
   }
+
+  // Mask
+  rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
+  for &c in _handle.display_chunks {
+    pos: [2]f32 = {
+      f32(c.position.x * CHUNK_PIXEL_SIZE),
+      f32(c.position.y * CHUNK_PIXEL_SIZE),
+    }
+
+    draw_mask(&c, pos)
+  }
+  rl.EndBlendMode()
 }
 
 
@@ -180,8 +212,9 @@ draw_chunk :: proc(c: ^Chunk, pos: [2]f32) {
     rl.Vector2 { pos.x, pos.y },
     rl.WHITE,
   )
+}
 
-  rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
+draw_mask :: proc(c: ^Chunk, pos: [2]f32) {
   rl.DrawTextureRec(
     c.mask.texture,
     rl.Rectangle { 0, 0,
@@ -191,7 +224,6 @@ draw_chunk :: proc(c: ^Chunk, pos: [2]f32) {
     rl.Vector2 { pos.x, pos.y },
     rl.Color { 255, 255, 255, 255 },
   )
-  rl.EndBlendMode()
 }
 
 
