@@ -14,19 +14,21 @@ relative_to_zoom :: proc(value: $T) -> f32 {
   return f32(value) * 1 / engine.camera.zoom
 }
 
-get_current_hovered_zone_to_cell_coords :: proc() -> ([2]i32, [2]i32) {
+get_current_hovered_cell_coords :: proc() -> [2]i32 {
   coords := to_cell_coords(rl.GetScreenToWorld2D(rl.GetMousePosition(), engine.camera))
-  first_point: [2]i32 = { coords.x - 3, coords.y - 3 }
-  last_point: [2]i32 = { coords.x + 3, coords.y + 3 }
 
-  first_point.x = min(first_point.x, _handle.cell_count_per_side)
-  first_point.x = max(first_point.x, 0)
-  first_point.y = min(first_point.y, _handle.cell_count_per_side)
-  first_point.y = max(first_point.y, 0)
-  last_point.x = min(last_point.x, _handle.cell_count_per_side)
-  last_point.x = max(last_point.x, 0)
-  last_point.y = min(last_point.y, _handle.cell_count_per_side)
-  last_point.y = max(last_point.y, 0)
+  coords.x = min(coords.x, _handle.cell_count_per_side)
+  coords.x = max(coords.x, 0)
+  coords.y = min(coords.y, _handle.cell_count_per_side)
+  coords.y = max(coords.y, 0)
 
-  return first_point, last_point
+  return coords
+}
+
+// Returns coords to tile and chunk index
+coords_to_tile_index :: proc(coords: [2]i32) -> (int, int) {
+  cell_idx := int(coords[1] * _handle.cell_count_per_side + coords[0])
+  chunk_idx := int((coords[1] / CHUNK_SIZE) * _handle.chunks_per_side + coords[0] / CHUNK_SIZE)
+
+  return cell_idx, chunk_idx
 }
