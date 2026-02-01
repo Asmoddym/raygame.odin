@@ -190,11 +190,14 @@ draw_whole_map:: proc() {
 draw_hover :: proc() {
   first_point, _ := get_current_hovered_zone_to_cell_coords()
 
+  first_point.x += 3
+  first_point.y += 3
+
   rl.DrawRectangle(
     first_point.x * TILE_SIZE,
     first_point.y * TILE_SIZE,
-    7 * TILE_SIZE,
-    7 * TILE_SIZE,
+    TILE_SIZE,
+    TILE_SIZE,
     rl.Color { 255, 0, 0, 255 },
   )
 }

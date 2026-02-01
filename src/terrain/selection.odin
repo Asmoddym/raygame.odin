@@ -4,6 +4,8 @@ package terrain
 import "../engine"
 import "../ui"
 import rl "vendor:raylib"
+import "core:math"
+import "core:slice"
 
 
 // GLOBALS
@@ -42,26 +44,65 @@ process_selection :: proc() {
   delta := rl.GetMouseDelta()
 
   if delta.x != 0 || delta.y != 0 {
-    first_point, last_point := get_current_hovered_zone_to_cell_coords()
+    first_point, _ := get_current_hovered_zone_to_cell_coords()
 
-    for y in first_point.y..<last_point.y {
-      for x in first_point.x..<last_point.x {
-        idx := y * _handle.cell_count_per_side + x
+    x: i32 = first_point.x + 3
+    y: i32 = first_point.y + 3
+    chunks_to_reload: [dynamic]int
 
-        _handle.tiles[idx].discovered = true
+    r: i32 =  7
+
+    // TODO: loop from 0 to 90
+    // make this an array of points and check the chunks when updating the tiles
+    for i: f32 = 0; i < 180 ; i += 5 {
+      cos_i := f32(r) * math.cos(i * math.PI / 180)
+      sin_i := f32(r) * math.sin(i * math.PI / 180)
+
+      x1: i32 = x + i32(cos_i)
+      y1: i32 = y + i32(sin_i)
+      y2:= y - i32(sin_i)
+
+      cell_idx := int(y1 * _handle.cell_count_per_side + x1)
+      chunk_idx := int((y1 / CHUNK_SIZE) * _handle.chunks_per_side + x1 / CHUNK_SIZE)
+      if !slice.contains(chunks_to_reload[:], chunk_idx) do append(&chunks_to_reload, chunk_idx)
+      _handle.tiles[int(cell_idx)].discovered = true
+
+      cell_idx = int(y2 * _handle.cell_count_per_side + x1)
+      chunk_idx = int(y2 / CHUNK_SIZE + x1 / CHUNK_SIZE)
+      if !slice.contains(chunks_to_reload[:], chunk_idx) do append(&chunks_to_reload, chunk_idx)
+      _handle.tiles[int(cell_idx)].discovered = true
+
+
+      for y3 in y2..<y1 {
+        cell_idx = int(y3 * _handle.cell_count_per_side + x1)
+        chunk_idx = int(y3 / CHUNK_SIZE + x1 / CHUNK_SIZE)
+        if !slice.contains(chunks_to_reload[:], chunk_idx) do append(&chunks_to_reload, chunk_idx)
+        _handle.tiles[int(cell_idx)].discovered = true
       }
     }
 
-    // rl.EndMode2D()
-    for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
-      for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
-        idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
-        if idx >= len(_handle.display_chunks) do continue
-
-        draw_mask_chunk(&_handle.display_chunks[idx])
-      }
+    for &c in chunks_to_reload {
+      draw_mask_chunk(&_handle.display_chunks[c])
     }
-    // rl.BeginMode2D(engine.camera)
+
+    // for y in first_point.y..<last_point.y {
+    //   for x in first_point.x..<last_point.x {
+    //     idx := y * _handle.cell_count_per_side + x
+    //
+    //     _handle.tiles[idx].discovered = true
+    //   }
+    // }
+    //
+    // // rl.EndMode2D()
+    // for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
+    //   for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
+    //     idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
+    //     if idx >= len(_handle.display_chunks) do continue
+    //
+    //     draw_mask_chunk(&_handle.display_chunks[idx])
+    //   }
+    // }
+    // // rl.BeginMode2D(engine.camera)
   }
 }
 
