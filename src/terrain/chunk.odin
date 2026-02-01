@@ -1,7 +1,5 @@
 package terrain
 
-import "core:log"
-import "../engine"
 import rl "vendor:raylib"
 
 
@@ -34,7 +32,8 @@ draw_display_chunk :: proc(chunk: ^Chunk) {
 
   for y in 0..<CHUNK_SIZE {
     for x in 0..<CHUNK_SIZE {
-      cell := &_handle.tiles[(chunk_tile_position.y + y) * _handle.cell_count_per_side + (chunk_tile_position.x + x)]
+      cell_idx := coords_to_tile_index({ chunk_tile_position.x + x, chunk_tile_position.y + y })
+      cell := &_handle.tiles[cell_idx]
 
       source := rl.Rectangle {
         f32(cell.tileset_pos.x) * F32_TILE_SIZE,
@@ -53,6 +52,7 @@ draw_display_chunk :: proc(chunk: ^Chunk) {
       rl.DrawTexturePro(_handle.tileset, source, dest, { 0, 0 }, 0, rl.WHITE)
     }
   }
+
   rl.DrawText(rl.TextFormat("%d, %d", chunk.position.x, chunk.position.y), 0, 0, 40, rl.WHITE)
   rl.EndTextureMode()
 }
@@ -66,7 +66,8 @@ draw_mask_chunk :: proc(chunk: ^Chunk) {
 
   for y in 0..<CHUNK_SIZE {
     for x in 0..<CHUNK_SIZE {
-      cell := &_handle.tiles[(chunk_tile_position.y + y) * _handle.cell_count_per_side + (chunk_tile_position.x + x)]
+      cell_idx := coords_to_tile_index({ chunk_tile_position.x + x, chunk_tile_position.y + y })
+      cell := &_handle.tiles[cell_idx]
 
       rl.DrawRectangle(
         x * TILE_SIZE,

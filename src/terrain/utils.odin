@@ -25,10 +25,18 @@ get_current_hovered_cell_coords :: proc() -> [2]i32 {
   return coords
 }
 
-// Returns coords to tile and chunk index
-coords_to_tile_index :: proc(coords: [2]i32) -> (int, int) {
-  cell_idx := int(coords[1] * _handle.cell_count_per_side + coords[0])
-  chunk_idx := int((coords[1] / CHUNK_SIZE) * _handle.chunks_per_side + coords[0] / CHUNK_SIZE)
-
-  return cell_idx, chunk_idx
+// Returns coords to tile index
+coords_to_tile_index :: proc(coords: [2]i32) -> int {
+  return int(coords[1] * _handle.cell_count_per_side + coords[0])
 }
+
+// Returns coords to chunk index
+coords_to_chunk_index :: proc(coords: [2]i32) -> int {
+  return int((coords[1] / CHUNK_SIZE) * _handle.chunks_per_side + coords[0] / CHUNK_SIZE)
+}
+
+// Returns coords to tile and chunk index
+coords_to_tile_and_chunk_index :: proc(coords: [2]i32) -> (int, int) {
+  return coords_to_tile_index(coords), coords_to_chunk_index(coords)
+}
+

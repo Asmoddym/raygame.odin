@@ -22,14 +22,14 @@ discover_circular_part :: proc(position: [2]i32, radius: i32) {
     }
 
     for &direction in directions {
-      tile_idx, chunk_idx := coords_to_tile_index(direction)
+      tile_idx, chunk_idx := coords_to_tile_and_chunk_index(direction)
       discover_tile_from_idx(tile_idx)
 
       if !slice.contains(chunks_to_reload[:], chunk_idx) do append(&chunks_to_reload, chunk_idx)
     }
 
     for tmp_y in directions[1][1]..<directions[0][1] {
-      tile_idx, _ := coords_to_tile_index({ directions[0][0], tmp_y })
+      tile_idx, _ := coords_to_tile_and_chunk_index({ directions[0][0], tmp_y })
       discover_tile_from_idx(tile_idx)
     }
   }

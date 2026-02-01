@@ -1,12 +1,9 @@
 
 package terrain
 
-import "core:log"
 import "../engine"
 import "../ui"
 import rl "vendor:raylib"
-import "core:math"
-import "core:slice"
 
 
 // GLOBALS
@@ -63,16 +60,14 @@ process_selection :: proc() {
 
   for y in first_point.y..<last_point.y {
     for x in first_point.x..<last_point.x {
-      idx := y * _handle.cell_count_per_side + x
-
-      _handle.tiles[idx].tileset_pos = { 0, 0 }
+      _handle.tiles[coords_to_tile_index({ x, y })].tileset_pos = { 0, 0 }
     }
   }
 
   // rl.EndMode2D()
   for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
     for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
-      idx: int = int(chunk_y * _handle.chunks_per_side + chunk_x)
+      idx := coords_to_chunk_index({ chunk_x, chunk_y })
       if idx >= len(_handle.display_chunks) do continue
 
       draw_display_chunk(&_handle.display_chunks[idx])

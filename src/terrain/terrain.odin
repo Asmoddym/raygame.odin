@@ -80,17 +80,13 @@ generate :: proc(size: i32) {
 
   for y in 0..<_handle.cell_count_per_side {
     for x in 0..<_handle.cell_count_per_side {
-      idx := y * _handle.cell_count_per_side + x
-
-      _handle.tiles[idx] = generate_cell(x, y)
+      _handle.tiles[coords_to_tile_index({ x, y })] = generate_cell(x, y)
     }
   }
 
   for chunk_y in 0..<_handle.chunks_per_side {
     for chunk_x in 0..<_handle.chunks_per_side {
-      idx := chunk_y * _handle.chunks_per_side + chunk_x
-
-      _handle.display_chunks[idx] = generate_display_chunk(chunk_x, chunk_y)
+      _handle.display_chunks[coords_to_chunk_index({ chunk_x * CHUNK_SIZE, chunk_y * CHUNK_SIZE })] = generate_display_chunk(chunk_x, chunk_y)
     }
   }
 }
