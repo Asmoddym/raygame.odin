@@ -8,8 +8,6 @@ import "core:math"
 discover_circular_part :: proc(position: [2]i32, radius: i32) {
   chunks_to_reload: [dynamic]int
 
-  // TODO: loop from 0 to 90
-  // make this an array of points and check the chunks when updating the tiles
   for i: f32 = 0; i < 90 ; i += 5 {
     cos_i := i32(f32(radius) * math.cos(i * math.PI / 90))
     sin_i := i32(f32(radius) * math.sin(i * math.PI / 90))
