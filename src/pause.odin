@@ -1,6 +1,5 @@
 package macro
 
-import "core:fmt"
 import "engine"
 import "enums"
 import "ui"

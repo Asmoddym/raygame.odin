@@ -10,6 +10,7 @@ import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
 import rl "vendor:raylib"
 
+BYPASS_MASK :: true
 
 // Terrain handle to store specific configuration.
 // All generated chunks are stored in the chunks slice.
@@ -211,6 +212,8 @@ draw_chunk :: proc(c: ^Chunk, pos: [2]f32) {
 }
 
 draw_mask :: proc(c: ^Chunk, pos: [2]f32) {
+  when BYPASS_MASK { return }
+
   rl.DrawTextureRec(
     c.mask.texture,
     rl.Rectangle { 0, 0,
