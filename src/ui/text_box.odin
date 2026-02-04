@@ -55,8 +55,6 @@ text_box_draw_fast :: proc(text: string, x, y: i32, font_size: i32, color: rl.Co
 
   text_box_generate_metadata(&text_box, text, font_size, color)
   text_box_draw_from_metadata(&text_box, { x, y })
-
-  // fmt.println("Drew fast textbox", "(", text, ")")
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer.

@@ -88,7 +88,10 @@ application_process_frame :: proc() {
   if game_state.current_scene.uses_camera {
     // 2D mode takes some time to process, so we want to separate it from the systems timer
     sub_timer := time.now()
-    rl.BeginMode2D(camera)
+    // rl.BeginMode2D(camera)
+
+    // Using this updates the engine.current_camera pointer
+    camera_set_current_camera(&camera)
     timer.add_offset(timer.Type.SYSTEM, time.duration_milliseconds(time.diff(sub_timer, time.now())))
 
     system_update(game_state.current_scene.id, now)

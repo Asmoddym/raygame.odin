@@ -7,6 +7,8 @@ import rl "vendor:raylib"
 // TODO: Maybe put this in the game_state? Or somewhere else?
 camera: rl.Camera2D
 
+// Current camera pointer
+current_camera: ^rl.Camera2D
 
 
 //
@@ -36,3 +38,9 @@ camera_set_offset_based_on_resolution :: proc() {
 camera_reset_zoom :: proc() {
   camera.zoom = 0.8
 }
+
+camera_set_current_camera :: proc(camera: ^rl.Camera2D) {
+  current_camera = camera
+  rl.BeginMode2D(camera^)
+}
+

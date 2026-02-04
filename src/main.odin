@@ -16,6 +16,7 @@ main :: proc() {
 
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, [2]f32 { 0.25, 0.5 }, engine.Position.DOWN_RIGHT)
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP, 0.15, engine.Position.UP_LEFT)
+  engine.scene_overlay_create(enums.SceneID.MAIN, 1234, 0.25, engine.Position.CENTER)
 
   // OLD STUFF
   //
