@@ -25,6 +25,9 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
   font_size := i32(engine.game_state.resolution.x / 80)
   height := i32(rl.MeasureTextEx(rl.GetFontDefault(), "A", f32(font_size), 1).y)
 
+  // TODO:
+  // - use position hooks for this
+  // - make 1 hook for X and 1 for Y? Maybe later
   ui.simple_button_draw("coucoucoucou", { 0.5, 0.1, overlay }, font_size)
 
   rl.DrawText(rl.TextFormat("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
@@ -35,7 +38,7 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
 draw_minimap :: proc(overlay: ^engine.Overlay) {
   @(static) camera: rl.Camera2D = { { 0, 0 }, { 0, 0 }, 0, 0 }
 
-  camera.zoom = overlay.resolution.x / terrain.map_side_pixel_size()
+  camera.zoom = f32(overlay.resolution.x) / terrain.f32_map_side_pixel_size()
 
   // Using this updates the engine.current_camera pointer
   engine.camera_set_current_camera(&camera)

@@ -4,8 +4,12 @@ import "../engine"
 import rl "vendor:raylib"
 
 // Calculate the total pixel length of the map side.
-map_side_pixel_size :: proc() -> f32 {
-  return F32_CHUNK_PIXEL_SIZE * f32(_handle.chunks_per_side)
+map_side_pixel_size :: proc() -> i32 {
+  return CHUNK_PIXEL_SIZE * i32(_handle.chunks_per_side)
+}
+
+f32_map_side_pixel_size :: proc() -> f32 {
+  return f32(map_side_pixel_size())
 }
 
 // Ensure zoom is capped.
@@ -14,13 +18,13 @@ ensure_zoom_capped :: proc() {
   engine.camera.zoom = max(ZOOM_INTERVAL[0], engine.camera.zoom)
 
   first_point := rl.GetWorldToScreen2D({ 0, 0 }, engine.camera)
-  last_point := rl.GetWorldToScreen2D({ map_side_pixel_size(), map_side_pixel_size() }, engine.camera)
+  last_point := rl.GetWorldToScreen2D({ f32_map_side_pixel_size(), f32_map_side_pixel_size() }, engine.camera)
 
   too_zoomed_x := last_point.x - first_point.x < f32(engine.game_state.resolution.x)
   too_zoomed_y := last_point.y - first_point.y < f32(engine.game_state.resolution.y)
 
   if too_zoomed_x || too_zoomed_y {
-    engine.camera.zoom = f32(engine.game_state.resolution.x) / map_side_pixel_size()
+    engine.camera.zoom = f32(engine.game_state.resolution.x) / f32_map_side_pixel_size()
   }
 
   ensure_camera_capped()
@@ -35,8 +39,8 @@ ensure_camera_capped :: proc() {
   }
 
   last_point := rl.Vector2 {
-    (map_side_pixel_size() + first_point.x) - f32(engine.game_state.resolution.x) / engine.camera.zoom,
-    (map_side_pixel_size() + first_point.y) - f32(engine.game_state.resolution.y) / engine.camera.zoom,
+    (f32_map_side_pixel_size() + first_point.x) - f32(engine.game_state.resolution.x) / engine.camera.zoom,
+    (f32_map_side_pixel_size() + first_point.y) - f32(engine.game_state.resolution.y) / engine.camera.zoom,
   }
 
   // engine.camera.target.x += relative_to_zoom(_manipulation_state.target_delta.x)
