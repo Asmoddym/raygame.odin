@@ -16,7 +16,7 @@ overlay_system_draw :: proc() {
 }
 
 draw_test :: proc(overlay: ^engine.Overlay) {
-  ui.simple_button_draw("a", { 5, f32(overlay.resolution.y - 50), overlay }, 12)
+  ui.simple_button_draw("a", { 0.1, 0.1, overlay }, 12)
 }
 
 draw_inventory :: proc(overlay: ^engine.Overlay) {
@@ -28,7 +28,11 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
   // TODO:
   // - use position hooks for this
   // - make 1 hook for X and 1 for Y? Maybe later
-  ui.simple_button_draw("coucoucoucou", { 0.5, 0.1, overlay }, font_size)
+  // - Make a system to detect if the mouse is above an overlay (to prevent the terrain to move for ex)
+  // - Add a frametime for overlays
+  _, clicked := ui.simple_button_draw("coucoucoucou", { 0.5, 0.1, overlay }, font_size)
+
+  if clicked do _game.resources.wood += 1
 
   rl.DrawText(rl.TextFormat("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
   rl.DrawText(rl.TextFormat("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)

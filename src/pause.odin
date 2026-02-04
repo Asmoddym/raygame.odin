@@ -18,18 +18,22 @@ pause_system :: proc() {
 
   if engine.game_state.current_scene.id != 1 do return
 
-  if rl.IsKeyPressed(.ENTER) {
-    on_clicks[selection]()
-  }
+  render_pause()
+}
 
-  ui.button_draw_xy_centered_list(
-    texts,
-    font_size = 40,
-    on_click = proc(id: int) {
-      on_clicks[id]()
-    },
-    selection = &selection,
-  )
+render_pause :: proc() {
+  if rl.IsKeyPressed(.ENTER)                 do on_clicks[selection]()
+  if rl.IsKeyPressed(rl.KeyboardKey.UP)      do selection = selection - 1 < 0 ? len(texts) - 1 : selection - 1
+  if rl.IsKeyPressed(rl.KeyboardKey.DOWN)    do selection = (selection + 1) % len(texts)
+
+  for idx in 0..<len(texts) {
+    text := texts[idx]
+
+    selected_by_mouse, clicked := ui.persistable_button_draw(text, { 0.25, f32(idx + 1) * 0.15, nil }, 40, selection == idx)
+
+    if selected_by_mouse do selection = idx
+    if clicked           do on_clicks[idx]()
+  }
 }
 
 
