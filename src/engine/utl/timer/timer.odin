@@ -16,6 +16,7 @@ import time_lib "core:time"
 Type :: enum {
   SYSTEM,
   FRAME,
+  OVERLAY,
   TYPES,
 }
 

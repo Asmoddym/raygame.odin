@@ -10,7 +10,7 @@ import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
 import rl "vendor:raylib"
 
-BYPASS_MASK :: true
+BYPASS_MASK :: false
 
 // Terrain handle to store specific configuration.
 // All generated chunks are stored in the chunks slice.

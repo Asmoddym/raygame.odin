@@ -1,5 +1,6 @@
 package engine
 
+import "core:os"
 import rand "core:math/rand"
 import "utl/timer"
 import "core:fmt"
@@ -103,7 +104,9 @@ application_process_frame :: proc() {
     system_update(game_state.current_scene.id, now)
   }
 
+  timer.reset(timer.Type.OVERLAY)
   system_overlay_update(game_state.current_scene.id, now)
+  timer.lock(timer.Type.OVERLAY)
 
   timer.lock(timer.Type.SYSTEM)
 }
@@ -120,6 +123,7 @@ application_debug_render_information :: proc() {
 
   texts[1 + int(timer.Type.SYSTEM)] = fmt.tprintf("\nsystem : %.03fms", timer.as_milliseconds(timer.Type.SYSTEM))
   texts[1 + int(timer.Type.FRAME)]  = fmt.tprintf("\nframe  : %.03fms", timer.as_milliseconds(timer.Type.FRAME))
+  texts[1 + int(timer.Type.OVERLAY)]  = fmt.tprintf("\noverlay: %.03fms", timer.as_milliseconds(timer.Type.OVERLAY))
 
   str, err := strings.concatenate(texts[:])
 
@@ -129,7 +133,7 @@ application_debug_render_information :: proc() {
 
   text := rl.TextFormat("res: %dx%d\ntarget: %f, %f (zoom: %f)\noffset: %f, %f", game_state.resolution.x, game_state.resolution.y, camera.target.x, camera.target.y, camera.zoom, camera.offset.x, camera.offset.y)
 
-  rl.DrawText(text, 10, game_state.resolution.y - 70, 20, rl.WHITE)
+  rl.DrawText(text, 10, game_state.resolution.y - 90, 20, rl.WHITE)
 }
 
 

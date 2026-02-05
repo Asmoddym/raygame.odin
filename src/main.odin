@@ -39,7 +39,7 @@ main :: proc() {
   engine.system_register(terrain.process_navigation,    { int(enums.SceneID.MAIN) })
   engine.system_register(terrain.process_selection,     { int(enums.SceneID.MAIN) })
 
-  engine.system_register(overlay_system_draw,           { int(enums.SceneID.MAIN) })
+  engine.system_overlay_register(overlay_system_draw,           { int(enums.SceneID.MAIN) })
 
   engine.system_register(game_update_resources, recurrence_in_ms = 100)
   terrain.generate(5)
