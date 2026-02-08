@@ -31,8 +31,6 @@ main :: proc() {
   // engine.system_register(input_system_player_movement,           { int(enums.SceneID.MAIN) }, recurrence_in_ms = 10)
   // engine.system_register(collectable_system_main)
 
-
-
   // engine.system_overlay_register(overlay_system_draw,   { int(enums.SceneID.MAIN) })
   engine.system_register(terrain.draw,                  { int(enums.SceneID.MAIN) })
   engine.system_register(terrain.process_navigation,    { int(enums.SceneID.MAIN) })

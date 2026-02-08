@@ -87,7 +87,7 @@ ButtonMetadata :: struct {
 generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32) -> ButtonMetadata {
   ctext := strings.unsafe_string_to_cstring(text)
   measured_text := rl.MeasureTextEx(rl.GetFontDefault(), ctext, f32(font_size), f32(font_size / 10))
-  padding := f32(font_size) / 3
+  padding := f32(font_size) / 2.5
   width := measured_text.x + 2 * padding
   height := measured_text.y + 2 * padding
 

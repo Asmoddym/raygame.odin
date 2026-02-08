@@ -30,10 +30,7 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
   height := i32(rl.MeasureTextEx(rl.GetFontDefault(), "A", f32(font_size), 1).y)
 
   // TODO:
-  // - use position hooks for this
-  // - make 1 hook for X and 1 for Y? Maybe later
   // - Make a system to detect if the mouse is above an overlay (to prevent the terrain to move for ex)
-  // - Add a frametime for overlays
   _, clicked := ui.simple_button_draw("coucoucoucou", overlay, { 0.5, 0.5 }, font_size)
 
   if clicked do _game.resources.wood += 1
