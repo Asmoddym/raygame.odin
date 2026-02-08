@@ -41,14 +41,5 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
 }
 
 draw_minimap :: proc(overlay: ^engine.Overlay) {
-  @(static) camera: rl.Camera2D = { { 0, 0 }, { 0, 0 }, 0, 0 }
-
-  camera.zoom = f32(overlay.resolution.x) / terrain.f32_map_side_pixel_size()
-
-  // Using this updates the engine.current_camera pointer
-  engine.camera_set_current_camera(&camera)
-
-  terrain.draw_whole_map()
-
-  rl.EndMode2D()
+  terrain.draw_in_overlay(overlay)
 }
