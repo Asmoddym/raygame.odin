@@ -3,7 +3,6 @@ package macro
 import "terrain"
 import "enums"
 import "engine"
-import "engine/utl"
 import "ui"
 import rl "vendor:raylib"
 
@@ -17,7 +16,11 @@ overlay_system_draw :: proc() {
 }
 
 draw_test :: proc(overlay: ^engine.Overlay) {
-  ui.simple_button_draw("a",  overlay, .UP_LEFT, 12)
+  font_size := i32(engine.game_state.resolution.x / 80)
+
+  ui.simple_button_draw("hello",  overlay, { 0, 0 }, font_size)
+  ui.simple_button_draw("we've been expecting you",  overlay, { 0.5, 0.5 }, font_size)
+  ui.simple_button_draw("there general kenobi",  overlay, { 1, 1 }, font_size)
 }
 
 draw_inventory :: proc(overlay: ^engine.Overlay) {
@@ -31,7 +34,7 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
   // - make 1 hook for X and 1 for Y? Maybe later
   // - Make a system to detect if the mouse is above an overlay (to prevent the terrain to move for ex)
   // - Add a frametime for overlays
-  _, clicked := ui.simple_button_draw("coucoucoucou", overlay, .CENTER, font_size)
+  _, clicked := ui.simple_button_draw("coucoucoucou", overlay, { 0.5, 0.5 }, font_size)
 
   if clicked do _game.resources.wood += 1
 

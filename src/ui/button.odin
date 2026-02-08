@@ -14,7 +14,7 @@ import rl "vendor:raylib"
 // Returns 2 bools:
 // - whether it's selected by the mouse
 // - whether it's clicked
-persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: utl.PositionHook, font_size: i32, selected: bool, color: rl.Color = rl.WHITE) -> (bool, bool) {
+persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, selected: bool, color: rl.Color = rl.WHITE) -> (bool, bool) {
   metadata          := generate_metadata(text, overlay, hook, font_size)
   selected          := selected
   clicked           := false
@@ -41,13 +41,15 @@ persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: ut
 // Returns 2 bools:
 // - whether it's selected by the mouse
 // - whether it's clicked
-simple_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: utl.PositionHook, font_size: i32, color: rl.Color = rl.WHITE) -> (bool, bool) {
+simple_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, color: rl.Color = rl.WHITE) -> (bool, bool) {
   metadata          := generate_metadata(text, overlay, hook, font_size)
   clicked           := false
   selected          := false
 
-  if rl.CheckCollisionPointRec(rl.GetMousePosition(), metadata.screen_bounds) do selected = true
-  if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do clicked = true
+  if rl.CheckCollisionPointRec(rl.GetMousePosition(), metadata.screen_bounds) {
+    selected = true
+    if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do clicked = true
+  }
 
   draw_from_metadata(&metadata, font_size, selected, color)
 
@@ -73,21 +75,21 @@ BUTTON_LINES_THICKNESS_SELECTED: f32 = 6
 
 ButtonMetadata :: struct {
   overlay: ^engine.Overlay,
-  hook: utl.PositionHook,
+  hook: [2]f32,
   padding: f32,
   ctext: cstring,
-  measured_text: i32,
+  measured_text: rl.Vector2,
   box: rl.Rectangle,
   screen_bounds: rl.Rectangle,
 }
 
 @(private="file")
-generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: utl.PositionHook, font_size: i32) -> ButtonMetadata {
+generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32) -> ButtonMetadata {
   ctext := strings.unsafe_string_to_cstring(text)
-  measured_text := rl.MeasureText(ctext, font_size)
+  measured_text := rl.MeasureTextEx(rl.GetFontDefault(), ctext, f32(font_size), f32(font_size / 10))
   padding := f32(font_size) / 3
-  width := f32(measured_text) + 2 * padding
-  height := f32(font_size) + 2 * padding
+  width := measured_text.x + 2 * padding
+  height := measured_text.y + 2 * padding
 
   position := utl.position_calculate(hook,
     overlay == nil ? engine.game_state.resolution : overlay.resolution,
@@ -102,7 +104,7 @@ generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: utl.Posi
     padding,
     ctext,
     measured_text,
-    rl.Rectangle { position.x - padding, position.y - padding, width, height },
+    rl.Rectangle { position.x, position.y, width, height },
     rl.Rectangle {
       position.x + offset.x,
       position.y + offset.y,

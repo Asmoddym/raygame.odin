@@ -1,35 +1,24 @@
 package utl
 
-position_calculate :: proc(hook: PositionHook, screen_resolution, item_resolution: [2]i32) -> [2]f32 {
-  position: [2]i32
+position_calculate :: proc(hook: [2]f32, container_resolution, item_resolution: [2]i32) -> [2]f32 {
+  padding: f32 = 30
 
-  #partial switch hook {
-  case .CENTER:
-    position = {
-      screen_resolution.x / 2 - item_resolution.x / 2,
-      screen_resolution.y / 2 - item_resolution.y / 2,
-    }
-
-    break
-  case .UP_LEFT:
-    position = { 5, 5 }
-
-    break
-  case .DOWN_RIGHT:
-    position = {
-      screen_resolution.x - item_resolution.x - 5,
-      screen_resolution.y - item_resolution.y - 5,
-    }
-
-    break
+  container_resolution_with_offset: [2]f32 = {
+    f32(container_resolution.x) - padding,
+    f32(container_resolution.y) - padding,
   }
 
-  return { f32(position.x), f32(position.y) }
+  position: [2]f32 = {
+    padding / 2 + f32(container_resolution_with_offset.x) * hook.x - f32(item_resolution.x) / 2,
+    padding / 2 + f32(container_resolution_with_offset.y) * hook.y - f32(item_resolution.y) / 2,
+  }
+
+  position.x = max(position.x, padding / 2)
+  position.x = min(position.x, padding / 2 + container_resolution_with_offset.x - f32(item_resolution.x))
+  position.y = max(padding / 2, position.y)
+  position.y = min(position.y, padding / 2 + container_resolution_with_offset.y - f32(item_resolution.y))
+
+  return position
 }
 
-PositionHook :: enum {
-  CENTER,
-  UP_LEFT,
-  DOWN_RIGHT,
-  POSITIONS,
-}
+PADDING: f32 = 30

@@ -1,7 +1,6 @@
 package macro
 
 import "engine"
-import "engine/utl"
 import "enums"
 import "ui"
 import rl "vendor:raylib"
@@ -30,7 +29,7 @@ render_pause :: proc() {
   for idx in 0..<len(texts) {
     text := texts[idx]
 
-    selected_by_mouse, clicked := ui.persistable_button_draw(text, nil, cast(utl.PositionHook)idx, 40, selection == idx)
+    selected_by_mouse, clicked := ui.persistable_button_draw(text, nil, { 0.5, 0.5 - (f32(len(texts) - 1) * 0.1) + f32(idx + 1) * 0.1 }, 40, selection == idx)
 
     if selected_by_mouse do selection = idx
     if clicked           do on_clicks[idx]()

@@ -25,7 +25,7 @@ Overlay :: struct {
   resolution: [2]i32,
   render_texture: rl.RenderTexture,
   dimension_ratios: [2]f32,
-  position_hook: utl.PositionHook,
+  hook: [2]f32,
   position: [2]f32,
 }
 
@@ -46,7 +46,7 @@ scene_set_current :: proc(#any_int id: int) {
 
 
 // Create an overlay and store it in a scene, with its render texture and resolution ratio.
-scene_overlay_create_with_ratios :: proc(#any_int scene_id: int, #any_int overlay_id: int, dimension_ratios: [2]f32, position_hook: utl.PositionHook) {
+scene_overlay_create_with_ratios :: proc(#any_int scene_id: int, #any_int overlay_id: int, dimension_ratios: [2]f32, hook: [2]f32) {
   scene := &scene_registry[scene_id]
   resolution: [2]i32
 
@@ -57,16 +57,13 @@ scene_overlay_create_with_ratios :: proc(#any_int scene_id: int, #any_int overla
     resolution,
     rl.LoadRenderTexture(i32(resolution.x), i32(resolution.y)),
     dimension_ratios,
-    position_hook,
-    { 0, 0 },
+    hook,
+    utl.position_calculate(hook, game_state.resolution, resolution),
   }
-
-  value, _ := &scene.overlays[overlay_id]
-  value.position = utl.position_calculate(position_hook, game_state.resolution, resolution)
 }
 
 // Create an overlay and store it in a scene, with its render texture and a unique ratio based on width.
-scene_overlay_create_with_width_ratio :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f32, position_hook: utl.PositionHook) {
+scene_overlay_create_with_width_ratio :: proc(#any_int scene_id: int, #any_int overlay_id: int, width_ratio: f32, hook: [2]f32) {
   resolution: [2]f32 = {
     f32(game_state.resolution.x) * width_ratio,
     f32(game_state.resolution.x) * width_ratio,
@@ -77,7 +74,7 @@ scene_overlay_create_with_width_ratio :: proc(#any_int scene_id: int, #any_int o
     resolution.y / f32(game_state.resolution.y),
   }
 
-  scene_overlay_create_with_ratios(scene_id, overlay_id, dimension_ratios, position_hook)
+  scene_overlay_create_with_ratios(scene_id, overlay_id, dimension_ratios, hook)
 }
 
 scene_overlay_create :: proc {
@@ -116,12 +113,12 @@ scene_overlay_update_resolutions :: proc() {
 
     for overlay_id in scene.overlays {
       overlay := &scene.overlays[overlay_id]
-      resolution := overlay_calculate_resolution(overlay.dimension_ratios)
+      overlay.resolution = overlay_calculate_resolution(overlay.dimension_ratios)
+      overlay.position = utl.position_calculate(overlay.hook, game_state.resolution, overlay.resolution)
 
       rl.UnloadRenderTexture(overlay.render_texture)
 
-      overlay.resolution = resolution
-      overlay.render_texture = rl.LoadRenderTexture(i32(resolution.x), i32(resolution.y))
+      overlay.render_texture = rl.LoadRenderTexture(i32(overlay.resolution.x), i32(overlay.resolution.y))
     }
   }
 }
