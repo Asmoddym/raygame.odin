@@ -1,5 +1,6 @@
 package engine
 
+import "core:log"
 import rl "vendor:raylib"
 import "utl"
 
@@ -47,10 +48,8 @@ scene_set_current :: proc(#any_int id: int) {
 
 // Create an overlay and store it in a scene, with its render texture and resolution ratio.
 scene_overlay_create_with_ratios :: proc(#any_int scene_id: int, #any_int overlay_id: int, dimension_ratios: [2]f32, hook: [2]f32) {
-  scene := &scene_registry[scene_id]
-  resolution: [2]i32
-
-  resolution = overlay_calculate_resolution(dimension_ratios)
+  scene      := &scene_registry[scene_id]
+  resolution := overlay_calculate_resolution(dimension_ratios)
 
   scene.overlays[overlay_id] = Overlay {
     overlay_id,

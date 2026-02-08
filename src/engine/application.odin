@@ -1,6 +1,5 @@
 package engine
 
-import "core:os"
 import rand "core:math/rand"
 import "utl/timer"
 import "core:fmt"
@@ -118,22 +117,26 @@ application_process_frame :: proc() {
 // Render FPS, resolution and window state (only on debug compilation mode)
 @(private="file")
 application_debug_render_information :: proc() {
-  texts: [int(timer.Type.TYPES) + 1]string
-  texts[0] = fmt.tprintf("%d FPS", rl.GetFPS())
+  texts:     [dynamic]string
+  font_size: f32 = 20
 
-  texts[1 + int(timer.Type.SYSTEM)] = fmt.tprintf("\nsystem : %.03fms", timer.as_milliseconds(timer.Type.SYSTEM))
-  texts[1 + int(timer.Type.FRAME)]  = fmt.tprintf("\nframe  : %.03fms", timer.as_milliseconds(timer.Type.FRAME))
-  texts[1 + int(timer.Type.OVERLAY)]  = fmt.tprintf("\noverlay: %.03fms", timer.as_milliseconds(timer.Type.OVERLAY))
+  append(&texts, fmt.tprintf("%d FPS", rl.GetFPS()))
+  append(&texts, fmt.tprintf("\nsystem : %.03fms", timer.as_milliseconds(timer.Type.SYSTEM)))
+  append(&texts, fmt.tprintf("\nframe  : %.03fms", timer.as_milliseconds(timer.Type.FRAME)))
+  append(&texts, fmt.tprintf("\noverlay: %.03fms", timer.as_milliseconds(timer.Type.OVERLAY)))
+  // append(&texts, fmt.tprintf("\nres: %dx%d\ntarget: %f, %f (zoom: %f)\noffset: %f, %f", game_state.resolution.x, game_state.resolution.y, camera.target.x, camera.target.y, camera.zoom, camera.offset.x, camera.offset.y))
 
   str, err := strings.concatenate(texts[:])
 
   if err == nil {
-    rl.DrawText(strings.unsafe_string_to_cstring(str), 10, 10, 20, rl.LIME)
+    measure := rl.MeasureTextEx(rl.GetFontDefault(), strings.unsafe_string_to_cstring(str), font_size, font_size / 10)
+    pos: [2]i32 = { 5, game_state.resolution.y - i32(measure.y) - 15 }
+
+    rl.DrawRectangle(pos.x, pos.y, i32(measure.x) + 10, i32(measure.y) + 10, rl.BLACK)
+    // rl.DrawRectangleLines(pos.x, pos.y, i32(measure.x) + 10, i32(measure.y) + 10, rl.WHITE)
+
+    rl.DrawText(strings.unsafe_string_to_cstring(str), pos.x + 5, pos.y + 5, i32(font_size), rl.GREEN)
   }
-
-  text := rl.TextFormat("res: %dx%d\ntarget: %f, %f (zoom: %f)\noffset: %f, %f", game_state.resolution.x, game_state.resolution.y, camera.target.x, camera.target.y, camera.zoom, camera.offset.x, camera.offset.y)
-
-  rl.DrawText(text, 10, game_state.resolution.y - 90, 20, rl.WHITE)
 }
 
 
