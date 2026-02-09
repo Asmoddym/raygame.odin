@@ -18,6 +18,11 @@ pause_system :: proc() {
 
   if engine.game_state.current_scene.id != 1 do return
 
+    // TODO: remove the draw from here and add it to a overlay system
+  if rl.IsKeyPressed(.ENTER)                 do on_clicks[selection]()
+  if rl.IsKeyPressed(rl.KeyboardKey.UP)      do selection = selection - 1 < 0 ? len(texts) - 1 : selection - 1
+  if rl.IsKeyPressed(rl.KeyboardKey.DOWN)    do selection = (selection + 1) % len(texts)
+
   engine.scene_overlay_draw(0, render_pause)
 }
 
@@ -30,10 +35,6 @@ pause_init :: proc(overlay: ^engine.Overlay) {
 }
 
 render_pause :: proc(overlay: ^engine.Overlay) {
-  if rl.IsKeyPressed(.ENTER)                 do on_clicks[selection]()
-  if rl.IsKeyPressed(rl.KeyboardKey.UP)      do selection = selection - 1 < 0 ? len(texts) - 1 : selection - 1
-  if rl.IsKeyPressed(rl.KeyboardKey.DOWN)    do selection = (selection + 1) % len(texts)
-
   for idx in 0..<len(texts) {
     selected_by_mouse, clicked := ui.persistable_button_draw(idx, overlay, selection == idx)
 
