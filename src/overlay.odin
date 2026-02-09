@@ -15,12 +15,22 @@ overlay_system_draw :: proc() {
   engine.scene_overlay_draw(1234, draw_test)
 }
 
-draw_test :: proc(overlay: ^engine.Overlay) {
+overlay_init_inventory :: proc(overlay: ^engine.Overlay) {
   font_size := i32(engine.game_state.resolution.x / 80)
+    ui.simple_button_create(1, "coucoucoucou", overlay, { 0.5, 0.5 }, font_size)
+}
 
-  ui.simple_button_draw("hello",  overlay, { 0, 0 }, font_size)
-  ui.simple_button_draw("CANCEL",  overlay, { 0, 1 }, font_size)
-  ui.simple_button_draw("APPROVE",  overlay, { 1, 1 }, font_size)
+overlay_init_test :: proc(overlay: ^engine.Overlay) {
+  font_size := i32(engine.game_state.resolution.x / 80)
+  ui.simple_button_create(1, "hello", overlay, { 0, 0 }, font_size)
+  ui.simple_button_create(2, "CANCEL",  overlay, { 0, 1 }, font_size)
+  ui.simple_button_create(3, "APPROVE",  overlay, { 1, 1 }, font_size)
+}
+
+draw_test :: proc(overlay: ^engine.Overlay) {
+  ui.simple_button_draw(1, overlay)
+  ui.simple_button_draw(2, overlay)
+  ui.simple_button_draw(3, overlay)
 }
 
 draw_inventory :: proc(overlay: ^engine.Overlay) {
@@ -31,7 +41,7 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
 
   // TODO:
   // - Make a system to detect if the mouse is above an overlay (to prevent the terrain to move for ex)
-  _, clicked := ui.simple_button_draw("coucoucoucou", overlay, { 0.5, 0.5 }, font_size)
+  _, clicked := ui.simple_button_draw(1, overlay)
 
   if clicked do _game.resources.wood += 1
 

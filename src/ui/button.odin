@@ -1,5 +1,6 @@
 package ui
 
+import "core:log"
 import "core:strings"
 import "../engine"
 import "../engine/utl"
@@ -15,7 +16,7 @@ import rl "vendor:raylib"
 // - whether it's selected by the mouse
 // - whether it's clicked
 persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, selected: bool, color: rl.Color = rl.WHITE) -> (bool, bool) {
-  metadata          := generate_metadata(text, overlay, hook, font_size)
+  metadata          := generate_metadata(text, overlay, hook, font_size, color)
   selected          := selected
   clicked           := false
   selected_by_mouse := false
@@ -32,7 +33,7 @@ persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2
     if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do clicked = true
   }
 
-  draw_from_metadata(&metadata, font_size, selected, color)
+  draw_from_metadata(&metadata, selected)
 
   return selected_by_mouse, clicked
 }
@@ -41,8 +42,9 @@ persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2
 // Returns 2 bools:
 // - whether it's selected by the mouse
 // - whether it's clicked
-simple_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, color: rl.Color = rl.WHITE) -> (bool, bool) {
-  metadata          := generate_metadata(text, overlay, hook, font_size)
+simple_button_draw :: proc(id: int, overlay: ^engine.Overlay) -> (bool, bool) {
+  registry, _ := &button_registry[overlay]
+  metadata, _ := &registry[id]
   clicked           := false
   selected          := false
 
@@ -51,9 +53,18 @@ simple_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32,
     if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do clicked = true
   }
 
-  draw_from_metadata(&metadata, font_size, selected, color)
+  draw_from_metadata(metadata, selected)
 
   return selected, clicked
+}
+
+simple_button_create :: proc(id: int, text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, color: rl.Color = rl.WHITE) {
+  if !(overlay in button_registry) {
+    button_registry[overlay] = make(map[int]ButtonMetadata)
+  }
+
+  registry, _ := &button_registry[overlay]
+  registry[id] = generate_metadata(text, overlay, hook, font_size, color)
 }
 
 
@@ -81,10 +92,14 @@ ButtonMetadata :: struct {
   measured_text: rl.Vector2,
   box: rl.Rectangle,
   screen_bounds: rl.Rectangle,
+  font_size: i32,
+  color: rl.Color,
 }
 
+button_registry: map[^engine.Overlay]map[int]ButtonMetadata
+
 @(private="file")
-generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32) -> ButtonMetadata {
+generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, color: rl.Color) -> ButtonMetadata {
   ctext := strings.unsafe_string_to_cstring(text)
   measured_text := rl.MeasureTextEx(rl.GetFontDefault(), ctext, f32(font_size), f32(font_size / 10))
   padding := f32(font_size) / 2.5
@@ -111,11 +126,13 @@ generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, 
       width,
       height,
     },
+    font_size,
+    color,
   }
 }
 
-draw_from_metadata :: proc(metadata: ^ButtonMetadata, font_size: i32, selected: bool, color: rl.Color) {
-  color := color
+draw_from_metadata :: proc(metadata: ^ButtonMetadata, selected: bool) {
+  color := metadata.color
 
   if !selected {
     color.r /= 2
@@ -123,6 +140,6 @@ draw_from_metadata :: proc(metadata: ^ButtonMetadata, font_size: i32, selected: 
     color.b /= 2
   }
 
-  rl.DrawText(metadata.ctext, i32(metadata.box.x + metadata.padding), i32(metadata.box.y + metadata.padding), font_size, color)
+  rl.DrawText(metadata.ctext, i32(metadata.box.x + metadata.padding), i32(metadata.box.y + metadata.padding), metadata.font_size, color)
   rl.DrawRectangleLinesEx(metadata.box, selected ? BUTTON_LINES_THICKNESS_SELECTED : BUTTON_LINES_THICKNESS_UNSELECTED, color)
 }
