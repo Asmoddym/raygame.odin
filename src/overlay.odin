@@ -19,8 +19,8 @@ draw_test :: proc(overlay: ^engine.Overlay) {
   font_size := i32(engine.game_state.resolution.x / 80)
 
   ui.simple_button_draw("hello",  overlay, { 0, 0 }, font_size)
-  ui.simple_button_draw("we've been expecting you",  overlay, { 0.5, 0.5 }, font_size)
-  ui.simple_button_draw("there general kenobi",  overlay, { 1, 1 }, font_size)
+  ui.simple_button_draw("CANCEL",  overlay, { 0, 1 }, font_size)
+  ui.simple_button_draw("APPROVE",  overlay, { 1, 1 }, font_size)
 }
 
 draw_inventory :: proc(overlay: ^engine.Overlay) {
