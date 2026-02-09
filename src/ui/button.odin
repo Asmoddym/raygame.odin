@@ -15,8 +15,9 @@ import rl "vendor:raylib"
 // Returns 2 bools:
 // - whether it's selected by the mouse
 // - whether it's clicked
-persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, selected: bool, color: rl.Color = rl.WHITE) -> (bool, bool) {
-  metadata          := generate_metadata(text, overlay, hook, font_size, color)
+persistable_button_draw :: proc(id: int, overlay: ^engine.Overlay, selected: bool) -> (bool, bool) {
+  registry, _ := &button_registry[overlay]
+  metadata, _ := &registry[id]
   selected          := selected
   clicked           := false
   selected_by_mouse := false
@@ -33,7 +34,7 @@ persistable_button_draw :: proc(text: string, overlay: ^engine.Overlay, hook: [2
     if rl.IsMouseButtonPressed(rl.MouseButton.LEFT) do clicked = true
   }
 
-  draw_from_metadata(&metadata, selected)
+  draw_from_metadata(metadata, selected)
 
   return selected_by_mouse, clicked
 }

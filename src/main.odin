@@ -14,6 +14,8 @@ main :: proc() {
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
   engine.scene_set_current(enums.SceneID.MAIN)
 
+  engine.scene_overlay_create(enums.SceneID.PAUSE, 0, [2]f32 { 0.9, 0.9 }, [2]f32 { 0.5, 0.5 }, on_init = pause_init)
+
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, [2]f32 { 0.25, 0.5 }, [2]f32 { 0.9, 0.9 }, on_init = overlay_init_inventory)
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP, 0.15, [2]f32 { 0, 0 })
   engine.scene_overlay_create(enums.SceneID.MAIN, 1234, 0.25, [2]f32 { 0.5, 0.5 }, on_init = overlay_init_test)

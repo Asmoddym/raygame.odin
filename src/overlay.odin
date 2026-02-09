@@ -1,5 +1,6 @@
 package macro
 
+import "core:fmt"
 import "terrain"
 import "enums"
 import "engine"
@@ -45,9 +46,13 @@ draw_inventory :: proc(overlay: ^engine.Overlay) {
 
   if clicked do _game.resources.wood += 1
 
-  rl.DrawText(rl.TextFormat("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
-  rl.DrawText(rl.TextFormat("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)
-  rl.DrawText(rl.TextFormat("Stone: %d", _game.resources.stone), 5, 5 + 4 * height, font_size, rl.WHITE)
+  // ui.text_box_draw_fast(fmt.tprint("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
+  // ui.text_box_draw_fast(fmt.tprint("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)
+  // ui.text_box_draw_fast(fmt.tprint("Stone: %d", _game.resources.stone), 5, 5 + 4 * height, font_size, rl.WHITE)
+  //
+  // rl.TextFormat("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
+  // rl.TextFormat("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)
+  // rl.TextFormat("Stone: %d", _game.resources.stone), 5, 5 + 4 * height, font_size, rl.WHITE)
 }
 
 draw_minimap :: proc(overlay: ^engine.Overlay) {
