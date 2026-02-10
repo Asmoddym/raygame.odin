@@ -5,6 +5,9 @@ import "engine"
 import "enums"
 import "terrain"
 
+import "ui"
+import "bounding_box"
+
 main :: proc() {
   context.logger = log.create_console_logger(.Debug, {.Level, .Time, .Short_File_Path, .Line, .Procedure, .Terminal_Color})
 
@@ -30,9 +33,9 @@ main :: proc() {
     hook = [2]f32 { 0.5, 0.5 },
     on_init = overlay_init_test)
 
+
   // OLD STUFF
   //
-  // engine.system_register(terrain.system_manipulation,               { int(enums.SceneID.MAIN) })
   // engine.system_register(ui.system_text_box_update,              { int(enums.SceneID.MAIN) })
   // engine.system_register(bounding_box.system_collision_resolver, { int(enums.SceneID.MAIN) })
   // engine.system_register(drawable_system_draw,                   { int(enums.SceneID.MAIN) })

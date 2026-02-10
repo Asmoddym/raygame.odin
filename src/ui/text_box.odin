@@ -148,12 +148,12 @@ system_text_box_update :: proc() {
   }
 }
 
-// Misc system to keep the camera position to the center of the screen
-system_update_camera_position :: proc() {
-  box := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID]).box
-
-  engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
-}
+// // Misc system to keep the camera position to the center of the screen
+// system_update_camera_position :: proc() {
+//   box := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID]).box
+//
+//   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
+// }
 
 
 
