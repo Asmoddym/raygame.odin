@@ -5,9 +5,6 @@ import "engine"
 import "enums"
 import "terrain"
 
-import "ui"
-import "bounding_box"
-
 main :: proc() {
   context.logger = log.create_console_logger(.Debug, {.Level, .Time, .Short_File_Path, .Line, .Procedure, .Terminal_Color})
 
