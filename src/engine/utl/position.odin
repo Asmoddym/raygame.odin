@@ -1,6 +1,5 @@
 package utl
 
-import "core:log"
 position_calculate :: proc(hook: [2]f32, container_resolution, item_resolution: [2]i32) -> [2]f32 {
   padding: f32 = 30
 

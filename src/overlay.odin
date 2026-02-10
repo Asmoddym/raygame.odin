@@ -16,15 +16,13 @@ overlay_system_draw :: proc() {
 }
 
 overlay_init_inventory :: proc(overlay: ^engine.Overlay) {
-  font_size := i32(engine.game_state.resolution.x / 80)
-    ui.simple_button_create(1, "coucoucoucou", overlay, { 0.5, 0.5 }, font_size)
+  ui.simple_button_create(1, "coucoucoucou", overlay, { 0.5, 0.5 })
 }
 
 overlay_init_test :: proc(overlay: ^engine.Overlay) {
-  font_size := i32(engine.game_state.resolution.x / 80)
-  ui.simple_button_create(1, "hello", overlay, { 0, 0 }, font_size)
-  ui.simple_button_create(2, "CANCEL",  overlay, { 0, 1 }, font_size)
-  ui.simple_button_create(3, "APPROVE",  overlay, { 1, 1 }, font_size)
+  ui.simple_button_create(1, "hello", overlay, { 0, 0 })
+  ui.simple_button_create(2, "CANCEL",  overlay, { 0, 1 })
+  ui.simple_button_create(3, "APPROVE",  overlay, { 1, 1 })
 }
 
 draw_test :: proc(overlay: ^engine.Overlay) {
