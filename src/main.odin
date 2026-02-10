@@ -14,11 +14,21 @@ main :: proc() {
   engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
   engine.scene_set_current(enums.SceneID.MAIN)
 
-  engine.scene_overlay_create(enums.SceneID.PAUSE, 0, [2]f32 { 0.9, 0.9 }, [2]f32 { 0.5, 0.5 }, on_init = pause_init)
-
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY, [2]f32 { 0.25, 0.5 }, [2]f32 { 0.9, 0.9 }, on_init = overlay_init_inventory)
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP, 0.15, [2]f32 { 0, 0 })
-  engine.scene_overlay_create(enums.SceneID.MAIN, 1234, 0.25, [2]f32 { 0.5, 0.5 }, on_init = overlay_init_test)
+  engine.scene_overlay_create(enums.SceneID.PAUSE, 0,
+    dimension_ratios = [2]f32 { 0.9, 0.9 },
+    hook = [2]f32 { 0.5, 0.5 },
+    on_init = pause_init)
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY,
+    dimension_ratios = [2]f32 { 0.25, 0.5 },
+    hook = [2]f32 { 0.9, 0.9 },
+    on_init = overlay_init_inventory)
+  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP,
+    width_ratio = 0.15,
+    hook = [2]f32 { 0, 0 })
+  engine.scene_overlay_create(enums.SceneID.MAIN, 1234,
+    width_ratio = 0.25,
+    hook = [2]f32 { 0.5, 0.5 },
+    on_init = overlay_init_test)
 
   // OLD STUFF
   //
@@ -39,6 +49,7 @@ main :: proc() {
   engine.system_register(terrain.process_selection,     { int(enums.SceneID.MAIN) })
 
   engine.system_overlay_register(overlay_system_draw,           { int(enums.SceneID.MAIN) })
+  engine.system_overlay_register(pause_overlay_system_draw,           { int(enums.SceneID.PAUSE) })
 
   engine.system_register(game_update_resources, recurrence_in_ms = 100)
   terrain.generate(5)
