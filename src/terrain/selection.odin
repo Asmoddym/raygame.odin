@@ -49,14 +49,8 @@ process_selection :: proc() {
   first_point: [2]i32 = { min(selection.rec[0].x, selection.rec[1].x), min(selection.rec[0].y, selection.rec[1].y) }
   last_point: [2]i32 = { max(selection.rec[0].x, selection.rec[1].x), max(selection.rec[0].y, selection.rec[1].y) }
 
-  first_point.x = min(first_point.x, _handle.cell_count_per_side)
-  first_point.x = max(first_point.x, 0)
-  first_point.y = min(first_point.y, _handle.cell_count_per_side)
-  first_point.y = max(first_point.y, 0)
-  last_point.x = min(last_point.x, _handle.cell_count_per_side)
-  last_point.x = max(last_point.x, 0)
-  last_point.y = min(last_point.y, _handle.cell_count_per_side)
-  last_point.y = max(last_point.y, 0)
+  cap_coords(&first_point)
+  cap_coords(&last_point)
 
   for y in first_point.y..<last_point.y {
     for x in first_point.x..<last_point.x {
@@ -64,16 +58,14 @@ process_selection :: proc() {
     }
   }
 
-  // rl.EndMode2D()
   for chunk_y in (first_point.y / CHUNK_SIZE)..=(last_point.y / CHUNK_SIZE) {
     for chunk_x in (first_point.x / CHUNK_SIZE)..=(last_point.x / CHUNK_SIZE) {
-      idx := coords_to_chunk_index({ chunk_x, chunk_y })
+      idx := chunk_coords_to_chunk_index({ chunk_x, chunk_y })
       if idx >= len(_handle.display_chunks) do continue
 
       draw_display_chunk(&_handle.display_chunks[idx])
     }
   }
-  // rl.BeginMode2D(engine.camera)
 }
 
 

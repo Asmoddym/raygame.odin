@@ -10,19 +10,26 @@ to_cell_coords :: proc(pos: [2]f32) -> [2]i32 {
   return { i32(pos.x / F32_TILE_SIZE), i32(pos.y / F32_TILE_SIZE) }
 }
 
+// Get a generic value relative to the zoom (simple division)
 relative_to_zoom :: proc(value: $T) -> f32 {
-  return f32(value) * 1 / engine.camera.zoom
+  return f32(value) / engine.camera.zoom
 }
 
+// Get current cell coords hovered by the mouse
 get_current_hovered_cell_coords :: proc() -> [2]i32 {
   coords := to_cell_coords(rl.GetScreenToWorld2D(rl.GetMousePosition(), engine.camera))
 
+  cap_coords(&coords)
+
+  return coords
+}
+
+// Cap a given coords to the handle
+cap_coords :: proc(coords: ^[2]i32) {
   coords.x = min(coords.x, _handle.cell_count_per_side)
   coords.x = max(coords.x, 0)
   coords.y = min(coords.y, _handle.cell_count_per_side)
   coords.y = max(coords.y, 0)
-
-  return coords
 }
 
 // Returns coords to tile index
@@ -33,6 +40,11 @@ coords_to_tile_index :: proc(coords: [2]i32) -> int {
 // Returns coords to chunk index
 coords_to_chunk_index :: proc(coords: [2]i32) -> int {
   return int((coords[1] / CHUNK_SIZE) * _handle.chunks_per_side + coords[0] / CHUNK_SIZE)
+}
+
+// Returns chunk coords to chunk index
+chunk_coords_to_chunk_index :: proc(coords: [2]i32) -> int {
+  return int(coords[1] * _handle.chunks_per_side + coords[0])
 }
 
 // Returns coords to tile and chunk index

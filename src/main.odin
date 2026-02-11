@@ -2,9 +2,29 @@ package macro
 
 import "core:log"
 import "engine"
-import "enums"
 import "terrain"
 
+
+// Enums
+
+
+// Scene IDs
+SceneID :: enum {
+  MAIN,
+  PAUSE,
+}
+
+// Overlay IDs
+OverlayID :: enum {
+  CONTROLS,
+  MINIMAP,
+}
+
+
+// Structs
+
+
+// Main controls struct
 Controls :: struct {
   mask_mode_toggled: bool,
   seed: u64,
@@ -13,6 +33,11 @@ Controls :: struct {
 
 controls: Controls = { false, 16, 5 }
 
+
+// Systems
+
+
+// Main terrain draw system to draw with or without masks.
 draw_terrain :: proc() {
   terrain.draw(draw_masks = controls.mask_mode_toggled)
 }
@@ -22,29 +47,29 @@ main :: proc() {
 
   engine.init()
 
-  engine.scene_create(enums.SceneID.MAIN,  uses_camera = true)
-  engine.scene_create(enums.SceneID.PAUSE, uses_camera = false)
-  engine.scene_set_current(enums.SceneID.MAIN)
+  engine.scene_create(SceneID.MAIN,  uses_camera = true)
+  engine.scene_create(SceneID.PAUSE, uses_camera = false)
+  engine.scene_set_current(SceneID.MAIN)
 
-  engine.scene_overlay_create(enums.SceneID.PAUSE, 0,
+  engine.scene_overlay_create(SceneID.PAUSE, 0,
     dimension_ratios = [2]f32 { 0.9, 0.9 },
     position_hook = [2]f32 { 0.5, 0.5 },
     on_init = pause_init)
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.CONTROLS,
+  engine.scene_overlay_create(SceneID.MAIN, OverlayID.CONTROLS,
     dimension_ratios = [2]f32 { 0.2, 0.5 },
     position_hook = [2]f32 { 0.9, 0.9 },
     on_init = overlay_init_controls)
-  engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP,
+  engine.scene_overlay_create(SceneID.MAIN, OverlayID.MINIMAP,
     width_ratio = 0.15,
     position_hook = [2]f32 { 0, 0 })
 
-  engine.system_register(draw_terrain,                      { int(enums.SceneID.MAIN) })
-  engine.system_register(terrain.process_navigation,        { int(enums.SceneID.MAIN) })
-  engine.system_register(terrain.process_selection,         { int(enums.SceneID.MAIN) })
-  engine.system_register(game_update_resources,         { int(enums.SceneID.MAIN) })
+  engine.system_register(draw_terrain,                      { int(SceneID.MAIN) })
+  engine.system_register(terrain.process_navigation,        { int(SceneID.MAIN) })
+  engine.system_register(terrain.process_selection,         { int(SceneID.MAIN) })
+  engine.system_register(game_update_resources,             { int(SceneID.MAIN) })
 
-  engine.system_overlay_register(overlay_system_draw,       { int(enums.SceneID.MAIN) })
-  engine.system_overlay_register(pause_overlay_system_draw, { int(enums.SceneID.PAUSE) })
+  engine.system_overlay_register(overlay_system_draw,       { int(SceneID.MAIN) })
+  engine.system_overlay_register(pause_overlay_system_draw, { int(SceneID.PAUSE) })
 
   terrain.generate(controls.size, controls.seed)
 

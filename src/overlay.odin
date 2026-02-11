@@ -2,7 +2,6 @@ package macro
 
 import "core:fmt"
 import "terrain"
-import "enums"
 import "engine"
 import "ui"
 
@@ -10,8 +9,8 @@ import "ui"
 // Main overlay draw system.
 // engine.scene_overlay_draw will wrap the callback with BeginTextureMode and ClearBackground, frame the texture and render it.
 overlay_system_draw :: proc() {
-  engine.scene_overlay_draw(enums.OverlayID.CONTROLS, draw_controls)
-  engine.scene_overlay_draw(enums.OverlayID.MINIMAP, draw_minimap)
+  engine.scene_overlay_draw(OverlayID.CONTROLS, draw_controls)
+  engine.scene_overlay_draw(OverlayID.MINIMAP, draw_minimap)
 }
 
 overlay_init_controls :: proc(overlay: ^engine.Overlay) {
@@ -26,20 +25,14 @@ overlay_init_controls :: proc(overlay: ^engine.Overlay) {
 
 draw_controls :: proc(overlay: ^engine.Overlay) {
   clicked: bool        = false
-  reload: bool         = false
+  previous_controls   := controls
 
   // Seed buttons
   _, clicked = ui.simple_button_draw(1, overlay)
-  if clicked {
-    controls.seed -= 1
-    reload = true
-  }
+  if clicked do controls.seed -= 1
 
   _, clicked = ui.simple_button_draw(2, overlay)
-  if clicked {
-    controls.seed += 1
-    reload = true
-  }
+  if clicked do controls.seed += 1
 
   // Mask mode buttons
   mask_mode_button_id := controls.mask_mode_toggled ? 4 : 3
@@ -48,18 +41,15 @@ draw_controls :: proc(overlay: ^engine.Overlay) {
 
   // Size buttons
   _, clicked = ui.simple_button_draw(5, overlay)
-  if clicked {
-    controls.size -= 1
-    reload = true
-  }
+  if clicked do controls.size -= 1
 
   _, clicked = ui.simple_button_draw(6, overlay)
-  if clicked {
-    controls.size += 1
-    reload = true
-  }
+  if clicked do controls.size += 1
 
-  if reload {
+  if (
+    previous_controls.seed != controls.seed ||
+    previous_controls.size != controls.size
+  ) {
     terrain.unload()
     terrain.generate(controls.size, controls.seed)
   }
