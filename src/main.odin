@@ -2,6 +2,7 @@ package macro
 
 import "core:log"
 import "engine"
+import rl "vendor:raylib"
 import "terrain"
 
 
@@ -42,6 +43,19 @@ draw_terrain :: proc() {
   terrain.draw(draw_masks = controls.mask_mode_toggled)
 }
 
+// Discover the terrain on mouse hover.
+discover_terrain :: proc() {
+  delta := rl.GetMouseDelta()
+
+  if delta.x != 0 || delta.y != 0 {
+    coords := terrain.get_current_hovered_cell_coords()
+
+    terrain.discover_circular_part(coords, 7)
+  }
+}
+
+
+// MAIN
 main :: proc() {
   context.logger = log.create_console_logger(.Debug, {.Level, .Time, .Short_File_Path, .Line, .Procedure, .Terminal_Color})
 
@@ -66,7 +80,7 @@ main :: proc() {
   engine.system_register(draw_terrain,                      { int(SceneID.MAIN) })
   engine.system_register(terrain.process_navigation,        { int(SceneID.MAIN) })
   engine.system_register(terrain.process_selection,         { int(SceneID.MAIN) })
-  engine.system_register(game_update_resources,             { int(SceneID.MAIN) })
+  engine.system_register(discover_terrain,                  { int(SceneID.MAIN) })
 
   engine.system_overlay_register(overlay_system_draw,       { int(SceneID.MAIN) })
   engine.system_overlay_register(pause_overlay_system_draw, { int(SceneID.PAUSE) })
