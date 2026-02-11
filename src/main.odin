@@ -59,6 +59,8 @@ discover_terrain :: proc() {
 main :: proc() {
   context.logger = log.create_console_logger(.Debug, {.Level, .Time, .Short_File_Path, .Line, .Procedure, .Terminal_Color})
 
+  when ODIN_DEBUG do rl.SetTraceLogLevel(rl.TraceLogLevel.ERROR)
+
   engine.init()
 
   engine.scene_create(SceneID.MAIN,  uses_camera = true)

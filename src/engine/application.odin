@@ -34,7 +34,7 @@ run :: proc() {
     application_process_frame()
     timer.lock(timer.Type.FRAME)
 
-    application_debug_render_information()
+    when ODIN_DEBUG do application_debug_render_information()
 
     rl.EndDrawing()
   }

@@ -100,6 +100,7 @@ unload :: proc() {
 
   for &chunk in _handle.display_chunks {
     rl.UnloadRenderTexture(chunk.render_texture)
+    rl.UnloadRenderTexture(chunk.mask)
   }
 
   delete(_handle.display_chunks)
