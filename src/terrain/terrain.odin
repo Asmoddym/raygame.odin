@@ -10,6 +10,7 @@ import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
 import rl "vendor:raylib"
 
+BYPASS_MASK :: false
 
 // Terrain handle to store specific configuration.
 // All generated chunks are stored in the chunks slice.
@@ -127,7 +128,7 @@ draw_visible_map :: proc(camera: ^rl.Camera2D) {
       continue
     }
 
-    draw_chunk(&c, pos)
+    draw_chunk(&c, pos, [2]f32 { F32_CHUNK_PIXEL_SIZE, F32_CHUNK_PIXEL_SIZE })
   }
 
   // Mask
@@ -146,31 +147,36 @@ draw_visible_map :: proc(camera: ^rl.Camera2D) {
       continue
     }
 
-    draw_mask(&c, pos)
+    draw_mask(&c, pos, [2]f32 { F32_CHUNK_PIXEL_SIZE, F32_CHUNK_PIXEL_SIZE })
   }
   rl.EndBlendMode()
 }
 
 // Draw all the map regardless of the camera. Shouldn't be used to draw the main map as we don't need out-of-range chunks
-draw_whole_map:: proc() {
+draw_in_overlay:: proc(overlay: ^engine.Overlay) {
+  draw_size: [2]f32 = {
+    f32(overlay.resolution.x) / f32(_handle.chunks_per_side),
+    f32(overlay.resolution.y) / f32(_handle.chunks_per_side),
+  }
+
   for &c in _handle.display_chunks {
     pos: [2]f32 = {
-      f32(c.position.x * CHUNK_PIXEL_SIZE),
-      f32(c.position.y * CHUNK_PIXEL_SIZE),
+      f32(c.position.x) * draw_size.x,
+      f32(c.position.y) * draw_size.y,
     }
 
-    draw_chunk(&c, pos)
+    draw_chunk(&c, pos, draw_size)
   }
 
   // Mask
   rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
   for &c in _handle.display_chunks {
     pos: [2]f32 = {
-      f32(c.position.x * CHUNK_PIXEL_SIZE),
-      f32(c.position.y * CHUNK_PIXEL_SIZE),
+      f32(c.position.x) * draw_size.x,
+      f32(c.position.y) * draw_size.y,
     }
 
-    draw_mask(&c, pos)
+    draw_mask(&c, pos, draw_size)
   }
   rl.EndBlendMode()
 }
@@ -197,27 +203,33 @@ draw_hover :: proc() {
 
 // Draw a chunk with its mask.
 @(private="file")
-draw_chunk :: proc(c: ^Chunk, pos: [2]f32) {
+draw_chunk :: proc(c: ^Chunk, pos: [2]f32, size: [2]f32) {
   // Using this method to invert the texture as that's the way Raylib works
-  rl.DrawTextureRec(
+  rl.DrawTexturePro(
     c.render_texture.texture,
     rl.Rectangle { 0, 0,
       F32_CHUNK_PIXEL_SIZE,
       -F32_CHUNK_PIXEL_SIZE,
     },
-    rl.Vector2 { pos.x, pos.y },
+    rl.Rectangle { pos.x, pos.y, size.x, size.y },
+    rl.Vector2 { 0, 0 },
+    0,
     rl.WHITE,
   )
 }
 
-draw_mask :: proc(c: ^Chunk, pos: [2]f32) {
-  rl.DrawTextureRec(
+draw_mask :: proc(c: ^Chunk, pos: [2]f32, size: [2]f32) {
+  when BYPASS_MASK { return }
+
+  rl.DrawTexturePro(
     c.mask.texture,
     rl.Rectangle { 0, 0,
       F32_CHUNK_PIXEL_SIZE,
       -F32_CHUNK_PIXEL_SIZE,
     },
-    rl.Vector2 { pos.x, pos.y },
+    rl.Rectangle { pos.x, pos.y, size.x, size.y },
+    rl.Vector2 { 0, 0 },
+    0,
     rl.Color { 255, 255, 255, 255 },
   )
 }

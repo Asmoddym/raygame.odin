@@ -55,8 +55,6 @@ text_box_draw_fast :: proc(text: string, x, y: i32, font_size: i32, color: rl.Co
 
   text_box_generate_metadata(&text_box, text, font_size, color)
   text_box_draw_from_metadata(&text_box, { x, y })
-
-  // fmt.println("Drew fast textbox", "(", text, ")")
 }
 
 // Init an animated text box, generating and storing the metadata to the component pointer.
@@ -150,12 +148,12 @@ system_text_box_update :: proc() {
   }
 }
 
-// Misc system to keep the camera position to the center of the screen
-system_update_camera_position :: proc() {
-  box := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID]).box
-
-  engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
-}
+// // Misc system to keep the camera position to the center of the screen
+// system_update_camera_position :: proc() {
+//   box := engine.database_get_component(globals.player_id, &bounding_box.layers[globals.PLAYER_LAYER_ID]).box
+//
+//   engine.camera.target = rl.Vector2 { f32(box.x), f32(box.y) }
+// }
 
 
 

@@ -1,6 +1,6 @@
 package macro
 
-import "core:fmt"
+import "core:log"
 import "engine"
 import "enums"
 import "ui"
@@ -16,21 +16,34 @@ pause_system :: proc() {
       engine.scene_set_current(enums.SceneID.MAIN)
     }
   }
+}
 
-  if engine.game_state.current_scene.id != 1 do return
+pause_init :: proc(overlay: ^engine.Overlay) {
+  for idx in 0..<len(texts) {
+    text := texts[idx]
 
-  if rl.IsKeyPressed(.ENTER) {
-    on_clicks[selection]()
+    ui.simple_button_create(idx, text, overlay, { 0.5, 0.5 - (f32(len(texts) - 1) * 0.1) + f32(idx + 1) * 0.1 }, 40)
   }
+}
 
-  ui.button_draw_xy_centered_list(
-    texts,
-    font_size = 40,
-    on_click = proc(id: int) {
-      on_clicks[id]()
-    },
-    selection = &selection,
-  )
+pause_overlay_system_draw :: proc() {
+  engine.scene_overlay_draw(0, render_pause)
+}
+
+
+render_pause :: proc(overlay: ^engine.Overlay) {
+  // TODO: remove the draw from here and add it to a overlay system
+
+  if rl.IsKeyPressed(.ENTER)                 do on_clicks[selection]()
+  if rl.IsKeyPressed(rl.KeyboardKey.UP)      do selection = selection - 1 < 0 ? len(texts) - 1 : selection - 1
+  if rl.IsKeyPressed(rl.KeyboardKey.DOWN)    do selection = (selection + 1) % len(texts)
+
+  for idx in 0..<len(texts) {
+    selected_by_mouse, clicked := ui.persistable_button_draw(idx, overlay, selection == idx)
+
+    if selected_by_mouse do selection = idx
+    if clicked           do on_clicks[idx]()
+  }
 }
 
 

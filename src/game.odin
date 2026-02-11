@@ -8,8 +8,8 @@ import rl "vendor:raylib"
 
 
 game_update_resources :: proc() {
-  _game.resources.wood += 1
-
+  // _game.resources.wood += 1
+  //
   delta := rl.GetMouseDelta()
 
   if delta.x != 0 || delta.y != 0 {
@@ -29,7 +29,6 @@ game_update_resources :: proc() {
 
 
 // Resources counter
-@(private="file")
 Resources :: struct {
   gold: int,
   wood: int,
@@ -37,7 +36,6 @@ Resources :: struct {
 }
 
 // Main game data struct
-@(private="file")
 Game :: struct {
   resources: Resources,
 }

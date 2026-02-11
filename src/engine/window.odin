@@ -46,8 +46,7 @@ window_toggle_mode :: proc(toggle: bool, toggler: proc()) {
     rl.SetWindowSize(game_state.resolution.x, game_state.resolution.y)
   }
 
-  camera_set_offset_based_on_resolution()
-  camera_reset_zoom()
+  camera_init()
   scene_overlay_update_resolutions()
 
   rl.SetConfigFlags({ rl.ConfigFlag.WINDOW_HIGHDPI })
