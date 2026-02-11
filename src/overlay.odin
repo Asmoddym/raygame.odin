@@ -41,7 +41,7 @@ draw_controls :: proc(overlay: ^engine.Overlay) {
 
   // Size buttons
   _, clicked = ui.simple_button_draw(5, overlay)
-  if clicked do controls.size -= 1
+  if clicked do controls.size = max(controls.size - 1, 1)
 
   _, clicked = ui.simple_button_draw(6, overlay)
   if clicked do controls.size += 1
