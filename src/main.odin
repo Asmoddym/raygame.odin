@@ -16,18 +16,18 @@ main :: proc() {
 
   engine.scene_overlay_create(enums.SceneID.PAUSE, 0,
     dimension_ratios = [2]f32 { 0.9, 0.9 },
-    hook = [2]f32 { 0.5, 0.5 },
+    position_hook = [2]f32 { 0.5, 0.5 },
     on_init = pause_init)
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.INVENTORY,
     dimension_ratios = [2]f32 { 0.25, 0.5 },
-    hook = [2]f32 { 0.9, 0.9 },
+    position_hook = [2]f32 { 0.9, 0.9 },
     on_init = overlay_init_inventory)
   engine.scene_overlay_create(enums.SceneID.MAIN, enums.OverlayID.MINIMAP,
     width_ratio = 0.15,
-    hook = [2]f32 { 0, 0 })
+    position_hook = [2]f32 { 0, 0 })
   engine.scene_overlay_create(enums.SceneID.MAIN, 1234,
     width_ratio = 0.25,
-    hook = [2]f32 { 0.5, 0.5 },
+    position_hook = [2]f32 { 0.5, 0.5 },
     on_init = overlay_init_test)
 
 

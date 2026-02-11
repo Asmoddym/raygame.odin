@@ -12,7 +12,7 @@ import rl "vendor:raylib"
 // Button metadata struct.
 ButtonMetadata :: struct {
   overlay: ^engine.Overlay,
-  hook: [2]f32,
+  position_hook: [2]f32,
   padding: f32,
   ctext: cstring,
   measured_text: rl.Vector2,
@@ -28,13 +28,13 @@ ButtonMetadata :: struct {
 
 // Create a button.
 // `id` is a static ID defining the button, it's not returned from anything.
-simple_button_create :: proc(id: int, text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32 = -1, color: rl.Color = rl.WHITE) {
+simple_button_create :: proc(id: int, text: string, overlay: ^engine.Overlay, position_hook: [2]f32, font_size: i32 = -1, color: rl.Color = rl.WHITE) {
   if !(overlay in button_registry) {
     button_registry[overlay] = make(map[int]ButtonMetadata)
   }
 
   registry, _ := &button_registry[overlay]
-  registry[id] = generate_metadata(text, overlay, hook, font_size, color)
+  registry[id] = generate_metadata(text, overlay, position_hook, font_size, color)
 }
 
 // Draw a PERSISTABLE button from its ID.
@@ -108,7 +108,7 @@ button_registry: map[^engine.Overlay]map[int]ButtonMetadata
 
 // Generate a button metadata to store them in the registry.
 @(private="file")
-generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, font_size: i32, color: rl.Color) -> ButtonMetadata {
+generate_metadata :: proc(text: string, overlay: ^engine.Overlay, position_hook: [2]f32, font_size: i32, color: rl.Color) -> ButtonMetadata {
   ctext         := strings.unsafe_string_to_cstring(text)
   font_size     := font_size == -1 ? default_font_size() : font_size
   measured_text := rl.MeasureTextEx(rl.GetFontDefault(), ctext, f32(font_size), f32(font_size / 10))
@@ -116,13 +116,13 @@ generate_metadata :: proc(text: string, overlay: ^engine.Overlay, hook: [2]f32, 
   width         := measured_text.x + 2 * padding
   height        := measured_text.y + 2 * padding
   container_res := overlay == nil ? engine.game_state.resolution : overlay.resolution
-  position      := utl.position_calculate(hook, container_res, { i32(width), i32(height) })
+  position      := utl.position_calculate(position_hook, container_res, { i32(width), i32(height) })
 
   offset: [2]f32 = overlay == nil ? { 0, 0 } : overlay.position
 
   return ButtonMetadata {
     overlay,
-    hook,
+    position_hook,
     padding,
     ctext,
     measured_text,
