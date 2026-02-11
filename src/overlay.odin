@@ -1,58 +1,74 @@
 package macro
 
+import "core:fmt"
 import "terrain"
 import "enums"
 import "engine"
 import "ui"
-import rl "vendor:raylib"
 
 
 // Main overlay draw system.
 // engine.scene_overlay_draw will wrap the callback with BeginTextureMode and ClearBackground, frame the texture and render it.
 overlay_system_draw :: proc() {
-  engine.scene_overlay_draw(enums.OverlayID.INVENTORY, draw_inventory)
+  engine.scene_overlay_draw(enums.OverlayID.CONTROLS, draw_controls)
   engine.scene_overlay_draw(enums.OverlayID.MINIMAP, draw_minimap)
-  engine.scene_overlay_draw(1234, draw_test)
 }
 
-overlay_init_inventory :: proc(overlay: ^engine.Overlay) {
-  ui.simple_button_create(1, "coucoucoucou", overlay, { 0.5, 0.5 })
+overlay_init_controls :: proc(overlay: ^engine.Overlay) {
+  // TODO: add an enum for IDs
+  ui.simple_button_create(1, "Seed -", overlay, { 0.2, 0.1 })
+  ui.simple_button_create(2, "Seed +", overlay, { 0.8, 0.1 })
+  ui.simple_button_create(3, "Toggle mask mode", overlay, { 0.5, 0.4 })
+  ui.simple_button_create(4, "Untoggle mask mode", overlay, { 0.5, 0.4 })
+  ui.simple_button_create(5, "Size -", overlay, { 0.2, 0.2 })
+  ui.simple_button_create(6, "Size +", overlay, { 0.8, 0.2 })
 }
 
-overlay_init_test :: proc(overlay: ^engine.Overlay) {
-  ui.simple_button_create(1, "hello", overlay, { 0, 0 })
-  ui.simple_button_create(2, "CANCEL",  overlay, { 0, 1 })
-  ui.simple_button_create(3, "APPROVE",  overlay, { 1, 1 })
-}
+draw_controls :: proc(overlay: ^engine.Overlay) {
+  clicked: bool        = false
+  reload: bool         = false
 
-draw_test :: proc(overlay: ^engine.Overlay) {
-  ui.simple_button_draw(1, overlay)
-  ui.simple_button_draw(2, overlay)
-  ui.simple_button_draw(3, overlay)
-}
+  // Seed buttons
+  _, clicked = ui.simple_button_draw(1, overlay)
+  if clicked {
+    controls.seed -= 1
+    reload = true
+  }
 
-draw_inventory :: proc(overlay: ^engine.Overlay) {
-  @(static) button_selected := false
+  _, clicked = ui.simple_button_draw(2, overlay)
+  if clicked {
+    controls.seed += 1
+    reload = true
+  }
 
-  font_size := i32(engine.game_state.resolution.x / 80)
-  height := i32(rl.MeasureTextEx(rl.GetFontDefault(), "A", f32(font_size), 1).y)
+  // Mask mode buttons
+  mask_mode_button_id := controls.mask_mode_toggled ? 4 : 3
+  _, clicked = ui.simple_button_draw(mask_mode_button_id, overlay)
+  if clicked do controls.mask_mode_toggled = !controls.mask_mode_toggled
 
-  // TODO:
-  // - Make a system to detect if the mouse is above an overlay (to prevent the terrain to move for ex)
-  _, clicked := ui.simple_button_draw(1, overlay)
+  // Size buttons
+  _, clicked = ui.simple_button_draw(5, overlay)
+  if clicked {
+    controls.size -= 1
+    reload = true
+  }
 
-  if clicked do _game.resources.wood += 1
+  _, clicked = ui.simple_button_draw(6, overlay)
+  if clicked {
+    controls.size += 1
+    reload = true
+  }
 
-  // ui.text_box_draw_fast(fmt.tprint("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
-  // ui.text_box_draw_fast(fmt.tprint("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)
-  // ui.text_box_draw_fast(fmt.tprint("Stone: %d", _game.resources.stone), 5, 5 + 4 * height, font_size, rl.WHITE)
-  //
+  if reload {
+    terrain.unload()
+    terrain.generate(controls.size, controls.seed)
+  }
 
-  rl.DrawText(rl.TextFormat("Gold: %d", _game.resources.gold), 5, 5, font_size, rl.WHITE)
-  rl.DrawText(rl.TextFormat("Wood: %d", _game.resources.wood), 5, 5 + 2 * height, font_size, rl.WHITE)
-  rl.DrawText(rl.TextFormat("Stone: %d", _game.resources.stone), 5, 5 + 4 * height, font_size, rl.WHITE)
+  // TODO: make this into position_hooks
+  ui.text_box_draw_fast(fmt.tprintf("Seed: %d", controls.seed), 5, 300)
+  ui.text_box_draw_fast(fmt.tprintf("Size: %dx%d", controls.size, controls.size), 5, 300 + 20 + 2 * ui.default_font_height())
 }
 
 draw_minimap :: proc(overlay: ^engine.Overlay) {
-  terrain.draw_in_overlay(overlay)
+  terrain.draw_in_overlay(overlay, controls.mask_mode_toggled)
 }

@@ -5,12 +5,11 @@ package terrain
 //
 // Could be worth checking out to have some nice oceans though.
 
+import rand "core:math/rand"
 import math "core:math"
 import perlin_noise "../lib/perlin_noise"
 import engine "../engine"
 import rl "vendor:raylib"
-
-BYPASS_MASK :: false
 
 // Terrain handle to store specific configuration.
 // All generated chunks are stored in the chunks slice.
@@ -54,8 +53,8 @@ Chunk :: struct {
 
 
 // Main draw system.
-draw :: proc() {
-  draw_visible_map(&engine.camera)
+draw :: proc(draw_masks: bool) {
+  draw_visible_map(&engine.camera, draw_masks)
   draw_hover()
 }
 
@@ -66,7 +65,9 @@ draw :: proc() {
 // Generate a terrain.
 // Takes the number of chunks and the tileset to be used for this terrain.
 // Returns a Handle pointer.
-generate :: proc(size: i32) {
+generate :: proc(size: i32, seed: u64) {
+  rand.reset(seed)
+
   _handle.cell_count_per_side  = size * CHUNK_SIZE
   _handle.tiles                = make([dynamic]TerrainCell, _handle.cell_count_per_side * _handle.cell_count_per_side)
   _handle.display_chunks       = make([dynamic]Chunk, size * size)
@@ -105,7 +106,7 @@ unload :: proc() {
 }
 
 // Draw only the chunks of the map that are in the viewing range.
-draw_visible_map :: proc(camera: ^rl.Camera2D) {
+draw_visible_map :: proc(camera: ^rl.Camera2D, draw_masks: bool) {
   drawn_rec := [2]rl.Vector2 {
     rl.GetScreenToWorld2D({ 0, 0 }, camera^),
     rl.GetScreenToWorld2D({ f32(engine.game_state.resolution.x), f32(engine.game_state.resolution.y) }, camera^),
@@ -131,6 +132,8 @@ draw_visible_map :: proc(camera: ^rl.Camera2D) {
     draw_chunk(&c, pos, [2]f32 { F32_CHUNK_PIXEL_SIZE, F32_CHUNK_PIXEL_SIZE })
   }
 
+  if !draw_masks do return
+
   // Mask
   rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
   for &c in _handle.display_chunks {
@@ -153,7 +156,7 @@ draw_visible_map :: proc(camera: ^rl.Camera2D) {
 }
 
 // Draw all the map regardless of the camera. Shouldn't be used to draw the main map as we don't need out-of-range chunks
-draw_in_overlay:: proc(overlay: ^engine.Overlay) {
+draw_in_overlay:: proc(overlay: ^engine.Overlay, draw_masks: bool) {
   draw_size: [2]f32 = {
     f32(overlay.resolution.x) / f32(_handle.chunks_per_side),
     f32(overlay.resolution.y) / f32(_handle.chunks_per_side),
@@ -167,6 +170,8 @@ draw_in_overlay:: proc(overlay: ^engine.Overlay) {
 
     draw_chunk(&c, pos, draw_size)
   }
+
+  if !draw_masks do return
 
   // Mask
   rl.BeginBlendMode(rl.BlendMode.MULTIPLIED)
@@ -219,8 +224,6 @@ draw_chunk :: proc(c: ^Chunk, pos: [2]f32, size: [2]f32) {
 }
 
 draw_mask :: proc(c: ^Chunk, pos: [2]f32, size: [2]f32) {
-  when BYPASS_MASK { return }
-
   rl.DrawTexturePro(
     c.mask.texture,
     rl.Rectangle { 0, 0,

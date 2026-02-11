@@ -18,7 +18,7 @@ SceneID :: enum {
 
 // Overlay IDs
 OverlayID :: enum {
-  INVENTORY,
+  CONTROLS,
   MINIMAP,
 }
 
