@@ -1,19 +1,17 @@
 package macro
 
-import "core:log"
 import "engine"
-import "enums"
 import "ui"
 import rl "vendor:raylib"
 
 // Pause system with its own input handling (for now at least)
 pause_system :: proc() {
   if rl.IsKeyPressed(.ESCAPE) {
-    if engine.game_state.current_scene.id != int(enums.SceneID.PAUSE) {
-      engine.scene_set_current(enums.SceneID.PAUSE)
+    if engine.game_state.current_scene.id != int(SceneID.PAUSE) {
+      engine.scene_set_current(SceneID.PAUSE)
       selection = 0
     } else {
-      engine.scene_set_current(enums.SceneID.MAIN)
+      engine.scene_set_current(SceneID.MAIN)
     }
   }
 }

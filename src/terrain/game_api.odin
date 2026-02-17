@@ -20,7 +20,11 @@ discover_circular_part :: proc(position: [2]i32, radius: i32) {
     }
 
     for &direction in directions {
+      cap_coords(&direction)
+
       tile_idx, chunk_idx := coords_to_tile_and_chunk_index(direction)
+      if !(tile_idx < len(_handle.tiles) && chunk_idx < len(_handle.display_chunks)) do continue
+
       discover_tile_from_idx(tile_idx)
 
       if !slice.contains(chunks_to_reload[:], chunk_idx) do append(&chunks_to_reload, chunk_idx)
@@ -28,6 +32,8 @@ discover_circular_part :: proc(position: [2]i32, radius: i32) {
 
     for tmp_y in directions[1][1]..<directions[0][1] {
       tile_idx, _ := coords_to_tile_and_chunk_index({ directions[0][0], tmp_y })
+      if !(tile_idx < len(_handle.tiles)) do continue
+
       discover_tile_from_idx(tile_idx)
     }
   }

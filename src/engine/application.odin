@@ -1,6 +1,5 @@
 package engine
 
-import rand "core:math/rand"
 import "utl/timer"
 import "core:fmt"
 import "core:time"
@@ -16,8 +15,6 @@ init :: proc() {
   rl.ChangeDirectory("resources")
 
   game_state.closed = false
-
-  rand.reset(rand_seed)
 
   window_init()
   camera_init()
@@ -64,14 +61,6 @@ GameState :: struct {
   resolution: [2]i32,
   current_scene: ^Scene,
 }
-
-
-// CONSTANTS
-
-
-// Random seed
-@(private="file")
-rand_seed: u64 = 16
 
 
 // FRAME PROCESSING

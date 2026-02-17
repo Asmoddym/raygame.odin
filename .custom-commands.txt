@@ -27,3 +27,9 @@ mode: float
 cmd_windows: :terminal .\vendor\builder.bat build debug
 cmd_unix: :terminal ./vendor/builder.sh build debug
 after: i
+
+[build-release]
+mode: float
+cmd_windows: :terminal .\vendor\builder.bat build release
+cmd_unix: :terminal ./vendor/builder.sh build release
+after: i
